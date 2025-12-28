@@ -1,0 +1,259 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum CollaboratorRole {
+  musician
+  writer
+  producer
+  artist
+  label
+}
+
+enum MasterRevenueScope {
+  digital_only
+  full
+}
+
+enum ContractType {
+  digital_master_only
+  songwriter_publishing
+  producer_agreement
+  label_record
+}
+
+enum ContractStatus {
+  pending
+  signed
+  expired
+}
+
+enum SplitType {
+  publishing
+  master
+}
+
+enum UserRole {
+  admin
+  collaborator
+}
+
+model Collaborator {
+  id                 String             @id @default(cuid())
+  firstName          String
+  middleName         String?
+  lastName           String
+  email              String?            @unique // Optional - only needed for login accounts
+  emailVerified      DateTime?
+  password           String? // Hashed password for authentication
+  image              String?
+  role               UserRole           @default(collaborator) // admin or collaborator
+  phone              String?
+  address            String?
+  capableRoles       CollaboratorRole[] // Multiple roles this person can perform (musician, writer, producer)
+  // Industry fields
+  proAffiliation     String? // ASCAP, BMI, SESAC
+  ipiNumber          String?
+  taxId              String? // Encrypted in application
+  publishingCompany  String?
+  managerName        String?
+  managerEmail       String?
+  managerPhone       String?
+  royaltyAccountInfo String?
+  // Metadata
+  notes              String?
+  status             String             @default("active") // active, inactive
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  // Relations
+  songCollaborators  SongCollaborator[]
+  accounts           Account[]
+  sessions           Session[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  collaboratorId    String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  collaborator Collaborator @relation(fields: [collaboratorId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id             String       @id @default(cuid())
+  sessionToken   String       @unique
+  collaboratorId String
+  expires        DateTime
+  collaborator   Collaborator @relation(fields: [collaboratorId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Song {
+  id                        String             @id @default(cuid())
+  title                     String
+  isrcCode                  String?            @unique
+  catalogNumber             String?
+  releaseDate               DateTime?
+  // Industry fields
+  proWorkRegistrationNumber String?
+  publishingAdmin           String?
+  masterOwner               String?
+  genre                     String?
+  subGenre                  String?
+  duration                  Int? // in seconds
+  recordingDate             DateTime?
+  recordingLocation         String?
+  // Split status
+  publishingLocked          Boolean            @default(false)
+  publishingLockedAt        DateTime?
+  masterLocked              Boolean            @default(false)
+  masterLockedAt            DateTime?
+  labelMasterShare          Decimal?           @db.Decimal(5, 4) // 0.0000 to 1.0000 (e.g., 0.5000 = 50%)
+  // Metadata
+  status                    String             @default("draft") // draft, active, archived
+  notes                     String?
+  createdAt                 DateTime           @default(now())
+  updatedAt                 DateTime           @updatedAt
+  // Relations
+  songCollaborators         SongCollaborator[]
+  songPublishingEntities    SongPublishingEntity[]
+  contracts                 Contract[]
+  splitHistory              SplitHistory[]
+}
+
+model SongCollaborator {
+  id                  String           @id @default(cuid())
+  songId              String
+  collaboratorId      String
+  roleInSong          CollaboratorRole
+  publishingOwnership Decimal?         @db.Decimal(5, 4) // 0.0000 to 1.0000
+  masterOwnership     Decimal?         @db.Decimal(5, 4) // 0.0000 to 1.0000
+  contractStatus      ContractStatus   @default(pending)
+  contractType        ContractType?
+  notes               String?
+  addedDate           DateTime         @default(now())
+  // Relations
+  song                Song             @relation(fields: [songId], references: [id], onDelete: Cascade)
+  collaborator        Collaborator     @relation(fields: [collaboratorId], references: [id], onDelete: Cascade)
+  contracts           Contract[]
+
+  @@unique([songId, collaboratorId, roleInSong]) // Allow same collaborator with different roles
+  @@index([songId])
+  @@index([collaboratorId])
+}
+
+model PublishingEntity {
+  id              String                  @id @default(cuid())
+  name            String                  // e.g., "River & Ember Publishing", "Sony Music Publishing"
+  isInternal      Boolean                 @default(false) // true for River & Ember, false for co-pubs
+  contactName     String?
+  contactEmail    String?
+  contactPhone    String?
+  address         String?
+  proAffiliation  String?                 // ASCAP, BMI, SESAC
+  notes           String?
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+  // Relations
+  songPublishingEntities SongPublishingEntity[]
+
+  @@index([name])
+  @@index([isInternal])
+}
+
+model SongPublishingEntity {
+  id                  String           @id @default(cuid())
+  songId              String
+  publishingEntityId  String
+  ownershipPercentage Decimal          @db.Decimal(5, 4) // 0.0000 to 1.0000 (e.g., 0.5000 = 50%)
+  notes               String?
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+  // Relations
+  song                Song             @relation(fields: [songId], references: [id], onDelete: Cascade)
+  publishingEntity    PublishingEntity @relation(fields: [publishingEntityId], references: [id], onDelete: Cascade)
+
+  @@unique([songId, publishingEntityId])
+  @@index([songId])
+  @@index([publishingEntityId])
+}
+
+model Contract {
+  id                 String           @id @default(cuid())
+  songId             String
+  collaboratorId     String
+  songCollaboratorId String
+  templateType       ContractType
+  pdfPath            String?
+  pdfUrl             String?
+  // E-signature
+  esignatureStatus   String?          @default("pending") // pending, sent, signed, declined
+  esignatureDocId    String? // HelloSign document ID
+  signerEmail        String?
+  signedAt           DateTime?
+  // Revenue scope
+  revenueScope       Json? // Allowed/disallowed revenue streams
+  // Metadata
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  // Relations
+  song               Song             @relation(fields: [songId], references: [id], onDelete: Cascade)
+  songCollaborator   SongCollaborator @relation(fields: [songCollaboratorId], references: [id], onDelete: Cascade)
+
+  @@index([songId])
+  @@index([collaboratorId])
+  @@index([esignatureStatus])
+}
+
+model ContractTemplate {
+  id              String       @id @default(cuid())
+  name            String
+  type            ContractType @unique
+  content         String       @db.Text // HTML/Markdown with placeholders
+  pdfStyling      Json? // PDF styling configuration
+  roleRestriction String[] // Which roles can use this template
+  isActive        Boolean      @default(true)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+}
+
+model SplitHistory {
+  id             String    @id @default(cuid())
+  songId         String
+  splitType      SplitType
+  previousValues Json // Previous split values
+  newValues      Json // New split values
+  changedBy      String // User ID
+  timestamp      DateTime  @default(now())
+  // Relations
+  song           Song      @relation(fields: [songId], references: [id], onDelete: Cascade)
+
+  @@index([songId])
+  @@index([timestamp])
+}
