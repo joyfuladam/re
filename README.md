@@ -153,10 +153,36 @@ npm start
 
 ## Environment Variables
 
+### Required
 - `DATABASE_URL`: PostgreSQL connection string
-- `NEXTAUTH_SECRET`: Secret key for NextAuth.js
-- `NEXTAUTH_URL`: Base URL of your application
-- `HELLOSIGN_API_KEY`: HelloSign/Dropbox Sign API key (optional)
+- `NEXTAUTH_SECRET`: Secret key for NextAuth.js (generate with `openssl rand -base64 32`)
+- `NEXTAUTH_URL`: Base URL of your application (e.g., `http://localhost:3000` for local dev)
+
+### Optional (for E-Signature)
+- `HELLOSIGN_API_KEY`: HelloSign/Dropbox Sign API key (get from your HelloSign account settings)
+- `HELLOSIGN_WEBHOOK_SECRET`: Webhook secret for verifying webhook requests (configure in HelloSign dashboard)
+- `HELLOSIGN_TEST_MODE`: Set to `"false"` to disable test mode (defaults to `true` in development). **Note:** In test mode, HelloSign only allows sending to emails within your account's domain. To test with external emails, set this to `"false"` (uses real API credits).
+
+### Setting Up HelloSign E-Signature
+
+1. **Create a HelloSign Account**: Sign up at https://www.hellosign.com/ or https://www.dropbox.com/sign
+
+2. **Get API Key**:
+   - Log into your HelloSign/Dropbox Sign account
+   - Navigate to Settings → API
+   - Generate or copy your API key
+   - Add to `.env`: `HELLOSIGN_API_KEY="your-api-key-here"`
+
+3. **Configure Webhook** (for production):
+   - In HelloSign dashboard, go to Settings → API → Event Callbacks
+   - Add callback URL: `https://your-domain.com/api/esignature/webhook`
+   - Copy the webhook secret
+   - Add to `.env`: `HELLOSIGN_WEBHOOK_SECRET="your-webhook-secret-here"`
+
+4. **Testing Locally** (optional):
+   - Use ngrok to expose your local server: `ngrok http 3000`
+   - Use the ngrok URL as your webhook callback URL in HelloSign dashboard
+   - The webhook secret is optional for local testing but recommended for production
 
 ## License
 

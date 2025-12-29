@@ -148,13 +148,123 @@ export async function buildPublishingAssignmentData(
 }
 
 /**
+ * Build contract data for a master revenue share agreement
+ */
+export async function buildMasterRevenueShareData(
+  song: Song,
+  artistCollaborator: SongCollaborator & { collaborator: Collaborator },
+  config: ContractConfig
+): Promise<ContractData> {
+  const artistFullName = [
+    artistCollaborator.collaborator.firstName,
+    artistCollaborator.collaborator.middleName,
+    artistCollaborator.collaborator.lastName,
+  ]
+    .filter(Boolean)
+    .join(" ")
+
+  // Calculate in-kind services total
+  const inKindServices = config.inKindServices
+    ? {
+        studioValue: config.inKindServices.studioValue || 0,
+        adminValue: config.inKindServices.adminValue || 0,
+        marketingValue: config.inKindServices.marketingValue || 0,
+        alternativeVersionsValue: config.inKindServices.alternativeVersionsValue || 0,
+        totalValue: calculateInKindTotal(config.inKindServices),
+      }
+    : undefined
+
+  // Format dates
+  const effectiveDate = new Date().toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  })
+
+  const masterShare = artistCollaborator.masterOwnership
+    ? parseFloat(artistCollaborator.masterOwnership.toString()) * 100
+    : 0
+
+  // Get role description
+  const roleDescriptions: Record<string, string> = {
+    artist: "Lead Artist/Performer",
+    musician: "Musician/Instrumentalist",
+    producer: "Producer",
+    writer: "Writer/Composer",
+  }
+  const artistRoleDescription = roleDescriptions[artistCollaborator.roleInSong] || artistCollaborator.roleInSong
+
+  return {
+    // Song-specific
+    songTitle: song.title,
+    isrcCode: song.isrcCode,
+    catalogNumber: song.catalogNumber,
+    releaseDate: song.releaseDate
+      ? new Date(song.releaseDate).toISOString().split("T")[0]
+      : null,
+
+    // Collaborator-specific
+    collaboratorName: artistFullName,
+    collaboratorFullName: artistFullName,
+    collaboratorEmail: artistCollaborator.collaborator.email,
+    collaboratorAddress: artistCollaborator.collaborator.address || null,
+    collaboratorPhone: artistCollaborator.collaborator.phone || null,
+    role: artistCollaborator.roleInSong,
+    publishingOwnership: artistCollaborator.publishingOwnership
+      ? parseFloat(artistCollaborator.publishingOwnership.toString())
+      : null,
+    masterOwnership: artistCollaborator.masterOwnership
+      ? parseFloat(artistCollaborator.masterOwnership.toString())
+      : null,
+    proAffiliation: artistCollaborator.collaborator.proAffiliation,
+    ipiNumber: artistCollaborator.collaborator.ipiNumber,
+
+    // Publisher/Label info (same as publisher for now)
+    publisherName: config.publisher.name,
+    publisherState: config.publisher.state,
+    publisherAddress: config.publisher.address,
+    publisherManagerName: config.publisher.managerName,
+    publisherManagerTitle: config.publisher.managerTitle,
+
+    // Configuration
+    effectiveDate,
+    governingState: config.defaults.governingState,
+
+    // In-kind services
+    inKindServices,
+
+    // Template compatibility fields (for master revenue share template)
+    artist_full_name: artistFullName,
+    artist_address: artistCollaborator.collaborator.address || null,
+    effective_date: effectiveDate,
+    label_state: config.publisher.state,
+    label_address: config.publisher.address,
+    governing_state: config.defaults.governingState,
+    song_title: song.title,
+    song_isrc: song.isrcCode || null,
+    artist_share_percentage: masterShare.toFixed(2),
+    artist_role_description: artistRoleDescription,
+    estimated_label_investment: inKindServices?.totalValue || 0,
+    additional_notes: song.notes || null,
+    studio_value: inKindServices?.studioValue || 0,
+    admin_value: inKindServices?.adminValue || 0,
+    marketing_value: inKindServices?.marketingValue || 0,
+    alternative_versions_value: inKindServices?.alternativeVersionsValue || 0,
+    total_value: inKindServices?.totalValue || 0,
+    publisher_manager_name: config.publisher.managerName,
+    publisher_manager_title: config.publisher.managerTitle,
+  }
+}
+
+/**
  * Build contract data from song and collaborator records
  */
 export async function buildContractData(
   song: Song,
   songCollaborator: SongCollaborator & { collaborator: Collaborator },
   allSongCollaborators: (SongCollaborator & { collaborator: Collaborator })[],
-  config: ContractConfig
+  config: ContractConfig,
+  contractType: string
 ): Promise<ContractData> {
   const fullName = [
     songCollaborator.collaborator.firstName,
@@ -168,16 +278,20 @@ export async function buildContractData(
     ? new Date(song.releaseDate).toISOString().split("T")[0]
     : null
 
-  // For publishing assignment contracts, use the specialized builder
-  if (
-    (songCollaborator.roleInSong === "writer" || songCollaborator.roleInSong === "artist") &&
-    songCollaborator.publishingOwnership &&
-    parseFloat(songCollaborator.publishingOwnership.toString()) > 0
-  ) {
+  // Use contractType to determine which builder to use
+  if (contractType === "songwriter_publishing") {
     return buildPublishingAssignmentData(
       song,
       songCollaborator,
       allSongCollaborators,
+      config
+    )
+  }
+
+  if (contractType === "digital_master_only") {
+    return buildMasterRevenueShareData(
+      song,
+      songCollaborator,
       config
     )
   }

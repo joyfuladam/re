@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { db } from "@/lib/db"
-import { canAccessCollaborator, canUpdateCollaborator, canManageCollaborators } from "@/lib/permissions"
+import { canAccessCollaborator, canUpdateCollaborator, canManageCollaborators, getUserPermissions } from "@/lib/permissions"
 import { CollaboratorRole } from "@prisma/client"
 import { z } from "zod"
+import bcrypt from "bcryptjs"
 
 const collaboratorUpdateSchema = z.object({
   firstName: z.string().min(1).optional(),
@@ -28,6 +29,7 @@ const collaboratorUpdateSchema = z.object({
   royaltyAccountInfo: z.string().optional().nullable(),
   notes: z.string().optional().nullable(),
   status: z.enum(["active", "inactive"]).optional(),
+  password: z.string().min(8, "Password must be at least 8 characters").optional(),
 })
 
 export async function GET(
@@ -51,6 +53,30 @@ export async function GET(
 
     const collaborator = await db.collaborator.findUnique({
       where: { id: params.id },
+      select: {
+        id: true,
+        firstName: true,
+        middleName: true,
+        lastName: true,
+        email: true,
+        phone: true,
+        address: true,
+        role: true,
+        capableRoles: true,
+        proAffiliation: true,
+        ipiNumber: true,
+        taxId: true,
+        publishingCompany: true,
+        managerName: true,
+        managerEmail: true,
+        managerPhone: true,
+        royaltyAccountInfo: true,
+        notes: true,
+        status: true,
+        createdAt: true,
+        updatedAt: true,
+        // Explicitly exclude password field
+      },
     })
 
     if (!collaborator) {
@@ -92,6 +118,15 @@ export async function PATCH(
     const body = await request.json()
     const validated = collaboratorUpdateSchema.parse(body)
 
+    // Check if user is admin (only admins can change passwords)
+    const permissions = await getUserPermissions(session)
+    if (validated.password && !permissions?.isAdmin) {
+      return NextResponse.json(
+        { error: "Forbidden: Only admins can change passwords" },
+        { status: 403 }
+      )
+    }
+
     // Build update data - use spread operator like in create route
     const updateData: any = { ...validated }
     
@@ -100,12 +135,45 @@ export async function PATCH(
       updateData.email = validated.email || null
     }
 
+    // Handle password hashing if password is being updated
+    if (validated.password) {
+      const hashedPassword = await bcrypt.hash(validated.password, 10)
+      updateData.password = hashedPassword
+    } else {
+      // Remove password from updateData if not provided
+      delete updateData.password
+    }
+
     // capableRoles is validated by Zod and should work directly
     // Prisma accepts string arrays that match enum values
 
     const collaborator = await db.collaborator.update({
       where: { id: params.id },
       data: updateData,
+      select: {
+        id: true,
+        firstName: true,
+        middleName: true,
+        lastName: true,
+        email: true,
+        phone: true,
+        address: true,
+        role: true,
+        capableRoles: true,
+        proAffiliation: true,
+        ipiNumber: true,
+        taxId: true,
+        publishingCompany: true,
+        managerName: true,
+        managerEmail: true,
+        managerPhone: true,
+        royaltyAccountInfo: true,
+        notes: true,
+        status: true,
+        createdAt: true,
+        updatedAt: true,
+        // Explicitly exclude password field
+      },
     })
 
     return NextResponse.json(collaborator)

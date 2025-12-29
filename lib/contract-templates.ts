@@ -8,7 +8,7 @@ import { renderTemplate, markdownToHTML } from "./template-engine"
  */
 const TEMPLATE_PATHS: Record<ContractType, string> = {
   songwriter_publishing: "templates/contracts/publishing-assignment.md",
-  digital_master_only: "", // Keep using existing HTML generation for now
+  digital_master_only: "templates/contracts/master-revenue-share.md",
   producer_agreement: "", // Keep using existing HTML generation for now
   label_record: "", // Keep using existing HTML generation for now
 }
@@ -60,7 +60,15 @@ export function renderContractTemplate(
 
   const template = loadTemplate(templatePath)
   const rendered = renderTemplate(template, data)
-  const html = markdownToHTML(rendered)
+  let html = markdownToHTML(rendered)
+  
+  // Hide HelloSign text tags after markdown conversion
+  // Match HelloSign text tags: [field|req|signerN] or [field|req|signerN|label|id]
+  const textTagRegex = /\[([a-z_]+)\|([a-z]+)\|([a-z0-9]+)(?:\|([^\]]+))?\]/gi
+  html = html.replace(textTagRegex, (match) => {
+    // Wrap the text tag in a span with white color to make it invisible
+    return `<span style="color: white; background: white;">${match}</span>`
+  })
 
   return html
 }

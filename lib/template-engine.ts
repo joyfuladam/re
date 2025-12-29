@@ -77,7 +77,8 @@ export function processLoops(template: string, data: Record<string, any>): strin
         processed = processConditionals(processed, loopData)
         // Replace placeholders - handle both top-level and nested (itemVar.property) placeholders
         processed = replacePlaceholders(processed, loopData)
-        return processed
+        // Trim trailing newlines to avoid gaps in tables
+        return processed.replace(/\n+$/, '')
       })
       .join("")
   })

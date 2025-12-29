@@ -4,6 +4,8 @@ import { authOptions } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { generateContractHTML, ContractData } from "@/lib/pdf-generator"
 import { getContractType } from "@/lib/roles"
+import { ContractType } from "@prisma/client"
+import { getRequiredContractTypes } from "@/lib/contract-types"
 import { canAccessSong, isAdmin } from "@/lib/permissions"
 import { z } from "zod"
 import { hasTemplate, renderContractTemplate } from "@/lib/contract-templates"
@@ -12,7 +14,8 @@ import { contractConfig } from "@/lib/config"
 
 const generateContractSchema = z.object({
   songId: z.string(),
-  collaboratorId: z.string(),
+  songCollaboratorId: z.string(), // Use songCollaboratorId to identify the specific role/split combination
+  contractType: z.nativeEnum(ContractType),
 })
 
 export async function POST(request: NextRequest) {
@@ -50,13 +53,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Song not found" }, { status: 404 })
     }
 
+    // Find the specific SongCollaborator by songCollaboratorId
+    // This ensures we use the exact role/split combination that was clicked
+    const contractType = validated.contractType
+    
     const songCollaborator = song.songCollaborators.find(
-      (sc) => sc.collaboratorId === validated.collaboratorId
+      (sc) => sc.id === validated.songCollaboratorId
     )
 
     if (!songCollaborator) {
       return NextResponse.json(
-        { error: "Collaborator not found on this song" },
+        { error: "Song collaborator record not found" },
         { status: 404 }
       )
     }
@@ -69,16 +76,22 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Use roleInSong (role for this specific song), not the collaborator's base role
-    const roleInSong = songCollaborator.roleInSong
-    const contractType = getContractType(roleInSong) // Use the role for THIS song
+    // Verify this contract type is valid for this collaborator
+    const requiredTypes = getRequiredContractTypes(songCollaborator)
+    if (!requiredTypes.includes(contractType)) {
+      return NextResponse.json(
+        { error: `Contract type ${contractType} is not valid for this collaborator's role and splits` },
+        { status: 400 }
+      )
+    }
 
-    // Build contract data using the builder
+    // Build contract data using the builder (pass contractType to determine which builder to use)
     const contractData = await buildContractData(
       song,
       songCollaborator,
       song.songCollaborators,
-      contractConfig
+      contractConfig,
+      contractType
     )
 
     // Try template-based generation first, fall back to legacy HTML generation
@@ -125,6 +138,7 @@ export async function POST(request: NextRequest) {
               .contract-table {
                 width: 100%;
                 border-collapse: collapse;
+                border-spacing: 0;
                 margin: 20px 0;
                 table-layout: fixed;
               }
@@ -134,6 +148,8 @@ export async function POST(request: NextRequest) {
                 padding: 8px;
                 text-align: left;
                 word-wrap: break-word;
+                margin: 0;
+                vertical-align: top;
               }
               .contract-table th {
                 background-color: #f0f0f0;
@@ -145,6 +161,18 @@ export async function POST(request: NextRequest) {
               .contract-table tbody {
                 display: table-row-group;
               }
+              .contract-table thead tr,
+              .contract-table tbody tr {
+                margin: 0;
+                padding: 0;
+              }
+              /* Ensure no gap between thead and tbody by making borders share the same line */
+              .contract-table thead tr:last-child th {
+                border-bottom-width: 1px;
+              }
+              .contract-table tbody tr:first-child td {
+                border-top-width: 0;
+              }
               p {
                 margin-bottom: 10px;
               }
@@ -152,6 +180,13 @@ export async function POST(request: NextRequest) {
                 margin-left: 20px;
                 margin-bottom: 10px;
               }
+              /* Hide HelloSign text tags - make them invisible */
+              /* Text tags like [sig|req|signer1] should be white/invisible */
+              body * {
+                color: inherit;
+              }
+              /* Target text tags specifically - they appear as text in the HTML */
+              /* We'll use a span wrapper approach or make them white */
             </style>
           </head>
           <body>
@@ -169,11 +204,24 @@ export async function POST(request: NextRequest) {
       contractHTML = generateContractHTML(contractData)
     }
 
-    // Create contract record
-    const contract = await db.contract.create({
-      data: {
+    // Use upsert to create or update contract (prevents duplicates)
+    const contract = await db.contract.upsert({
+      where: {
+        songCollaboratorId_templateType: {
+          songCollaboratorId: songCollaborator.id,
+          templateType: contractType,
+        },
+      },
+      update: {
+        // Reset status to pending if regenerating
+        esignatureStatus: "pending",
+        pdfPath: null,
+        pdfUrl: null,
+        signedAt: null,
+      },
+      create: {
         songId: validated.songId,
-        collaboratorId: validated.collaboratorId,
+        collaboratorId: songCollaborator.collaboratorId,
         songCollaboratorId: songCollaborator.id,
         templateType: contractType,
         esignatureStatus: "pending",

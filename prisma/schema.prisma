@@ -226,6 +226,7 @@ model Contract {
   song               Song             @relation(fields: [songId], references: [id], onDelete: Cascade)
   songCollaborator   SongCollaborator @relation(fields: [songCollaboratorId], references: [id], onDelete: Cascade)
 
+  @@unique([songCollaboratorId, templateType]) // Prevent duplicate contracts for same collaborator/type
   @@index([songId])
   @@index([collaboratorId])
   @@index([esignatureStatus])

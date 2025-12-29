@@ -84,6 +84,7 @@ export function ContractGenerator({
         body: JSON.stringify({
           songId,
           collaboratorId,
+          contractType,
         }),
       })
 
@@ -150,6 +151,7 @@ export function ContractGenerator({
         body: JSON.stringify({
           songId,
           collaboratorId: contract.collaboratorId,
+          contractType: contract.contractType,
         }),
       })
 

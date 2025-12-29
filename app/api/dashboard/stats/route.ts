@@ -30,10 +30,24 @@ export async function GET(request: NextRequest) {
       collaboratorWhere.id = permissions.collaboratorId
     }
 
+    // Build contract where clause based on permissions
+    const contractWhere: any = { esignatureStatus: "pending" }
+    
+    // Collaborators can only see contracts for songs they're involved in
+    if (!permissions.isAdmin && permissions.collaboratorId) {
+      contractWhere.song = {
+        songCollaborators: {
+          some: {
+            collaboratorId: permissions.collaboratorId,
+          },
+        },
+      }
+    }
+
     const [totalSongs, totalCollaborators, pendingContracts, lockedSongs] = await Promise.all([
       db.song.count({ where: songWhere }),
       db.collaborator.count({ where: collaboratorWhere }),
-      db.contract.count({ where: { esignatureStatus: "pending" } }), // TODO: Filter by access
+      db.contract.count({ where: contractWhere }),
       db.song.count({
         where: {
           ...songWhere,

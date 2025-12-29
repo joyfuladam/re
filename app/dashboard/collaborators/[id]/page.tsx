@@ -55,6 +55,7 @@ export default function CollaboratorDetailPage() {
     managerPhone: "",
     royaltyAccountInfo: "",
     notes: "",
+    password: "",
   })
 
   const isAdmin = session?.user?.role === "admin"
@@ -101,7 +102,7 @@ export default function CollaboratorDetailPage() {
   const handleSave = async () => {
     setSaving(true)
     try {
-      const payload = {
+      const payload: any = {
         firstName: formData.firstName.trim(),
         middleName: formData.middleName?.trim() || null,
         lastName: formData.lastName.trim(),
@@ -118,6 +119,11 @@ export default function CollaboratorDetailPage() {
         royaltyAccountInfo: formData.royaltyAccountInfo?.trim() || null,
         notes: formData.notes?.trim() || null,
       }
+      
+      // Only include password if admin is changing it
+      if (isAdmin && formData.password.trim()) {
+        payload.password = formData.password.trim()
+      }
 
       const response = await fetch(`/api/collaborators/${params.id}`, {
         method: "PATCH",
@@ -127,6 +133,7 @@ export default function CollaboratorDetailPage() {
 
       if (response.ok) {
         setEditing(false)
+        setFormData({ ...formData, password: "" })
         fetchCollaborator()
       } else {
         let errorData
@@ -200,11 +207,9 @@ export default function CollaboratorDetailPage() {
           <Link href="/dashboard/collaborators">
             <Button variant="outline">Back</Button>
           </Link>
-          {isAdmin && (
-            <Button onClick={() => setEditing(!editing)}>
-              {editing ? "Cancel" : "Edit"}
-            </Button>
-          )}
+          <Button onClick={() => setEditing(!editing)}>
+            {editing ? "Cancel" : "Edit"}
+          </Button>
         </div>
       </div>
 
@@ -255,6 +260,34 @@ export default function CollaboratorDetailPage() {
               disabled={!editing}
             />
           </div>
+          {isAdmin && editing && (
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="password"
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  placeholder="Leave blank to keep current password"
+                  disabled={!editing}
+                />
+                {formData.password && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setFormData({ ...formData, password: "" })}
+                  >
+                    Clear
+                  </Button>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Leave blank to keep the current password, or enter a new password to change it
+              </p>
+            </div>
+          )}
           <div className="space-y-2">
             <Label htmlFor="phone">Phone</Label>
             <Input

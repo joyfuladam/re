@@ -10,31 +10,25 @@ export function getRequiredContractTypes(
   const contractTypes: ContractType[] = []
   const { roleInSong, publishingOwnership, masterOwnership } = songCollaborator
 
-  const publishing = publishingOwnership ? parseFloat(publishingOwnership.toString()) : 0
-  const master = masterOwnership ? parseFloat(masterOwnership.toString()) : 0
+  // Parse ownership values - handle Prisma Decimal types
+  // masterOwnership and publishingOwnership are stored as decimals (0-1)
+  const publishing = publishingOwnership 
+    ? parseFloat(publishingOwnership.toString()) 
+    : 0
+  const master = masterOwnership 
+    ? parseFloat(masterOwnership.toString()) 
+    : 0
 
-  // Writer with publishing share > 0 → Publishing Assignment
-  if (roleInSong === "writer" && publishing > 0) {
+  // Any collaborator with publishing share > 0 → Publishing Assignment
+  // Publishing is stored as decimal (0-1), so check if > 0
+  if (publishing > 0) {
     contractTypes.push("songwriter_publishing")
   }
 
-  // Artist with publishing share > 0 → Publishing Assignment
-  if (roleInSong === "artist" && publishing > 0) {
-    contractTypes.push("songwriter_publishing")
-  }
-
-  // Musician with master share > 0 → Master Participation Agreement
-  if (roleInSong === "musician" && master > 0) {
-    contractTypes.push("digital_master_only")
-  }
-
-  // Producer with master share > 0 → Producer Agreement
-  if (roleInSong === "producer" && master > 0) {
-    contractTypes.push("producer_agreement")
-  }
-
-  // Artist with master share > 0 → Master Participation Agreement (if not already added)
-  if (roleInSong === "artist" && master > 0 && !contractTypes.includes("digital_master_only")) {
+  // Any collaborator with master share > 0 → Master Revenue Share Agreement
+  // Master is stored as decimal (0-1), so check if > 0
+  // This applies to ANY collaborator with a master split, regardless of role
+  if (master > 0) {
     contractTypes.push("digital_master_only")
   }
 
@@ -53,9 +47,8 @@ export function shouldGeneratePublishingAssignment(
   const { roleInSong, publishingOwnership } = songCollaborator
   const publishing = publishingOwnership ? parseFloat(publishingOwnership.toString()) : 0
 
-  return (
-    (roleInSong === "writer" || roleInSong === "artist") && publishing > 0
-  )
+  // Publishing assignment for any collaborator with publishing share
+  return publishing > 0
 }
 
 /**
@@ -90,7 +83,7 @@ export function shouldGenerateProducerAgreement(
 export function getContractTypeLabel(contractType: ContractType): string {
   const labels: Record<ContractType, string> = {
     songwriter_publishing: "Publishing Assignment",
-    digital_master_only: "Master Participation Agreement",
+    digital_master_only: "Master Revenue Share Agreement",
     producer_agreement: "Producer Agreement",
     label_record: "Label Record",
   }

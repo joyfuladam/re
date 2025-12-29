@@ -69,6 +69,17 @@ export interface ContractData {
   reversion_condition?: string
   advance_amount?: number
   governing_state?: string
+  // Master revenue share template fields
+  artist_full_name?: string
+  artist_address?: string | null
+  label_state?: string
+  label_address?: string
+  song_title?: string
+  song_isrc?: string | null
+  artist_share_percentage?: string
+  artist_role_description?: string
+  estimated_label_investment?: number
+  additional_notes?: string | null
 }
 
 export function generateContractHTML(data: ContractData): string {

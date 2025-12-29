@@ -11,7 +11,8 @@ import { Label } from "@/components/ui/label"
 import { PublishingSplitEditor } from "@/components/splits/PublishingSplitEditor"
 import { MasterSplitEditor } from "@/components/splits/MasterSplitEditor"
 import { SplitPieChart } from "@/components/charts/SplitPieChart"
-import { ContractGenerator } from "@/components/contracts/ContractGenerator"
+import { ContractType } from "@prisma/client"
+import { getRequiredContractTypes, getContractTypeLabel } from "@/lib/contract-types"
 import { CollaboratorRole } from "@prisma/client"
 
 interface Song {
@@ -84,8 +85,155 @@ export default function SongDetailPage() {
     recordingLocation: "",
     notes: "",
   })
+  const [viewingContract, setViewingContract] = useState<{
+    html: string
+    contractType: ContractType
+    collaboratorName: string
+  } | null>(null)
+  const [generatingContractId, setGeneratingContractId] = useState<string | null>(null)
+  const [contracts, setContracts] = useState<Array<{
+    id: string
+    songCollaboratorId: string
+    templateType: ContractType
+    esignatureStatus: string | null
+    signedAt: string | null
+  }>>([])
 
   const isAdmin = session?.user?.role === "admin"
+
+  const handlePreviewContract = async (songCollaboratorId: string, contractType: ContractType, collaboratorName: string) => {
+    if (!song) return
+    
+    setGeneratingContractId(`${songCollaboratorId}-${contractType}`)
+    try {
+      // Find the songCollaborator
+      const songCollaborator = song.songCollaborators.find(sc => sc.id === songCollaboratorId)
+      if (!songCollaborator) {
+        alert("Collaborator not found")
+        return
+      }
+
+      const response = await fetch("/api/contracts/generate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          songId: song.id,
+          songCollaboratorId: songCollaboratorId,
+          contractType,
+        }),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        alert(`Error generating contract: ${error.error || "Unknown error"}`)
+        return
+      }
+
+      const data = await response.json()
+      setViewingContract({
+        html: data.html,
+        contractType: data.contractType,
+        collaboratorName,
+      })
+    } catch (error) {
+      console.error("Error generating contract:", error)
+      alert("An unexpected error occurred while generating the contract.")
+    } finally {
+      setGeneratingContractId(null)
+    }
+  }
+
+  const fetchContracts = async (songId: string) => {
+    try {
+      const response = await fetch(`/api/contracts?songId=${songId}`)
+      if (response.ok) {
+        const data = await response.json()
+        setContracts(data.contracts || [])
+      }
+    } catch (error) {
+      console.error("Error fetching contracts:", error)
+    }
+  }
+
+  const getContractStatus = (songCollaboratorId: string, contractType: ContractType): {
+    status: string | null
+    signedAt: string | null
+    contractId: string | null
+  } => {
+    const contract = contracts.find(
+      (c) => c.songCollaboratorId === songCollaboratorId && c.templateType === contractType
+    )
+    return {
+      status: contract?.esignatureStatus || null,
+      signedAt: contract?.signedAt || null,
+      contractId: contract?.id || null,
+    }
+  }
+
+  const handleSendContract = async (songCollaboratorId: string, contractType: ContractType, collaboratorName: string) => {
+    if (!song) return
+    
+    setGeneratingContractId(`${songCollaboratorId}-${contractType}`)
+    try {
+      // Find the songCollaborator
+      const songCollaborator = song.songCollaborators.find(sc => sc.id === songCollaboratorId)
+      if (!songCollaborator) {
+        alert("Collaborator not found")
+        return
+      }
+
+      // First generate the contract
+      const generateResponse = await fetch("/api/contracts/generate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          songId: song.id,
+          songCollaboratorId: songCollaboratorId,
+          contractType,
+        }),
+      })
+
+      if (!generateResponse.ok) {
+        const error = await generateResponse.json()
+        alert(`Error generating contract: ${error.error || "Unknown error"}`)
+        return
+      }
+
+      const generateData = await generateResponse.json()
+      
+      // Then send via e-signature
+      const sendResponse = await fetch("/api/esignature/send", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          contractId: generateData.contractId,
+        }),
+      })
+
+      if (!sendResponse.ok) {
+        const error = await sendResponse.json()
+        alert(`Error sending contract: ${error.error || "Unknown error"}`)
+        return
+      }
+
+      alert(`Contract sent to ${collaboratorName} for e-signature`)
+      // Refresh contracts to show updated status
+      if (song) {
+        await fetchContracts(song.id)
+      }
+    } catch (error) {
+      console.error("Error sending contract:", error)
+      alert("An unexpected error occurred while sending the contract.")
+    } finally {
+      setGeneratingContractId(null)
+    }
+  }
 
   useEffect(() => {
     // #region agent log
@@ -161,6 +309,9 @@ export default function SongDetailPage() {
           })) || [],
         }
         setSong(processedData)
+        
+        // Fetch contracts for this song
+        await fetchContracts(params.id)
         
         // Initialize edit form data
         setEditFormData({
@@ -659,12 +810,12 @@ export default function SongDetailPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Master Splits</CardTitle>
+            <CardTitle>Master Revenue Shares</CardTitle>
             <CardDescription>
               {!song.publishingLocked
                 ? "Publishing splits must be locked first"
                 : song.masterLocked
-                ? "Master splits are locked"
+                ? "Master revenue shares are locked"
                 : "Set master ownership percentages (must total 100%)"}
             </CardDescription>
           </CardHeader>
@@ -691,45 +842,170 @@ export default function SongDetailPage() {
             <CardDescription>Manage collaborators for this song</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
-              {song.songCollaborators
-                .filter((sc) => {
-                  // Only show collaborators with at least one non-zero ownership
-                  const publishing = sc.publishingOwnership ?? 0
-                  const master = sc.masterOwnership ?? 0
-                  return publishing > 0 || master > 0
-                })
-                .map((sc) => {
-                  const publishing = sc.publishingOwnership ?? 0
-                  const master = sc.masterOwnership ?? 0
-                  const ownershipParts: string[] = []
-                  
-                  if (publishing > 0) {
-                    ownershipParts.push(`Publishing: ${publishing.toFixed(2)}%`)
-                  }
-                  if (master > 0) {
-                    ownershipParts.push(`Master: ${master.toFixed(2)}%`)
-                  }
-                  
-                  return (
-                    <div
-                      key={sc.id}
-                      className="flex items-center justify-between p-2 border rounded"
-                    >
-                      <div>
-                        <div className="font-medium">{[sc.collaborator.firstName, sc.collaborator.middleName, sc.collaborator.lastName].filter(Boolean).join(" ")}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {sc.roleInSong === "writer" ? "Writer" : 
-                           sc.roleInSong === "producer" ? "Producer" :
-                           sc.roleInSong === "musician" ? "Musician" :
-                           sc.roleInSong === "artist" ? "Artist" :
-                           sc.roleInSong === "label" ? "Label" : sc.roleInSong}
-                          {ownershipParts.length > 0 && ` • ${ownershipParts.join(" • ")}`}
-                        </div>
-                      </div>
+            <div className="space-y-6">
+              {/* Publishing Share Section */}
+              {song.songCollaborators.some((sc) => {
+                const publishing = sc.publishingOwnership ? parseFloat(sc.publishingOwnership.toString()) : 0
+                return publishing > 0
+              }) && (
+                <div>
+                  <div className="flex items-center justify-between mb-3 p-3">
+                    <h3 className="text-lg font-semibold">Publishing Share</h3>
+                    <div className="flex gap-2 ml-4 justify-center" style={{ minWidth: '140px' }}>
+                      <h3 className="text-lg font-semibold">Contracts</h3>
                     </div>
-                  )
-                })}
+                  </div>
+                  <div className="space-y-2">
+                    {song.songCollaborators
+                      .filter((sc) => {
+                        const publishing = sc.publishingOwnership ? parseFloat(sc.publishingOwnership.toString()) : 0
+                        return publishing > 0
+                      })
+                      .map((sc) => {
+                        const publishing = sc.publishingOwnership ? parseFloat(sc.publishingOwnership.toString()) : 0
+                        const collaboratorName = [sc.collaborator.firstName, sc.collaborator.middleName, sc.collaborator.lastName].filter(Boolean).join(" ")
+                        const roleLabel = sc.roleInSong === "writer" ? "Writer" : 
+                                         sc.roleInSong === "producer" ? "Producer" :
+                                         sc.roleInSong === "musician" ? "Musician" :
+                                         sc.roleInSong === "artist" ? "Artist" :
+                                         sc.roleInSong === "label" ? "Label" : sc.roleInSong
+                        const contractType: ContractType = "songwriter_publishing"
+                        const isGenerating = generatingContractId === `${sc.id}-${contractType}`
+                        const contractStatus = getContractStatus(sc.id, contractType)
+                        const isSent = contractStatus.status === "sent" || contractStatus.status === "signed"
+                        const isSigned = contractStatus.status === "signed"
+                        const canResend = contractStatus.status === "sent" && !isSigned
+                        
+                        return (
+                          <div
+                            key={`publishing-${sc.id}`}
+                            className="flex items-center justify-between p-3 border rounded"
+                          >
+                            <div className="flex-1">
+                              <div className="font-medium">{collaboratorName}</div>
+                              <div className="text-sm text-muted-foreground">
+                                {roleLabel} • Publishing: {publishing.toFixed(2)}%
+                                {contractStatus.status && (
+                                  <span className={`ml-2 px-2 py-0.5 rounded text-xs ${
+                                    isSigned 
+                                      ? "bg-green-100 text-green-800" 
+                                      : contractStatus.status === "sent"
+                                      ? "bg-blue-100 text-blue-800"
+                                      : contractStatus.status === "declined"
+                                      ? "bg-red-100 text-red-800"
+                                      : "bg-gray-100 text-gray-800"
+                                  }`}>
+                                    {isSigned ? "Signed" : contractStatus.status === "sent" ? "Sent" : contractStatus.status === "declined" ? "Declined" : contractStatus.status}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex gap-2 ml-4">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handlePreviewContract(sc.id, contractType, collaboratorName)}
+                                disabled={!song.masterLocked || isGenerating}
+                              >
+                                Preview
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleSendContract(sc.id, contractType, collaboratorName)}
+                                disabled={!song.masterLocked || isGenerating || isSigned}
+                              >
+                                {isSigned ? "Signed" : canResend ? "Re-Send" : "Send"}
+                              </Button>
+                            </div>
+                          </div>
+                        )
+                      })}
+                  </div>
+                </div>
+              )}
+
+              {/* Master Revenue Share Section */}
+              {song.songCollaborators.some((sc) => {
+                const master = sc.masterOwnership ? parseFloat(sc.masterOwnership.toString()) : 0
+                return master > 0
+              }) && (
+                <div>
+                  <div className="flex items-center justify-between mb-3 p-3">
+                    <h3 className="text-lg font-semibold">Master Revenue Share</h3>
+                    <div className="flex gap-2 ml-4 justify-center" style={{ minWidth: '140px' }}>
+                      <h3 className="text-lg font-semibold">Contracts</h3>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    {song.songCollaborators
+                      .filter((sc) => {
+                        const master = sc.masterOwnership ? parseFloat(sc.masterOwnership.toString()) : 0
+                        return master > 0
+                      })
+                      .map((sc) => {
+                        const master = sc.masterOwnership ? parseFloat(sc.masterOwnership.toString()) : 0
+                        const collaboratorName = [sc.collaborator.firstName, sc.collaborator.middleName, sc.collaborator.lastName].filter(Boolean).join(" ")
+                        const roleLabel = sc.roleInSong === "writer" ? "Writer" : 
+                                         sc.roleInSong === "producer" ? "Producer" :
+                                         sc.roleInSong === "musician" ? "Musician" :
+                                         sc.roleInSong === "artist" ? "Artist" :
+                                         sc.roleInSong === "label" ? "Label" : sc.roleInSong
+                        const contractType: ContractType = "digital_master_only"
+                        const isGenerating = generatingContractId === `${sc.id}-${contractType}`
+                        const contractStatus = getContractStatus(sc.id, contractType)
+                        const isSent = contractStatus.status === "sent" || contractStatus.status === "signed"
+                        const isSigned = contractStatus.status === "signed"
+                        const canResend = contractStatus.status === "sent" && !isSigned
+                        
+                        return (
+                          <div
+                            key={`master-${sc.id}`}
+                            className="flex items-center justify-between p-3 border rounded"
+                          >
+                            <div className="flex-1">
+                              <div className="font-medium">{collaboratorName}</div>
+                              <div className="text-sm text-muted-foreground">
+                                {roleLabel} • Master Revenue: {master.toFixed(2)}%
+                                {contractStatus.status && (
+                                  <span className={`ml-2 px-2 py-0.5 rounded text-xs ${
+                                    isSigned 
+                                      ? "bg-green-100 text-green-800" 
+                                      : contractStatus.status === "sent"
+                                      ? "bg-blue-100 text-blue-800"
+                                      : contractStatus.status === "declined"
+                                      ? "bg-red-100 text-red-800"
+                                      : "bg-gray-100 text-gray-800"
+                                  }`}>
+                                    {isSigned ? "Signed" : contractStatus.status === "sent" ? "Sent" : contractStatus.status === "declined" ? "Declined" : contractStatus.status}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex gap-2 ml-4">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handlePreviewContract(sc.id, contractType, collaboratorName)}
+                                disabled={!song.masterLocked || isGenerating}
+                              >
+                                Preview
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleSendContract(sc.id, contractType, collaboratorName)}
+                                disabled={!song.masterLocked || isGenerating || isSigned}
+                              >
+                                {isSigned ? "Signed" : canResend ? "Re-Send" : "Send"}
+                              </Button>
+                            </div>
+                          </div>
+                        )
+                      })}
+                  </div>
+                </div>
+              )}
             </div>
             {isAdmin && (
               <div className="mt-4">
@@ -738,31 +1014,13 @@ export default function SongDetailPage() {
                 </Link>
               </div>
             )}
+            {!song.masterLocked && (
+              <p className="text-sm text-muted-foreground mt-4">
+                Master revenue shares must be locked before contracts can be generated.
+              </p>
+            )}
           </CardContent>
         </Card>
-
-        <ContractGenerator
-          songId={song.id}
-          songCollaborators={song.songCollaborators.map((sc) => ({
-            id: sc.id,
-            roleInSong: sc.roleInSong,
-            publishingOwnership: sc.publishingOwnership
-              ? parseFloat(sc.publishingOwnership.toString()) / 100
-              : null, // Convert back to decimal (0-1) for component
-            masterOwnership: sc.masterOwnership
-              ? parseFloat(sc.masterOwnership.toString()) / 100
-              : null, // Convert back to decimal (0-1) for component
-            collaborator: {
-              id: sc.collaborator.id,
-              firstName: sc.collaborator.firstName || null,
-              middleName: sc.collaborator.middleName || null,
-              lastName: sc.collaborator.lastName || null,
-              email: (sc.collaborator as any).email || null,
-            },
-          }))}
-          masterLocked={song.masterLocked}
-          isAdmin={isAdmin}
-        />
 
         <Card>
           <CardHeader>
@@ -778,6 +1036,39 @@ export default function SongDetailPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Contract Preview Modal */}
+      {viewingContract && (
+        <div
+          className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+          onClick={() => setViewingContract(null)}
+        >
+          <div
+            className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-4 border-b flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-semibold">
+                  {getContractTypeLabel(viewingContract.contractType)}
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  {viewingContract.collaboratorName}
+                </p>
+              </div>
+              <Button variant="outline" onClick={() => setViewingContract(null)}>
+                Close
+              </Button>
+            </div>
+            <div className="flex-1 overflow-auto p-6">
+              <div
+                dangerouslySetInnerHTML={{ __html: viewingContract.html }}
+                className="prose max-w-none"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
