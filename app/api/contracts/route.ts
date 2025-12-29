@@ -5,6 +5,8 @@ import { db } from "@/lib/db"
 import { canAccessSong } from "@/lib/permissions"
 import { z } from "zod"
 
+export const dynamic = 'force-dynamic'
+
 const getContractsSchema = z.object({
   songId: z.string(),
 })
@@ -56,4 +58,5 @@ export async function GET(request: NextRequest) {
     )
   }
 }
+
 

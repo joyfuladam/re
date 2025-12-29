@@ -5581,3 +5581,6 @@
 {"location":"lib/db.ts:19","message":"After PrismaClient init","data":{"hasDb":true},"timestamp":1766976525869,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
 {"location":"app/page.tsx:4","message":"Home component rendering","data":{},"timestamp":1766976526324,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
 {"location":"app/page.tsx:4","message":"Home component rendering","data":{},"timestamp":1766976526327,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"lib/db.ts:1","message":"DB module loading","data":{"env":"development"},"timestamp":1766976599495,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"lib/db.ts:10","message":"Before PrismaClient init","data":{"hasExisting":true},"timestamp":1766976599495,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"lib/db.ts:19","message":"After PrismaClient init","data":{"hasDb":true},"timestamp":1766976599495,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}

@@ -26,3 +26,4 @@ echo "3. Add NEXTAUTH_SECRET with the value above"
 echo "4. Set for Production, Preview, and Development environments"
 echo ""
 
+
