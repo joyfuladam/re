@@ -311,7 +311,7 @@ export default function SongDetailPage() {
         setSong(processedData)
         
         // Fetch contracts for this song
-        await fetchContracts(params.id)
+        await fetchContracts(typeof params.id === 'string' ? params.id : params.id[0])
         
         // Initialize edit form data
         setEditFormData({

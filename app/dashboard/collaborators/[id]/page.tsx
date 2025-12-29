@@ -88,6 +88,7 @@ export default function CollaboratorDetailPage() {
           managerPhone: data.managerPhone || "",
           royaltyAccountInfo: data.royaltyAccountInfo || "",
           notes: data.notes || "",
+          password: "", // Password is not returned from API for security
         })
       } else if (response.status === 404) {
         router.push("/dashboard/collaborators")

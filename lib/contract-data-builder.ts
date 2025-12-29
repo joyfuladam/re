@@ -96,7 +96,7 @@ export async function buildPublishingAssignmentData(
     collaboratorName: writerFullName,
     collaboratorFullName: writerFullName,
     collaboratorEmail: writerCollaborator.collaborator.email,
-    collaboratorAddress: writerCollaborator.collaborator.address || undefined,
+    collaboratorAddress: writerCollaborator.collaborator.address || null, // ContractData allows null
     collaboratorPhone: writerCollaborator.collaborator.phone || null,
     role: writerCollaborator.roleInSong,
     publishingOwnership: writerCollaborator.publishingOwnership
@@ -207,7 +207,7 @@ export async function buildMasterRevenueShareData(
     collaboratorName: artistFullName,
     collaboratorFullName: artistFullName,
     collaboratorEmail: artistCollaborator.collaborator.email,
-    collaboratorAddress: artistCollaborator.collaborator.address || undefined,
+    collaboratorAddress: artistCollaborator.collaborator.address || null, // ContractData allows null
     collaboratorPhone: artistCollaborator.collaborator.phone || null,
     role: artistCollaborator.roleInSong,
     publishingOwnership: artistCollaborator.publishingOwnership

@@ -66,6 +66,8 @@ export interface ContractData {
   effective_date?: string
   publisher_state?: string
   publisher_address?: string
+  publisher_manager_name?: string
+  publisher_manager_title?: string
   reversion_condition?: string
   advance_amount?: number
   governing_state?: string
