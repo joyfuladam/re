@@ -96,7 +96,7 @@ export async function buildPublishingAssignmentData(
     collaboratorName: writerFullName,
     collaboratorFullName: writerFullName,
     collaboratorEmail: writerCollaborator.collaborator.email,
-    collaboratorAddress: writerCollaborator.collaborator.address || null,
+    collaboratorAddress: writerCollaborator.collaborator.address || undefined,
     collaboratorPhone: writerCollaborator.collaborator.phone || null,
     role: writerCollaborator.roleInSong,
     publishingOwnership: writerCollaborator.publishingOwnership
@@ -130,7 +130,7 @@ export async function buildPublishingAssignmentData(
 
     // Template compatibility fields (for publishing assignment template)
     writer_full_name: writerFullName,
-    writer_address: writerCollaborator.collaborator.address || null,
+    writer_address: writerCollaborator.collaborator.address || undefined,
     effective_date: effectiveDate,
     publisher_state: config.publisher.state,
     publisher_address: config.publisher.address,
@@ -207,7 +207,7 @@ export async function buildMasterRevenueShareData(
     collaboratorName: artistFullName,
     collaboratorFullName: artistFullName,
     collaboratorEmail: artistCollaborator.collaborator.email,
-    collaboratorAddress: artistCollaborator.collaborator.address || null,
+    collaboratorAddress: artistCollaborator.collaborator.address || undefined,
     collaboratorPhone: artistCollaborator.collaborator.phone || null,
     role: artistCollaborator.roleInSong,
     publishingOwnership: artistCollaborator.publishingOwnership
@@ -235,7 +235,7 @@ export async function buildMasterRevenueShareData(
 
     // Template compatibility fields (for master revenue share template)
     artist_full_name: artistFullName,
-    artist_address: artistCollaborator.collaborator.address || null,
+    artist_address: artistCollaborator.collaborator.address || undefined,
     effective_date: effectiveDate,
     label_state: config.publisher.state,
     label_address: config.publisher.address,
@@ -308,8 +308,8 @@ export async function buildContractData(
     collaboratorName: fullName,
     collaboratorFullName: fullName,
     collaboratorEmail: songCollaborator.collaborator.email,
-    collaboratorAddress: songCollaborator.collaborator.address || null,
-    collaboratorPhone: songCollaborator.collaborator.phone || null,
+    collaboratorAddress: songCollaborator.collaborator.address || null, // ContractData allows null
+    collaboratorPhone: songCollaborator.collaborator.phone || null, // ContractData allows null
     role: songCollaborator.roleInSong,
     publishingOwnership: songCollaborator.publishingOwnership
       ? parseFloat(songCollaborator.publishingOwnership.toString())
