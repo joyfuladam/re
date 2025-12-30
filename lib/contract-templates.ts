@@ -141,16 +141,6 @@ Date: [date|req|signer2]
 | Song Title             | {{song_title}}                           |
 | Artist Share           | {{artist_share_percentage}}% of Net Receipts |
 | Artist Role            | {{artist_role_description}}              |
-| Estimated Label Investment | $${tplVar('estimated_label_investment')} (studio, marketing, versions) |
-| ISRC (if available)    | {{song_isrc}}                            |
-| Notes                  | {{additional_notes}}                     |
-
-**Exhibit B: In-Kind Services Provided by Label** (Fair Market Value)  
-- In-house studio recording, engineering, mixing: $${tplVar('studio_value')}  
-- Publishing admin setup (Sentric/CCLI): $${tplVar('admin_value')}  
-- Marketing/playlist pitching (Wings Access): $${tplVar('marketing_value')}  
-- Alternative versions production: $${tplVar('alternative_versions_value')}  
-**Total Value**: $${tplVar('total_value')} (recoupable solely from Label's share)
 `
 
 /**
