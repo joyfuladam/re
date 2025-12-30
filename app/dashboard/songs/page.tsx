@@ -11,6 +11,7 @@ interface Song {
   id: string
   title: string
   isrcCode: string | null
+  iswcCode: string | null
   catalogNumber: string | null
   publishingLocked: boolean
   masterLocked: boolean
