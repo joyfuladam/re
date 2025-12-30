@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -10,7 +11,18 @@ import { MultiRoleSelector } from "@/components/collaborators/MultiRoleSelector"
 import { CollaboratorRole } from "@prisma/client"
 
 export default function NewCollaboratorPage() {
+  const { data: session } = useSession()
   const router = useRouter()
+
+  useEffect(() => {
+    if (session && session.user?.role !== "admin") {
+      router.push("/dashboard")
+    }
+  }, [session, router])
+
+  if (session && session.user?.role !== "admin") {
+    return null
+  }
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     firstName: "",

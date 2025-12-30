@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useSession } from "next-auth/react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -13,6 +14,8 @@ interface DashboardStats {
 }
 
 export default function DashboardPage() {
+  const { data: session } = useSession()
+  const isAdmin = session?.user?.role === "admin"
   const [stats, setStats] = useState<DashboardStats>({
     totalSongs: 0,
     totalCollaborators: 0,
@@ -99,24 +102,28 @@ export default function DashboardPage() {
             <CardDescription>Common tasks</CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
-            <Link href="/dashboard/collaborators/new">
-              <Button variant="outline" className="w-full justify-start">
-                Add Collaborator
-              </Button>
-            </Link>
-            <Link href="/dashboard/songs/new">
-              <Button variant="outline" className="w-full justify-start">
-                Add Song
-              </Button>
-            </Link>
+            {isAdmin && (
+              <>
+                <Link href="/dashboard/collaborators/new">
+                  <Button variant="outline" className="w-full justify-start">
+                    Add Collaborator
+                  </Button>
+                </Link>
+                <Link href="/dashboard/songs/new">
+                  <Button variant="outline" className="w-full justify-start">
+                    Add Song
+                  </Button>
+                </Link>
+              </>
+            )}
             <Link href="/dashboard/songs">
               <Button variant="outline" className="w-full justify-start">
-                View All Songs
+                {isAdmin ? "View All Songs" : "My Songs"}
               </Button>
             </Link>
             <Link href="/dashboard/collaborators">
               <Button variant="outline" className="w-full justify-start">
-                View All Collaborators
+                {isAdmin ? "View All Collaborators" : "My Profile"}
               </Button>
             </Link>
           </CardContent>

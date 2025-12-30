@@ -51,6 +51,10 @@ export async function GET(
       )
     }
 
+    // Check if user is admin (to determine if role should be included)
+    const permissions = await getUserPermissions(session)
+    const isAdmin = permissions?.isAdmin ?? false
+
     const collaborator = await db.collaborator.findUnique({
       where: { id: params.id },
       select: {
@@ -86,7 +90,12 @@ export async function GET(
       )
     }
 
-    return NextResponse.json(collaborator)
+    // Remove role from response if user is not admin
+    const response = isAdmin
+      ? collaborator
+      : { ...collaborator, role: undefined }
+
+    return NextResponse.json(response)
   } catch (error) {
     console.error("Error fetching collaborator:", error)
     return NextResponse.json(

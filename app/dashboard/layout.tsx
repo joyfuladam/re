@@ -37,9 +37,15 @@ export default function DashboardLayout({
               <Link href="/dashboard" className="hover:underline">
                 Dashboard
               </Link>
-              <Link href="/dashboard/collaborators" className="hover:underline">
-                {isAdmin ? "Collaborators" : "My Profile"}
-              </Link>
+              {isAdmin ? (
+                <Link href="/dashboard/collaborators" className="hover:underline">
+                  Collaborators
+                </Link>
+              ) : (
+                <Link href={`/dashboard/collaborators/${session?.user?.id}`} className="hover:underline">
+                  My Profile
+                </Link>
+              )}
               {isAdmin && (
                 <>
                   <Link href="/dashboard/songs" className="hover:underline">
