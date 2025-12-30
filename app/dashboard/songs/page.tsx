@@ -52,9 +52,10 @@ export default function SongsPage() {
       
       // Ensure data is an array
       if (Array.isArray(data)) {
+        console.log(`Fetched ${data.length} songs:`, data.map(s => ({ id: s.id, title: s.title, status: s.status })))
         setSongs(data)
       } else {
-        console.error("Invalid response format:", data)
+        console.error("Invalid response format - expected array, got:", typeof data, data)
         setSongs([])
       }
     } catch (error) {
