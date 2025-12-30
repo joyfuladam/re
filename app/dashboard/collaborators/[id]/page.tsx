@@ -312,6 +312,7 @@ export default function CollaboratorDetailPage() {
               <MultiRoleSelector
                 value={formData.capableRoles}
                 onValueChange={(roles) => setFormData({ ...formData, capableRoles: roles })}
+                disabled={!isAdmin}
               />
             </div>
           )}

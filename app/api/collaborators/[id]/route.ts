@@ -144,6 +144,14 @@ export async function PATCH(
       )
     }
 
+    // Only admins can change capableRoles
+    if (validated.capableRoles !== undefined && !permissions?.isAdmin) {
+      return NextResponse.json(
+        { error: "Forbidden: Only admins can change capable roles" },
+        { status: 403 }
+      )
+    }
+
     // Build update data - use spread operator like in create route
     const updateData: any = { ...validated }
     
