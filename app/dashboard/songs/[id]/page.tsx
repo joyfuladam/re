@@ -565,18 +565,19 @@ export default function SongDetailPage() {
         </CardHeader>
         <CardContent>
           {editing ? (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="edit-title">Title *</Label>
-                <Input
-                  id="edit-title"
-                  value={editFormData.title}
-                  onChange={(e) => setEditFormData({ ...editFormData, title: e.target.value })}
-                  required
-                />
-              </div>
+            <div className="grid grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-title">Title *</Label>
+                  <Input
+                    id="edit-title"
+                    value={editFormData.title}
+                    onChange={(e) => setEditFormData({ ...editFormData, title: e.target.value })}
+                    required
+                  />
+                </div>
 
-              <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="edit-isrcCode">ISRC Code</Label>
                   <Input
@@ -678,30 +679,33 @@ export default function SongDetailPage() {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="edit-recordingLocation">Recording Location</Label>
-                <Input
-                  id="edit-recordingLocation"
-                  value={editFormData.recordingLocation}
-                  onChange={(e) => setEditFormData({ ...editFormData, recordingLocation: e.target.value })}
-                />
+                <div className="space-y-2">
+                  <Label htmlFor="edit-recordingLocation">Recording Location</Label>
+                  <Input
+                    id="edit-recordingLocation"
+                    value={editFormData.recordingLocation}
+                    onChange={(e) => setEditFormData({ ...editFormData, recordingLocation: e.target.value })}
+                  />
+                </div>
               </div>
-
               <div className="space-y-2">
-                <Label htmlFor="edit-notes">Notes</Label>
-                <Input
+                <Label htmlFor="edit-notes">Lyrics</Label>
+                <textarea
                   id="edit-notes"
+                  className="w-full min-h-[400px] p-2 border rounded-md resize-y focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   value={editFormData.notes}
                   onChange={(e) => setEditFormData({ ...editFormData, notes: e.target.value })}
+                  placeholder="Enter song lyrics..."
                 />
               </div>
             </div>
           ) : (
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <div className="text-sm font-medium text-muted-foreground">Title</div>
-                <div className="text-lg font-semibold">{song.title}</div>
-              </div>
+            <div className="grid grid-cols-2 gap-6">
+              <div className="grid gap-4">
+                <div>
+                  <div className="text-sm font-medium text-muted-foreground">Title</div>
+                  <div className="text-lg font-semibold">{song.title}</div>
+                </div>
               
               {song.isrcCode && (
                 <div>
@@ -797,23 +801,25 @@ export default function SongDetailPage() {
                 </div>
               )}
               
-              {song.recordingLocation && (
+                {song.recordingLocation && (
+                  <div>
+                    <div className="text-sm font-medium text-muted-foreground">Recording Location</div>
+                    <div>{song.recordingLocation}</div>
+                  </div>
+                )}
+                
                 <div>
-                  <div className="text-sm font-medium text-muted-foreground">Recording Location</div>
-                  <div>{song.recordingLocation}</div>
+                  <div className="text-sm font-medium text-muted-foreground">Status</div>
+                  <div className="capitalize">{song.status}</div>
                 </div>
-              )}
-              
-              {song.notes && (
-                <div className="md:col-span-2">
-                  <div className="text-sm font-medium text-muted-foreground">Notes</div>
-                  <div>{song.notes}</div>
-                </div>
-              )}
-              
-              <div>
-                <div className="text-sm font-medium text-muted-foreground">Status</div>
-                <div className="capitalize">{song.status}</div>
+              </div>
+              <div className="space-y-2">
+                <div className="text-sm font-medium text-muted-foreground">Lyrics</div>
+                {song.notes ? (
+                  <div className="whitespace-pre-wrap p-4 border rounded-md bg-muted/50 min-h-[400px]">{song.notes}</div>
+                ) : (
+                  <div className="whitespace-pre-wrap p-4 border rounded-md bg-muted/50 min-h-[400px] text-muted-foreground italic">No lyrics entered</div>
+                )}
               </div>
             </div>
           )}
