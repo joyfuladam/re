@@ -1,48 +1,192 @@
 import { ContractType } from "@prisma/client"
-import { readFileSync } from "fs"
-import { join } from "path"
 import { renderTemplate, markdownToHTML } from "./template-engine"
 
 /**
- * Template registry mapping contract types to template files
+ * Embedded contract templates
+ * These are embedded directly in the code to ensure they're available in serverless environments like Vercel
  */
-const TEMPLATE_PATHS: Record<ContractType, string> = {
-  songwriter_publishing: "templates/contracts/publishing-assignment.md",
-  digital_master_only: "templates/contracts/master-revenue-share.md",
-  producer_agreement: "", // Keep using existing HTML generation for now
-  label_record: "", // Keep using existing HTML generation for now
+const PUBLISHING_ASSIGNMENT_TEMPLATE = `# Project-Specific Full Publishing Assignment Agreement Template
+
+**PROJECT-SPECIFIC PUBLISHING ASSIGNMENT AGREEMENT**
+
+This Agreement is made effective as of {{effective_date}} ("Effective Date"), between **River and Ember, LLC** ("Publisher"), a {{publisher_state}} limited liability company with principal place of business at {{publisher_address}}, and **{{writer_full_name}}**, an individual residing at {% if writer_address %}{{writer_address}}{% else %}<span style="color: red;">[Writer address not provided]</span>{% endif %} ("Writer").
+
+**RECITALS**  
+Writer has created certain musical compositions for recording and release under Publisher's label projects. Publisher desires to administer publishing rights in those compositions to maximize congregational and global impact.
+
+**AGREEMENT**
+
+1. **Assignment of Publishing Rights**  
+   Writer hereby irrevocably and exclusively assigns to Publisher one hundred percent (100%) of the worldwide publisher's share (including but not limited to performance, mechanical, synchronization, print, and all other royalties) in and to the musical compositions listed in Exhibit A attached hereto (the "Compositions"), which are created for and recorded/released under Publisher's label projects. Writer retains one hundred percent (100%) of the writer's share of all royalties, which shall be paid directly to Writer by Writer's performing rights organization (e.g., ASCAP, BMI, SESAC) without interference from Publisher.
+
+2. **Scope & Project-Specific Nature**  
+   This assignment applies **solely** to the Compositions listed in Exhibit A (and any approved revisions). Writer retains full publishing rights in all other compositions not created for or released under Publisher's projects.
+
+3. **Term**  
+   Perpetual, subject to reversion to Writer upon {{reversion_condition}}.
+
+4. **Administration**  
+   Publisher shall administer the assigned rights worldwide through its chosen publishing administrator (e.g., Sentric Music). Publisher shall account to Writer quarterly for Publisher's collected share (for transparency only—no payment due to Writer from publisher's share).
+
+5. **Advances (Optional)**  
+   {% if advance_amount %}Publisher shall pay Writer a non-returnable advance of ${{advance_amount}}, recoupable solely from Publisher's share of royalties from the Compositions.{% else %}No advance is provided under this Agreement.{% endif %}
+
+6. **Morals & Conduct Clause**  
+   Writer agrees to conduct themselves, both publicly and privately, in a manner consistent with biblical Christian principles. Material breach (as reasonably determined by Publisher, e.g., public conduct contrary to Scripture) shall allow Publisher immediate termination of this Agreement and reversion of rights to Writer.
+
+7. **Warranties & Representations**  
+   Writer warrants that the Compositions are original, do not infringe third-party rights, and Writer has full authority to grant these rights.
+
+8. **Governing Law**  
+   This Agreement shall be governed by the laws of the State of {{governing_state}}, without regard to conflict of laws principles.
+
+9. **Alternative Versions & Expanded Releases**  
+   Publisher, at its discretion and expense, may create, record, and release alternative versions of the Compositions (including but not limited to acoustic, instrumental, live, radio edit, or featured artist collaborations) to enhance visibility, congregational adoption, and revenue potential. Such versions shall be subject to the same publishing assignment terms herein. Publisher will consult with Writer on creative decisions where practicable and credit Writer appropriately. This provision is intended to maximize the Compositions' ministry impact through diverse formats suitable for church use, streaming, and sync opportunities.
+
+IN WITNESS WHEREOF, the parties have executed this Agreement as of the Effective Date.
+
+**Publisher:** River and Ember, LLC  
+By: [sig|req|signer1]  
+Name: {{publisher_manager_name}}  
+Title: {{publisher_manager_title}}  
+Date: [date|req|signer1]
+
+**Writer:**  
+[sig|req|signer2]  
+{{writer_full_name}}  
+Date: [date|req|signer2]
+
+**Exhibit A: Compositions**
+
+| Title                  | Writers & Shares                              |
+|------------------------|-----------------------------------------------|
+{% for song in compositions %}| {{song.title}}         | {{song.writers}}                              |
+{% endfor %}
+
+**Exhibit B: In-Kind Services Provided by Publisher**  
+Publisher provides the following services at no cash cost to Writer, with estimated fair market value:  
+
+- In-house studio recording, engineering, and mixing: ${{studio_value}}  
+- Publishing administration setup (Sentric/CCLI registrations): ${{admin_value}}  
+- Marketing and playlist pitching (Wings Access, social media): ${{marketing_value}}  
+- Production and promotion of alternative versions (acoustic, instrumental, live, features, etc.): ${{alternative_versions_value}}  
+
+**Total Estimated Value**: ${{total_value}}  
+
+These services are recoupable from Publisher's share of royalties from the Compositions.
+`
+
+const MASTER_REVENUE_SHARE_TEMPLATE = `# Song-by-Song Master Revenue Share Agreement Template
+
+**SONG-BY-SONG MASTER REVENUE SHARE AGREEMENT**
+
+This Agreement is made effective as of {{effective_date}} ("Effective Date"), between **River and Ember, LLC** ("Label"), a {{label_state}} limited liability company with principal place of business at {{label_address}}, and **{{artist_full_name}}**, an individual residing at {% if artist_address %}{{artist_address}}{% else %}<span style="color: red;">[Artist address not provided]</span>{% endif %} ("Artist").
+
+**RECITALS**  
+Label and Artist desire to collaborate on a per-song basis for the sound recording titled "{{song_title}}" (the "Recording"). This Agreement is limited to this specific song and does not create an exclusive or long-term relationship, preserving Artist's freedom to pursue other opportunities.
+
+**AGREEMENT**
+
+1. **Services & Grant of Rights**  
+   Artist shall provide lead performance and creative input for the Recording. Artist hereby grants and assigns to Label all right, title, and interest in and to the master sound recording(s) of the Recording (the "Master"), including all worldwide copyright and other proprietary rights therein. Artist further grants Label perpetual, worldwide rights to exploit, distribute, promote, and create derivative works from the Master (including alternative versions), and to use Artist's name, likeness, voice, and performance in connection therewith. Artist acknowledges that this assignment constitutes full transfer of ownership of the Master to Label, and Artist shall have no ownership interest therein.
+
+2. **Compensation - Master Revenue Share**  
+   In full consideration for Artist's services and the assignment of Master rights, Label shall pay Artist {{artist_share_percentage}}% of Net Receipts from digital revenue streams (streaming and downloads). "Net Receipts" means all monies actually received by Label from any source attributable to the digital exploitation of the Master (including streaming and downloads), less any third-party fees, taxes, returns, or customary deductions.  
+   Artist shall **not** be entitled to any revenue from the Master outside of Net Receipts, including but not limited to synchronization licenses, physical sales, live performance fees, direct licensing, or any other exploitation. Label retains 100% of such revenue to fund future ministry projects and Label operations.
+
+3. **Alternative Versions**  
+   Label may, at its sole discretion and expense, create, record, and release alternative versions of the Recording (including but not limited to acoustic, instrumental, live, radio edits, or featured artist collaborations) to enhance visibility, congregational adoption, church usage (e.g., CCLI), and revenue potential. All such versions shall be owned exclusively by Label. Alternative versions will be subject to separate contracts specific to those arrangements, and shall not be subject to the revenue share terms of this Agreement. Label will consult with Artist on creative decisions where practicable and provide appropriate credit.
+
+4. **Publishing**  
+   Publishing rights for the underlying musical composition(s) are governed by separate Song-by-Song Publishing Assignment Agreement (if applicable). Artist retains full control of publishing rights in non-Label songs. This Agreement pertains solely to Master rights and revenues.
+
+5. **Accounting & Payment**  
+   Label shall provide quarterly accounting statements detailing Net Receipts (if exceeding $25 threshold) and pay Artist's share within 30 days thereafter. Artist may audit Label's relevant records once per year upon reasonable notice, at Artist's expense.
+
+6. **Conduct Standards**  
+   Artist agrees to conduct themselves, both publicly and privately, in a manner consistent with biblical Christian principles during the term of this Agreement and in connection with promotion of the Recording. Artist understands that any public conduct reasonably deemed by Label to be materially inconsistent with such principles may impact Label's willingness to collaborate on future projects, though it shall not affect Label's perpetual ownership of the Master or rights hereunder.
+
+7. **Warranties & Representations**  
+   Artist warrants and represents that: (i) Artist has full right and authority to grant the rights herein; (ii) the performance is original and does not infringe third-party rights; and (iii) Artist will not make any claims inconsistent with Label's ownership of the Master.
+
+8. **Governing Law**  
+   This Agreement shall be governed by the laws of the State of {{governing_state}}, without regard to conflict of laws principles. Any disputes shall be resolved exclusively in the courts of {{governing_state}}.
+
+9. **Entire Agreement**  
+   This constitutes the entire understanding between the parties and supersedes all prior agreements. No modifications except in writing signed by both parties.
+
+IN WITNESS WHEREOF, the parties have executed this Agreement as of the Effective Date.
+
+**Label:** River and Ember, LLC  
+By: [sig|req|signer1]  
+Name: {{publisher_manager_name}}  
+Title: {{publisher_manager_title}}  
+Date: [date|req|signer1]
+
+**Artist:**  
+[sig|req|signer2]  
+{{artist_full_name}}  
+Date: [date|req|signer2]
+
+**Exhibit A: Song & Recording Details**
+
+| Detail                  | Information                              |
+|-------------------------|------------------------------------------|
+| Song Title             | {{song_title}}                           |
+| Artist Share           | {{artist_share_percentage}}% of Net Receipts |
+| Artist Role            | {{artist_role_description}}              |
+| Estimated Label Investment | ${{estimated_label_investment}} (studio, marketing, versions) |
+| ISRC (if available)    | {{song_isrc}}                            |
+| Notes                  | {{additional_notes}}                     |
+
+**Exhibit B: In-Kind Services Provided by Label** (Fair Market Value)  
+- In-house studio recording, engineering, mixing: ${{studio_value}}  
+- Publishing admin setup (Sentric/CCLI): ${{admin_value}}  
+- Marketing/playlist pitching (Wings Access): ${{marketing_value}}  
+- Alternative versions production: ${{alternative_versions_value}}  
+**Total Value**: ${{total_value}} (recoupable solely from Label's share)
+`
+
+/**
+ * Template registry mapping contract types to embedded templates
+ */
+const TEMPLATES: Record<ContractType, string | null> = {
+  songwriter_publishing: PUBLISHING_ASSIGNMENT_TEMPLATE,
+  digital_master_only: MASTER_REVENUE_SHARE_TEMPLATE,
+  producer_agreement: null, // Keep using existing HTML generation for now
+  label_record: null, // Keep using existing HTML generation for now
 }
 
 /**
- * Load a template file from disk
+ * Load a template (from embedded content)
  */
-function loadTemplate(templatePath: string): string {
-  if (!templatePath) {
-    throw new Error(`Template path is empty`)
+function loadTemplate(contractType: ContractType): string {
+  const template = TEMPLATES[contractType]
+  if (!template) {
+    throw new Error(`No template available for contract type: ${contractType}`)
   }
-  
-  const fullPath = join(process.cwd(), templatePath)
-  try {
-    return readFileSync(fullPath, "utf-8")
-  } catch (error) {
-    throw new Error(`Failed to load template from ${fullPath}: ${error}`)
-  }
+  return template
 }
 
 /**
- * Check if a contract type has a template file
+ * Check if a contract type has a template
  */
 export function hasTemplate(contractType: ContractType): boolean {
-  const templatePath = TEMPLATE_PATHS[contractType]
-  return !!templatePath && templatePath.trim() !== ""
+  return TEMPLATES[contractType] !== null
 }
 
 /**
- * Get the template path for a contract type
+ * Get the template path for a contract type (for reference only, templates are now embedded)
  */
 export function getTemplatePath(contractType: ContractType): string | null {
-  const templatePath = TEMPLATE_PATHS[contractType]
-  return templatePath && templatePath.trim() !== "" ? templatePath : null
+  // Return a reference path for documentation purposes
+  const paths: Record<ContractType, string | null> = {
+    songwriter_publishing: "templates/contracts/publishing-assignment.md",
+    digital_master_only: "templates/contracts/master-revenue-share.md",
+    producer_agreement: null,
+    label_record: null,
+  }
+  return paths[contractType]
 }
 
 /**
@@ -52,13 +196,7 @@ export function renderContractTemplate(
   contractType: ContractType,
   data: Record<string, any>
 ): string {
-  const templatePath = TEMPLATE_PATHS[contractType]
-  
-  if (!templatePath || templatePath.trim() === "") {
-    throw new Error(`No template available for contract type: ${contractType}`)
-  }
-
-  const template = loadTemplate(templatePath)
+  const template = loadTemplate(contractType)
   const rendered = renderTemplate(template, data)
   let html = markdownToHTML(rendered)
   
@@ -77,13 +215,8 @@ export function renderContractTemplate(
  * Get template content for a contract type (for preview/editing)
  */
 export function getTemplateContent(contractType: ContractType): string | null {
-  const templatePath = TEMPLATE_PATHS[contractType]
-  if (!templatePath || templatePath.trim() === "") {
-    return null
-  }
-
   try {
-    return loadTemplate(templatePath)
+    return loadTemplate(contractType)
   } catch {
     return null
   }
