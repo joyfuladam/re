@@ -953,6 +953,16 @@ export default function SongDetailPage() {
                               >
                                 {isSigned ? "Signed" : canResend ? "Re-Send" : "Send"}
                               </Button>
+                              {isAdmin && (
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  onClick={() => handleDeleteCollaborator(sc.id, collaboratorName)}
+                                  disabled={deletingCollaboratorId === sc.id}
+                                >
+                                  {deletingCollaboratorId === sc.id ? "Removing..." : "Remove"}
+                                </Button>
+                              )}
                             </div>
                           </div>
                         )
