@@ -6,6 +6,8 @@ import { getUserPermissions, canManageSongs, canAccessSong } from "@/lib/permiss
 import { generateNextCatalogNumber } from "@/lib/catalog-number"
 import { z } from "zod"
 
+export const dynamic = 'force-dynamic'
+
 const songSchema = z.object({
   title: z.string().min(1),
   isrcCode: z.string().optional().nullable(),
@@ -72,11 +74,17 @@ export async function GET(request: NextRequest) {
       orderBy: { title: "asc" },
     })
 
+    console.log(`[API] Returning ${songs.length} songs`)
+    if (songs.length > 0) {
+      console.log(`[API] First song: ${songs[0].title} (${songs[0].id})`)
+    }
+
     return NextResponse.json(songs)
   } catch (error) {
     console.error("Error fetching songs:", error)
+    console.error("Error details:", error instanceof Error ? error.stack : error)
     return NextResponse.json(
-      { error: "Failed to fetch songs" },
+      { error: "Failed to fetch songs", details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     )
   }
