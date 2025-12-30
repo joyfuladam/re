@@ -577,7 +577,17 @@ export default function SongDetailPage() {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-catalogNumber">Catalog Number</Label>
+                  <Input
+                    id="edit-catalogNumber"
+                    value={editFormData.catalogNumber}
+                    disabled
+                    className="bg-muted cursor-not-allowed"
+                  />
+                  <p className="text-xs text-muted-foreground">Catalog number is permanent and cannot be changed</p>
+                </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="edit-isrcCode">ISRC Code</Label>
                   <Input
@@ -589,55 +599,15 @@ export default function SongDetailPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="edit-catalogNumber">Catalog Number</Label>
+                  <Label htmlFor="edit-duration">Duration (seconds)</Label>
                   <Input
-                    id="edit-catalogNumber"
-                    value={editFormData.catalogNumber}
-                    onChange={(e) => setEditFormData({ ...editFormData, catalogNumber: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="edit-releaseDate">Release Date</Label>
-                <Input
-                  id="edit-releaseDate"
-                  type="date"
-                  value={editFormData.releaseDate}
-                  onChange={(e) => setEditFormData({ ...editFormData, releaseDate: e.target.value })}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="edit-proWorkRegistrationNumber">PRO Work Registration Number</Label>
-                  <Input
-                    id="edit-proWorkRegistrationNumber"
-                    value={editFormData.proWorkRegistrationNumber}
-                    onChange={(e) => setEditFormData({ ...editFormData, proWorkRegistrationNumber: e.target.value })}
+                    id="edit-duration"
+                    type="number"
+                    value={editFormData.duration}
+                    onChange={(e) => setEditFormData({ ...editFormData, duration: e.target.value })}
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="edit-publishingAdmin">Publishing Administrator</Label>
-                  <Input
-                    id="edit-publishingAdmin"
-                    value={editFormData.publishingAdmin}
-                    onChange={(e) => setEditFormData({ ...editFormData, publishingAdmin: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="edit-masterOwner">Master Owner</Label>
-                <Input
-                  id="edit-masterOwner"
-                  value={editFormData.masterOwner}
-                  onChange={(e) => setEditFormData({ ...editFormData, masterOwner: e.target.value })}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="edit-genre">Genre</Label>
                   <Input
@@ -648,23 +618,51 @@ export default function SongDetailPage() {
                 </div>
 
                 <div className="space-y-2">
+                  <Label htmlFor="edit-releaseDate">Release Date</Label>
+                  <Input
+                    id="edit-releaseDate"
+                    type="date"
+                    value={editFormData.releaseDate}
+                    onChange={(e) => setEditFormData({ ...editFormData, releaseDate: e.target.value })}
+                  />
+                </div>
+
+                {/* Additional fields */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-proWorkRegistrationNumber">PRO Work Registration Number</Label>
+                    <Input
+                      id="edit-proWorkRegistrationNumber"
+                      value={editFormData.proWorkRegistrationNumber}
+                      onChange={(e) => setEditFormData({ ...editFormData, proWorkRegistrationNumber: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-publishingAdmin">Publishing Administrator</Label>
+                    <Input
+                      id="edit-publishingAdmin"
+                      value={editFormData.publishingAdmin}
+                      onChange={(e) => setEditFormData({ ...editFormData, publishingAdmin: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="edit-masterOwner">Master Owner</Label>
+                  <Input
+                    id="edit-masterOwner"
+                    value={editFormData.masterOwner}
+                    onChange={(e) => setEditFormData({ ...editFormData, masterOwner: e.target.value })}
+                  />
+                </div>
+
+                <div className="space-y-2">
                   <Label htmlFor="edit-subGenre">Sub-Genre</Label>
                   <Input
                     id="edit-subGenre"
                     value={editFormData.subGenre}
                     onChange={(e) => setEditFormData({ ...editFormData, subGenre: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="edit-duration">Duration (seconds)</Label>
-                  <Input
-                    id="edit-duration"
-                    type="number"
-                    value={editFormData.duration}
-                    onChange={(e) => setEditFormData({ ...editFormData, duration: e.target.value })}
                   />
                 </div>
 
@@ -677,7 +675,6 @@ export default function SongDetailPage() {
                     onChange={(e) => setEditFormData({ ...editFormData, recordingDate: e.target.value })}
                   />
                 </div>
-              </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="edit-recordingLocation">Recording Location</Label>
@@ -702,32 +699,37 @@ export default function SongDetailPage() {
           ) : (
             <div className="grid grid-cols-2 gap-6">
               <div className="grid gap-4">
+                {/* Always visible fields */}
                 <div>
                   <div className="text-sm font-medium text-muted-foreground">Title</div>
                   <div className="text-lg font-semibold">{song.title}</div>
                 </div>
-              
-              {song.isrcCode && (
-                <div>
-                  <div className="text-sm font-medium text-muted-foreground">ISRC Code</div>
-                  <div>{song.isrcCode}</div>
-                </div>
-              )}
-              
-              {song.catalogNumber && (
+                
                 <div>
                   <div className="text-sm font-medium text-muted-foreground">Catalog Number</div>
-                  <div>{song.catalogNumber}</div>
+                  <div>{song.catalogNumber || "—"}</div>
                 </div>
-              )}
-              
-              {song.releaseDate && (
+                
+                <div>
+                  <div className="text-sm font-medium text-muted-foreground">ISRC Code</div>
+                  <div>{song.isrcCode || "—"}</div>
+                </div>
+                
+                <div>
+                  <div className="text-sm font-medium text-muted-foreground">Duration</div>
+                  <div>{song.duration ? `${Math.floor(song.duration / 60)}:${(song.duration % 60).toString().padStart(2, "0")}` : "—"}</div>
+                </div>
+                
+                <div>
+                  <div className="text-sm font-medium text-muted-foreground">Genre</div>
+                  <div>{song.genre || "—"}</div>
+                </div>
+                
                 <div>
                   <div className="text-sm font-medium text-muted-foreground">Release Date</div>
                   <div>
-                    {(() => {
+                    {song.releaseDate ? (() => {
                       try {
-                        // Handle both ISO date strings (YYYY-MM-DD) and Date objects
                         const date = typeof song.releaseDate === "string" 
                           ? (song.releaseDate.includes("T") ? new Date(song.releaseDate) : new Date(song.releaseDate + "T00:00:00"))
                           : new Date(song.releaseDate)
@@ -735,72 +737,57 @@ export default function SongDetailPage() {
                       } catch {
                         return song.releaseDate
                       }
-                    })()}
+                    })() : "—"}
                   </div>
                 </div>
-              )}
-              
-              {song.proWorkRegistrationNumber && (
-                <div>
-                  <div className="text-sm font-medium text-muted-foreground">PRO Work Registration Number</div>
-                  <div>{song.proWorkRegistrationNumber}</div>
-                </div>
-              )}
-              
-              {song.publishingAdmin && (
-                <div>
-                  <div className="text-sm font-medium text-muted-foreground">Publishing Administrator</div>
-                  <div>{song.publishingAdmin}</div>
-                </div>
-              )}
-              
-              {song.masterOwner && (
-                <div>
-                  <div className="text-sm font-medium text-muted-foreground">Master Owner</div>
-                  <div>{song.masterOwner}</div>
-                </div>
-              )}
-              
-              {song.genre && (
-                <div>
-                  <div className="text-sm font-medium text-muted-foreground">Genre</div>
-                  <div>{song.genre}</div>
-                </div>
-              )}
-              
-              {song.subGenre && (
-                <div>
-                  <div className="text-sm font-medium text-muted-foreground">Sub-Genre</div>
-                  <div>{song.subGenre}</div>
-                </div>
-              )}
-              
-              {song.duration && (
-                <div>
-                  <div className="text-sm font-medium text-muted-foreground">Duration</div>
-                  <div>{Math.floor(song.duration / 60)}:{(song.duration % 60).toString().padStart(2, "0")}</div>
-                </div>
-              )}
-              
-              {song.recordingDate && (
-                <div>
-                  <div className="text-sm font-medium text-muted-foreground">Recording Date</div>
+                
+                {/* Additional fields (if they exist) */}
+                {song.proWorkRegistrationNumber && (
                   <div>
-                    {(() => {
-                      try {
-                        // Handle both ISO date strings (YYYY-MM-DD) and Date objects
-                        const date = typeof song.recordingDate === "string" 
-                          ? (song.recordingDate.includes("T") ? new Date(song.recordingDate) : new Date(song.recordingDate + "T00:00:00"))
-                          : new Date(song.recordingDate)
-                        return date.toLocaleDateString()
-                      } catch {
-                        return song.recordingDate
-                      }
-                    })()}
+                    <div className="text-sm font-medium text-muted-foreground">PRO Work Registration Number</div>
+                    <div>{song.proWorkRegistrationNumber}</div>
                   </div>
-                </div>
-              )}
-              
+                )}
+                
+                {song.publishingAdmin && (
+                  <div>
+                    <div className="text-sm font-medium text-muted-foreground">Publishing Administrator</div>
+                    <div>{song.publishingAdmin}</div>
+                  </div>
+                )}
+                
+                {song.masterOwner && (
+                  <div>
+                    <div className="text-sm font-medium text-muted-foreground">Master Owner</div>
+                    <div>{song.masterOwner}</div>
+                  </div>
+                )}
+                
+                {song.subGenre && (
+                  <div>
+                    <div className="text-sm font-medium text-muted-foreground">Sub-Genre</div>
+                    <div>{song.subGenre}</div>
+                  </div>
+                )}
+                
+                {song.recordingDate && (
+                  <div>
+                    <div className="text-sm font-medium text-muted-foreground">Recording Date</div>
+                    <div>
+                      {(() => {
+                        try {
+                          const date = typeof song.recordingDate === "string" 
+                            ? (song.recordingDate.includes("T") ? new Date(song.recordingDate) : new Date(song.recordingDate + "T00:00:00"))
+                            : new Date(song.recordingDate)
+                          return date.toLocaleDateString()
+                        } catch {
+                          return song.recordingDate
+                        }
+                      })()}
+                    </div>
+                  </div>
+                )}
+                
                 {song.recordingLocation && (
                   <div>
                     <div className="text-sm font-medium text-muted-foreground">Recording Location</div>

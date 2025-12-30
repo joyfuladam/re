@@ -122,7 +122,8 @@ export async function PATCH(
     const body = await request.json()
     const validated = songUpdateSchema.parse(body)
 
-    const updateData: any = { ...validated }
+    // Remove catalogNumber from update - it's permanent and cannot be changed
+    const { catalogNumber, ...updateData } = validated
     if (validated.releaseDate) {
       updateData.releaseDate = new Date(validated.releaseDate)
     }

@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { getUserPermissions, canManageSongs, canAccessSong } from "@/lib/permissions"
+import { generateNextCatalogNumber } from "@/lib/catalog-number"
 import { z } from "zod"
 
 const songSchema = z.object({
@@ -98,11 +99,17 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const validated = songSchema.parse(body)
 
+    // Auto-generate catalog number if not provided
+    let catalogNumber = validated.catalogNumber
+    if (!catalogNumber) {
+      catalogNumber = await generateNextCatalogNumber()
+    }
+
     const song = await db.song.create({
       data: {
         title: validated.title,
         isrcCode: validated.isrcCode,
-        catalogNumber: validated.catalogNumber,
+        catalogNumber: catalogNumber,
         releaseDate: validated.releaseDate ? new Date(validated.releaseDate) : null,
         proWorkRegistrationNumber: validated.proWorkRegistrationNumber,
         publishingAdmin: validated.publishingAdmin,
