@@ -1,6 +1,10 @@
 import { ContractType } from "@prisma/client"
 import { renderTemplate, markdownToHTML } from "./template-engine"
 
+// Helper to avoid TypeScript parsing issues with {{ in template literals
+const OPEN_BRACE = '{{'
+const CLOSE_BRACE = '}}'
+
 /**
  * Embedded contract templates
  * These are embedded directly in the code to ensure they're available in serverless environments like Vercel
@@ -29,7 +33,7 @@ Writer has created certain musical compositions for recording and release under 
    Publisher shall administer the assigned rights worldwide through its chosen publishing administrator (e.g., Sentric Music). Publisher shall account to Writer quarterly for Publisher's collected share (for transparency only—no payment due to Writer from publisher's share).
 
 5. **Advances (Optional)**  
-   {% if advance_amount %}Publisher shall pay Writer a non-returnable advance of ${{advance_amount}}, recoupable solely from Publisher's share of royalties from the Compositions.{% else %}No advance is provided under this Agreement.{% endif %}
+   {% if advance_amount %}Publisher shall pay Writer a non-returnable advance of $${OPEN_BRACE}advance_amount${CLOSE_BRACE}, recoupable solely from Publisher's share of royalties from the Compositions.{% else %}No advance is provided under this Agreement.{% endif %}
 
 6. **Morals & Conduct Clause**  
    Writer agrees to conduct themselves, both publicly and privately, in a manner consistent with biblical Christian principles. Material breach (as reasonably determined by Publisher, e.g., public conduct contrary to Scripture) shall allow Publisher immediate termination of this Agreement and reversion of rights to Writer.
@@ -66,12 +70,12 @@ Date: [date|req|signer2]
 **Exhibit B: In-Kind Services Provided by Publisher**  
 Publisher provides the following services at no cash cost to Writer, with estimated fair market value:  
 
-- In-house studio recording, engineering, and mixing: ${{studio_value}}  
-- Publishing administration setup (Sentric/CCLI registrations): ${{admin_value}}  
-- Marketing and playlist pitching (Wings Access, social media): ${{marketing_value}}  
-- Production and promotion of alternative versions (acoustic, instrumental, live, features, etc.): ${{alternative_versions_value}}  
+- In-house studio recording, engineering, and mixing: $${OPEN_BRACE}studio_value${CLOSE_BRACE}  
+- Publishing administration setup (Sentric/CCLI registrations): $${OPEN_BRACE}admin_value${CLOSE_BRACE}  
+- Marketing and playlist pitching (Wings Access, social media): $${OPEN_BRACE}marketing_value${CLOSE_BRACE}  
+- Production and promotion of alternative versions (acoustic, instrumental, live, features, etc.): $${OPEN_BRACE}alternative_versions_value${CLOSE_BRACE}  
 
-**Total Estimated Value**: ${{total_value}}  
+**Total Estimated Value**: $${OPEN_BRACE}total_value${CLOSE_BRACE}  
 
 These services are recoupable from Publisher's share of royalties from the Compositions.
 `
@@ -135,16 +139,16 @@ Date: [date|req|signer2]
 | Song Title             | {{song_title}}                           |
 | Artist Share           | {{artist_share_percentage}}% of Net Receipts |
 | Artist Role            | {{artist_role_description}}              |
-| Estimated Label Investment | ${{estimated_label_investment}} (studio, marketing, versions) |
+| Estimated Label Investment | $${OPEN_BRACE}estimated_label_investment${CLOSE_BRACE} (studio, marketing, versions) |
 | ISRC (if available)    | {{song_isrc}}                            |
 | Notes                  | {{additional_notes}}                     |
 
 **Exhibit B: In-Kind Services Provided by Label** (Fair Market Value)  
-- In-house studio recording, engineering, mixing: ${{studio_value}}  
-- Publishing admin setup (Sentric/CCLI): ${{admin_value}}  
-- Marketing/playlist pitching (Wings Access): ${{marketing_value}}  
-- Alternative versions production: ${{alternative_versions_value}}  
-**Total Value**: ${{total_value}} (recoupable solely from Label's share)
+- In-house studio recording, engineering, mixing: $${OPEN_BRACE}studio_value${CLOSE_BRACE}  
+- Publishing admin setup (Sentric/CCLI): $${OPEN_BRACE}admin_value${CLOSE_BRACE}  
+- Marketing/playlist pitching (Wings Access): $${OPEN_BRACE}marketing_value${CLOSE_BRACE}  
+- Alternative versions production: $${OPEN_BRACE}alternative_versions_value${CLOSE_BRACE}  
+**Total Value**: $${OPEN_BRACE}total_value${CLOSE_BRACE} (recoupable solely from Label's share)
 `
 
 /**
