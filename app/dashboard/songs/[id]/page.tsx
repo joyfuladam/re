@@ -19,6 +19,7 @@ interface Song {
   id: string
   title: string
   isrcCode: string | null
+  iswcCode: string | null
   catalogNumber: string | null
   releaseDate: string | null
   proWorkRegistrationNumber: string | null
@@ -74,6 +75,7 @@ export default function SongDetailPage() {
   const [editFormData, setEditFormData] = useState({
     title: "",
     isrcCode: "",
+    iswcCode: "",
     catalogNumber: "",
     releaseDate: "",
     proWorkRegistrationNumber: "",
@@ -353,6 +355,7 @@ export default function SongDetailPage() {
         setEditFormData({
           title: processedData.title || "",
           isrcCode: processedData.isrcCode || "",
+          iswcCode: processedData.iswcCode || "",
           catalogNumber: processedData.catalogNumber || "",
           releaseDate: processedData.releaseDate || "",
           proWorkRegistrationNumber: processedData.proWorkRegistrationNumber || "",
@@ -424,6 +427,7 @@ export default function SongDetailPage() {
     setEditFormData({
       title: song.title || "",
       isrcCode: song.isrcCode || "",
+      iswcCode: song.iswcCode || "",
       catalogNumber: song.catalogNumber || "",
       releaseDate: song.releaseDate || "",
       proWorkRegistrationNumber: song.proWorkRegistrationNumber || "",
@@ -447,9 +451,10 @@ export default function SongDetailPage() {
       const response = await fetch(`/api/songs/${song.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+          body: JSON.stringify({
           title: editFormData.title,
           isrcCode: editFormData.isrcCode || null,
+          iswcCode: editFormData.iswcCode || null,
           catalogNumber: editFormData.catalogNumber || null,
           releaseDate: editFormData.releaseDate || null,
           proWorkRegistrationNumber: editFormData.proWorkRegistrationNumber || null,
@@ -599,6 +604,16 @@ export default function SongDetailPage() {
                 </div>
 
                 <div className="space-y-2">
+                  <Label htmlFor="edit-iswcCode">ISWC</Label>
+                  <Input
+                    id="edit-iswcCode"
+                    value={editFormData.iswcCode}
+                    onChange={(e) => setEditFormData({ ...editFormData, iswcCode: e.target.value })}
+                    placeholder="T-123456789-0"
+                  />
+                </div>
+
+                <div className="space-y-2">
                   <Label htmlFor="edit-duration">Duration (seconds)</Label>
                   <Input
                     id="edit-duration"
@@ -713,6 +728,11 @@ export default function SongDetailPage() {
                 <div>
                   <div className="text-sm font-medium text-muted-foreground">ISRC Code</div>
                   <div>{song.isrcCode || "—"}</div>
+                </div>
+                
+                <div>
+                  <div className="text-sm font-medium text-muted-foreground">ISWC</div>
+                  <div>{song.iswcCode || "—"}</div>
                 </div>
                 
                 <div>

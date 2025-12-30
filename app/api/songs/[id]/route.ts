@@ -8,6 +8,7 @@ import { z } from "zod"
 const songUpdateSchema = z.object({
   title: z.string().min(1).optional(),
   isrcCode: z.string().optional().nullable(),
+  iswcCode: z.string().optional().nullable(),
   catalogNumber: z.string().optional().nullable(),
   releaseDate: z.string().datetime().optional().nullable(),
   proWorkRegistrationNumber: z.string().optional().nullable(),

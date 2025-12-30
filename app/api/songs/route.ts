@@ -9,6 +9,7 @@ import { z } from "zod"
 const songSchema = z.object({
   title: z.string().min(1),
   isrcCode: z.string().optional().nullable(),
+  iswcCode: z.string().optional().nullable(),
   catalogNumber: z.string().optional().nullable(),
   releaseDate: z.string().datetime().optional().nullable(),
   proWorkRegistrationNumber: z.string().optional().nullable(),
@@ -45,6 +46,7 @@ export async function GET(request: NextRequest) {
       where.OR = [
         { title: { contains: search, mode: "insensitive" } },
         { isrcCode: { contains: search, mode: "insensitive" } },
+        { iswcCode: { contains: search, mode: "insensitive" } },
         { catalogNumber: { contains: search, mode: "insensitive" } },
       ]
     }
@@ -109,6 +111,7 @@ export async function POST(request: NextRequest) {
       data: {
         title: validated.title,
         isrcCode: validated.isrcCode,
+        iswcCode: validated.iswcCode,
         catalogNumber: catalogNumber,
         releaseDate: validated.releaseDate ? new Date(validated.releaseDate) : null,
         proWorkRegistrationNumber: validated.proWorkRegistrationNumber,

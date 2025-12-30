@@ -118,6 +118,7 @@ model Song {
   id                        String                 @id @default(cuid())
   title                     String
   isrcCode                  String?                @unique
+  iswcCode                  String?
   catalogNumber             String?
   releaseDate               DateTime?
   // Industry fields
