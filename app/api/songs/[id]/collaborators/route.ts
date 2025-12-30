@@ -140,3 +140,67 @@ export async function GET(
   }
 }
 
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions)
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    // Only admins can delete collaborators from songs
+    const userIsAdmin = await isAdmin(session)
+    if (!userIsAdmin) {
+      return NextResponse.json(
+        { error: "Forbidden: Only admins can remove collaborators from songs" },
+        { status: 403 }
+      )
+    }
+
+    // Get songCollaboratorId from query params
+    const { searchParams } = new URL(request.url)
+    const songCollaboratorId = searchParams.get("songCollaboratorId")
+
+    if (!songCollaboratorId) {
+      return NextResponse.json(
+        { error: "songCollaboratorId is required" },
+        { status: 400 }
+      )
+    }
+
+    // Verify the song collaborator exists and belongs to this song
+    const songCollaborator = await db.songCollaborator.findUnique({
+      where: { id: songCollaboratorId },
+    })
+
+    if (!songCollaborator) {
+      return NextResponse.json(
+        { error: "Song collaborator not found" },
+        { status: 404 }
+      )
+    }
+
+    if (songCollaborator.songId !== params.id) {
+      return NextResponse.json(
+        { error: "Song collaborator does not belong to this song" },
+        { status: 400 }
+      )
+    }
+
+    // Delete the song collaborator
+    await db.songCollaborator.delete({
+      where: { id: songCollaboratorId },
+    })
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error("Error deleting song collaborator:", error)
+    return NextResponse.json(
+      { error: "Failed to delete song collaborator" },
+      { status: 500 }
+    )
+  }
+}
+

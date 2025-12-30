@@ -68,6 +68,7 @@ export default function SongDetailPage() {
   const [song, setSong] = useState<Song | null>(null)
   const [loading, setLoading] = useState(true)
   const [deleting, setDeleting] = useState(false)
+  const [deletingCollaboratorId, setDeletingCollaboratorId] = useState<string | null>(null)
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
   const [editFormData, setEditFormData] = useState({
@@ -232,6 +233,41 @@ export default function SongDetailPage() {
       alert("An unexpected error occurred while sending the contract.")
     } finally {
       setGeneratingContractId(null)
+    }
+  }
+
+  const handleDeleteCollaborator = async (songCollaboratorId: string, collaboratorName: string) => {
+    if (!song) return
+    
+    const confirmed = window.confirm(
+      `Are you sure you want to remove ${collaboratorName} from this song? This will remove all their shares and splits.`
+    )
+    
+    if (!confirmed) return
+
+    setDeletingCollaboratorId(songCollaboratorId)
+    try {
+      const response = await fetch(
+        `/api/songs/${song.id}/collaborators?songCollaboratorId=${songCollaboratorId}`,
+        {
+          method: "DELETE",
+        }
+      )
+
+      if (response.ok) {
+        // Refresh song data to reflect the deletion
+        await fetchSong()
+        // Also refresh contracts
+        await fetchContracts(song.id)
+      } else {
+        const error = await response.json()
+        alert(`Error: ${error.error || "Failed to remove collaborator"}`)
+      }
+    } catch (error) {
+      console.error("Error deleting collaborator:", error)
+      alert("Failed to remove collaborator")
+    } finally {
+      setDeletingCollaboratorId(null)
     }
   }
 
@@ -999,6 +1035,16 @@ export default function SongDetailPage() {
                               >
                                 {isSigned ? "Signed" : canResend ? "Re-Send" : "Send"}
                               </Button>
+                              {isAdmin && (
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  onClick={() => handleDeleteCollaborator(sc.id, collaboratorName)}
+                                  disabled={deletingCollaboratorId === sc.id}
+                                >
+                                  {deletingCollaboratorId === sc.id ? "Removing..." : "Remove"}
+                                </Button>
+                              )}
                             </div>
                           </div>
                         )
