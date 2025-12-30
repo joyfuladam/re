@@ -115,9 +115,9 @@ model VerificationToken {
 }
 
 model Song {
-  id                        String             @id @default(cuid())
+  id                        String                 @id @default(cuid())
   title                     String
-  isrcCode                  String?            @unique
+  isrcCode                  String?                @unique
   catalogNumber             String?
   releaseDate               DateTime?
   // Industry fields
@@ -130,16 +130,16 @@ model Song {
   recordingDate             DateTime?
   recordingLocation         String?
   // Split status
-  publishingLocked          Boolean            @default(false)
+  publishingLocked          Boolean                @default(false)
   publishingLockedAt        DateTime?
-  masterLocked              Boolean            @default(false)
+  masterLocked              Boolean                @default(false)
   masterLockedAt            DateTime?
-  labelMasterShare          Decimal?           @db.Decimal(5, 4) // 0.0000 to 1.0000 (e.g., 0.5000 = 50%)
+  labelMasterShare          Decimal?               @db.Decimal(5, 4) // 0.0000 to 1.0000 (e.g., 0.5000 = 50%)
   // Metadata
-  status                    String             @default("draft") // draft, active, archived
+  status                    String                 @default("draft") // draft, active, archived
   notes                     String?
-  createdAt                 DateTime           @default(now())
-  updatedAt                 DateTime           @updatedAt
+  createdAt                 DateTime               @default(now())
+  updatedAt                 DateTime               @updatedAt
   // Relations
   songCollaborators         SongCollaborator[]
   songPublishingEntities    SongPublishingEntity[]
@@ -169,17 +169,17 @@ model SongCollaborator {
 }
 
 model PublishingEntity {
-  id              String                  @id @default(cuid())
-  name            String                  // e.g., "River & Ember Publishing", "Sony Music Publishing"
-  isInternal      Boolean                 @default(false) // true for River & Ember, false for co-pubs
-  contactName     String?
-  contactEmail    String?
-  contactPhone    String?
-  address         String?
-  proAffiliation  String?                 // ASCAP, BMI, SESAC
-  notes           String?
-  createdAt       DateTime                @default(now())
-  updatedAt       DateTime                @updatedAt
+  id                     String                 @id @default(cuid())
+  name                   String // e.g., "River & Ember Publishing", "Sony Music Publishing"
+  isInternal             Boolean                @default(false) // true for River & Ember, false for co-pubs
+  contactName            String?
+  contactEmail           String?
+  contactPhone           String?
+  address                String?
+  proAffiliation         String? // ASCAP, BMI, SESAC
+  notes                  String?
+  createdAt              DateTime               @default(now())
+  updatedAt              DateTime               @updatedAt
   // Relations
   songPublishingEntities SongPublishingEntity[]
 

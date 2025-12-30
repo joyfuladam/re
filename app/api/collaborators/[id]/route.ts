@@ -118,11 +118,19 @@ export async function PATCH(
     const body = await request.json()
     const validated = collaboratorUpdateSchema.parse(body)
 
-    // Check if user is admin (only admins can change passwords)
+    // Check if user is admin (only admins can change passwords and roles)
     const permissions = await getUserPermissions(session)
     if (validated.password && !permissions?.isAdmin) {
       return NextResponse.json(
         { error: "Forbidden: Only admins can change passwords" },
+        { status: 403 }
+      )
+    }
+
+    // Only admins can change roles
+    if (validated.role !== undefined && !permissions?.isAdmin) {
+      return NextResponse.json(
+        { error: "Forbidden: Only admins can change roles" },
         { status: 403 }
       )
     }

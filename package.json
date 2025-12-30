@@ -10,7 +10,17 @@
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "migrate:create": "prisma migrate dev --create-only",
+    "migrate:dev": "prisma migrate dev",
+    "migrate:deploy": "prisma migrate deploy",
+    "migrate:prod": "supabase db push",
+    "migrate:status": "prisma migrate status",
+    "migrate:full": "./scripts/deploy-migration.sh",
+    "migrate:quick": "./scripts/quick-migrate.sh",
+    "data:export": "tsx scripts/export-local-data.ts",
+    "data:import": "tsx scripts/import-to-production.ts",
+    "data:transfer": "./scripts/transfer-local-to-production.sh"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.4.0",
