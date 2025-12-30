@@ -40,10 +40,25 @@ export default function SongsPage() {
       const params = new URLSearchParams()
       if (search) params.append("search", search)
       const response = await fetch(`/api/songs?${params.toString()}`)
+      
+      if (!response.ok) {
+        console.error("Error fetching songs:", response.status, response.statusText)
+        setSongs([])
+        return
+      }
+      
       const data = await response.json()
-      setSongs(data)
+      
+      // Ensure data is an array
+      if (Array.isArray(data)) {
+        setSongs(data)
+      } else {
+        console.error("Invalid response format:", data)
+        setSongs([])
+      }
     } catch (error) {
       console.error("Error fetching songs:", error)
+      setSongs([])
     } finally {
       setLoading(false)
     }
@@ -84,7 +99,7 @@ export default function SongsPage() {
       </Card>
 
       <div className="space-y-4">
-        {songs.map((song) => (
+        {Array.isArray(songs) && songs.map((song) => (
           <Card key={song.id}>
             <CardHeader>
               <div className="flex items-center justify-between">
