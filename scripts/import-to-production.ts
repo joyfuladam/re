@@ -2,7 +2,9 @@ import { PrismaClient } from "@prisma/client"
 import * as fs from "fs"
 import * as path from "path"
 
-if (!process.env.DATABASE_URL) {
+const DATABASE_URL = process.env.DATABASE_URL
+
+if (!DATABASE_URL) {
   console.error("❌ DATABASE_URL environment variable is required")
   console.error("Set it to your production database connection string")
   process.exit(1)
@@ -11,7 +13,7 @@ if (!process.env.DATABASE_URL) {
 const productionDb = new PrismaClient({
   datasources: {
     db: {
-      url: process.env.DATABASE_URL,
+      url: DATABASE_URL,
     },
   },
 })
@@ -27,7 +29,7 @@ async function importData() {
     const exportData = JSON.parse(fs.readFileSync(exportPath, "utf-8"))
 
     console.log("📥 Importing data to production database...")
-    console.log(`Database: ${process.env.DATABASE_URL.replace(/:[^:@]+@/, ":****@")}`)
+    console.log(`Database: ${DATABASE_URL.replace(/:[^:@]+@/, ":****@")}`)
     console.log(`Export date: ${exportData.exportedAt}`)
     console.log("")
 

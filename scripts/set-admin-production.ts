@@ -1,6 +1,8 @@
 import { PrismaClient } from "@prisma/client"
 
-if (!process.env.DATABASE_URL) {
+const DATABASE_URL = process.env.DATABASE_URL
+
+if (!DATABASE_URL) {
   console.error("❌ DATABASE_URL environment variable is required")
   process.exit(1)
 }
@@ -8,7 +10,7 @@ if (!process.env.DATABASE_URL) {
 const db = new PrismaClient({
   datasources: {
     db: {
-      url: process.env.DATABASE_URL,
+      url: DATABASE_URL,
     },
   },
 })
