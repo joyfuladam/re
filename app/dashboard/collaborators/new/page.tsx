@@ -13,16 +13,6 @@ import { CollaboratorRole } from "@prisma/client"
 export default function NewCollaboratorPage() {
   const { data: session } = useSession()
   const router = useRouter()
-
-  useEffect(() => {
-    if (session && session.user?.role !== "admin") {
-      router.push("/dashboard")
-    }
-  }, [session, router])
-
-  if (session && session.user?.role !== "admin") {
-    return null
-  }
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     firstName: "",
@@ -43,6 +33,16 @@ export default function NewCollaboratorPage() {
     royaltyAccountInfo: "",
     notes: "",
   })
+
+  useEffect(() => {
+    if (session && session.user?.role !== "admin") {
+      router.push("/dashboard")
+    }
+  }, [session, router])
+
+  if (session && session.user?.role !== "admin") {
+    return null
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
