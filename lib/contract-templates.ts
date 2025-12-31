@@ -106,19 +106,16 @@ Label and Artist desire to collaborate on a per-song basis for the sound recordi
 4. **Publishing**  
    Publishing rights for the underlying musical composition(s) are governed by separate Song-by-Song Publishing Assignment Agreement (if applicable). Artist retains full control of publishing rights in non-Label songs. This Agreement pertains solely to Master rights and revenues.
 
-5. **Accounting & Payment**  
-   Label shall provide quarterly accounting statements detailing Net Receipts (if exceeding $25 threshold) and pay Artist's share within 30 days thereafter. Artist may audit Label's relevant records once per year upon reasonable notice, at Artist's expense.
-
-6. **Conduct Standards**  
+5. **Conduct Standards**  
    Artist agrees to conduct themselves, both publicly and privately, in a manner consistent with biblical Christian principles during the term of this Agreement and in connection with promotion of the Recording. Artist understands that any public conduct reasonably deemed by Label to be materially inconsistent with such principles may impact Label's willingness to collaborate on future projects, though it shall not affect Label's perpetual ownership of the Master or rights hereunder.
 
-7. **Warranties & Representations**  
+6. **Warranties & Representations**  
    Artist warrants and represents that: (i) Artist has full right and authority to grant the rights herein; (ii) the performance is original and does not infringe third-party rights; and (iii) Artist will not make any claims inconsistent with Label's ownership of the Master.
 
-8. **Governing Law**  
+7. **Governing Law**  
    This Agreement shall be governed by the laws of the State of {{governing_state}}, without regard to conflict of laws principles. Any disputes shall be resolved exclusively in the courts of {{governing_state}}.
 
-9. **Entire Agreement**  
+8. **Entire Agreement**  
    This constitutes the entire understanding between the parties and supersedes all prior agreements. No modifications except in writing signed by both parties.
 
 IN WITNESS WHEREOF, the parties have executed this Agreement as of the Effective Date.
