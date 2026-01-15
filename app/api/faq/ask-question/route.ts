@@ -46,8 +46,14 @@ export async function POST(request: NextRequest) {
     }
 
     console.error("Error processing question:", error)
+    
+    // Provide more detailed error in development
+    const errorMessage = process.env.NODE_ENV === "development" 
+      ? (error instanceof Error ? error.message : "Failed to submit question")
+      : "Failed to submit question"
+    
     return NextResponse.json(
-      { error: "Failed to submit question" },
+      { error: errorMessage },
       { status: 500 }
     )
   }
