@@ -40,20 +40,42 @@ export function replacePlaceholders(template: string, data: Record<string, any>)
 
 /**
  * Process conditional blocks: {% if condition %}...{% else %}...{% endif %}
+ * Handles nested conditionals by processing iteratively until no more conditionals remain
  */
 export function processConditionals(template: string, data: Record<string, any>): string {
-  const ifRegex = /\{%\s*if\s+(\w+)\s*%\}(.*?)(?:\{%\s*else\s*%\}(.*?))?\{%\s*endif\s*%\}/gs
+  let result = template
+  let previousResult = ""
+  let iterations = 0
+  const maxIterations = 50 // Prevent infinite loops
 
-  return template.replace(ifRegex, (match, condition, ifBlock, elseBlock = "") => {
-    const conditionValue = data[condition]
-    const isTruthy = conditionValue !== null && conditionValue !== undefined && conditionValue !== false && conditionValue !== 0 && conditionValue !== ""
+  // Process conditionals iteratively to handle nesting
+  while (result !== previousResult && iterations < maxIterations) {
+    previousResult = result
+    
+    // Find the innermost conditional (one that doesn't contain another {% if %}
+    // This regex matches {% if %}...{% endif %} blocks
+    const ifRegex = /\{%\s*if\s+(\w+)\s*%\}((?:(?!\{%\s*if).)*?)(?:\{%\s*else\s*%\}((?:(?!\{%\s*if).)*?))?\{%\s*endif\s*%\}/gs
+    
+    result = result.replace(ifRegex, (match, condition, ifBlock, elseBlock = "") => {
+      const conditionValue = data[condition]
+      const isTruthy = conditionValue !== null && conditionValue !== undefined && conditionValue !== false && conditionValue !== 0 && conditionValue !== ""
 
-    if (isTruthy) {
-      return ifBlock
-    } else {
-      return elseBlock
-    }
-  })
+      if (isTruthy) {
+        return ifBlock.trim()
+      } else {
+        return (elseBlock || "").trim()
+      }
+    })
+    
+    iterations++
+  }
+
+  // Clean up any remaining conditional tags as a safety measure
+  result = result.replace(/\{%\s*if\s+[\w]+\s*%\}/g, "")
+  result = result.replace(/\{%\s*else\s*%\}/g, "")
+  result = result.replace(/\{%\s*endif\s*%\}/g, "")
+
+  return result
 }
 
 /**
