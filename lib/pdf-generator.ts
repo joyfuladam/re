@@ -73,6 +73,12 @@ export interface ContractData {
   governing_state?: string
   // Master revenue share template fields
   artist_full_name?: string
+  // Role-specific fields for template conditionals
+  collaborator_role?: string
+  is_musician?: boolean
+  is_artist?: boolean
+  is_producer?: boolean
+  is_writer?: boolean
   artist_address?: string | null
   label_state?: string
   label_address?: string

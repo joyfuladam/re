@@ -253,6 +253,13 @@ export async function buildMasterRevenueShareData(
     total_value: inKindServices?.totalValue || 0,
     publisher_manager_name: config.publisher.managerName,
     publisher_manager_title: config.publisher.managerTitle,
+    // Role for conditional template rendering
+    collaborator_role: artistCollaborator.roleInSong,
+    // Role flags for template conditionals
+    is_musician: artistCollaborator.roleInSong === "musician",
+    is_artist: artistCollaborator.roleInSong === "artist",
+    is_producer: artistCollaborator.roleInSong === "producer",
+    is_writer: artistCollaborator.roleInSong === "writer",
   }
 }
 
