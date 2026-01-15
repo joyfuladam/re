@@ -259,3 +259,19 @@ model SplitHistory {
   @@index([songId])
   @@index([timestamp])
 }
+
+model FaqSubmission {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  subject   String
+  message   String   @db.Text
+  read      Boolean  @default(false)
+  readAt    DateTime?
+  readBy    String? // Admin user ID who marked it as read
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([read])
+  @@index([createdAt])
+}
