@@ -103,6 +103,19 @@ export default function SongDetailPage() {
   }>>([])
 
   const isAdmin = session?.user?.role === "admin"
+  
+  // Find the current user's role on this song
+  const currentUserSongCollaborator = song 
+    ? song.songCollaborators.find(sc => sc.collaborator.id === session?.user?.id)
+    : null
+  
+  // Check if current user is a writer or artist on this song
+  const isWriterOrArtist = currentUserSongCollaborator 
+    ? (currentUserSongCollaborator.roleInSong === "writer" || currentUserSongCollaborator.roleInSong === "artist")
+    : false
+  
+  // Non-writer/artist collaborators can only see their own share
+  const canSeeAllShares = isAdmin || isWriterOrArtist
 
   const handlePreviewContract = async (songCollaboratorId: string, contractType: ContractType, collaboratorName: string) => {
     if (!song) return
@@ -833,58 +846,60 @@ export default function SongDetailPage() {
         </CardContent>
       </Card>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Publishing Splits</CardTitle>
-            <CardDescription>
-              {song.publishingLocked
-                ? "Publishing splits are locked"
-                : "Set publishing ownership percentages (must total 100%)"}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <PublishingSplitEditor
-              songId={song.id}
-              songCollaborators={song.songCollaborators.map(sc => ({
-                ...sc,
-                roleInSong: sc.roleInSong as CollaboratorRole
-              })) as any}
-              songPublishingEntities={song.songPublishingEntities}
-              isLocked={song.publishingLocked}
-              onUpdate={fetchSong}
-            />
-          </CardContent>
-        </Card>
+      {isAdmin && (
+        <div className="grid gap-4 md:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Publishing Splits</CardTitle>
+              <CardDescription>
+                {song.publishingLocked
+                  ? "Publishing splits are locked"
+                  : "Set publishing ownership percentages (must total 100%)"}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <PublishingSplitEditor
+                songId={song.id}
+                songCollaborators={song.songCollaborators.map(sc => ({
+                  ...sc,
+                  roleInSong: sc.roleInSong as CollaboratorRole
+                })) as any}
+                songPublishingEntities={song.songPublishingEntities}
+                isLocked={song.publishingLocked}
+                onUpdate={fetchSong}
+              />
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Master Revenue Shares</CardTitle>
-            <CardDescription>
-              {!song.publishingLocked
-                ? "Publishing splits must be locked first"
-                : song.masterLocked
-                ? "Master revenue shares are locked"
-                : "Set master ownership percentages (must total 100%)"}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <MasterSplitEditor
-              songId={song.id}
-              songCollaborators={song.songCollaborators.map(sc => ({
-                ...sc,
-                roleInSong: sc.roleInSong as CollaboratorRole
-              })) as any}
-              labelMasterShare={song.labelMasterShare}
-              isLocked={song.masterLocked}
-              publishingLocked={song.publishingLocked}
-              onUpdate={fetchSong}
-            />
-          </CardContent>
-        </Card>
-      </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Master Revenue Shares</CardTitle>
+              <CardDescription>
+                {!song.publishingLocked
+                  ? "Publishing splits must be locked first"
+                  : song.masterLocked
+                  ? "Master revenue shares are locked"
+                  : "Set master ownership percentages (must total 100%)"}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <MasterSplitEditor
+                songId={song.id}
+                songCollaborators={song.songCollaborators.map(sc => ({
+                  ...sc,
+                  roleInSong: sc.roleInSong as CollaboratorRole
+                })) as any}
+                labelMasterShare={song.labelMasterShare}
+                isLocked={song.masterLocked}
+                publishingLocked={song.publishingLocked}
+                onUpdate={fetchSong}
+              />
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className={`grid gap-4 ${canSeeAllShares ? 'md:grid-cols-2' : ''}`}>
         <Card>
           <CardHeader>
             <CardTitle>Collaborators</CardTitle>
@@ -910,8 +925,16 @@ export default function SongDetailPage() {
                         const publishing = sc.publishingOwnership ? parseFloat(sc.publishingOwnership.toString()) : 0
                         return publishing > 0
                       })
+                      .filter((sc) => {
+                        // If user can't see all shares, only show their own
+                        if (!canSeeAllShares) {
+                          return sc.collaborator.id === session?.user?.id
+                        }
+                        return true
+                      })
                       .map((sc) => {
                         const publishing = sc.publishingOwnership ? parseFloat(sc.publishingOwnership.toString()) : 0
+                        const isCurrentUser = sc.collaborator.id === session?.user?.id
                         const collaboratorName = [sc.collaborator.firstName, sc.collaborator.middleName, sc.collaborator.lastName].filter(Boolean).join(" ")
                         const roleLabel = sc.roleInSong === "writer" ? "Writer" : 
                                          sc.roleInSong === "producer" ? "Producer" :
@@ -933,7 +956,7 @@ export default function SongDetailPage() {
                             <div className="flex-1">
                               <div className="font-medium">{collaboratorName}</div>
                               <div className="text-sm text-muted-foreground">
-                                {roleLabel} • Publishing: {publishing.toFixed(2)}%
+                                {canSeeAllShares && `${roleLabel} • `}Publishing: {publishing.toFixed(2)}%
                                 {contractStatus.status && (
                                   <span className={`ml-2 px-2 py-0.5 rounded text-xs ${
                                     isSigned 
@@ -950,31 +973,35 @@ export default function SongDetailPage() {
                               </div>
                             </div>
                             <div className="flex gap-2 ml-4">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handlePreviewContract(sc.id, contractType, collaboratorName)}
-                                disabled={!song.masterLocked || isGenerating}
-                              >
-                                Preview
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleSendContract(sc.id, contractType, collaboratorName)}
-                                disabled={!song.masterLocked || isGenerating || isSigned}
-                              >
-                                {isSigned ? "Signed" : canResend ? "Re-Send" : "Send"}
-                              </Button>
-                              {isAdmin && (
+                              {(isCurrentUser || isAdmin) && (
                                 <Button
-                                  variant="destructive"
+                                  variant="outline"
                                   size="sm"
-                                  onClick={() => handleDeleteCollaborator(sc.id, collaboratorName)}
-                                  disabled={deletingCollaboratorId === sc.id}
+                                  onClick={() => handlePreviewContract(sc.id, contractType, collaboratorName)}
+                                  disabled={!song.masterLocked || isGenerating}
                                 >
-                                  {deletingCollaboratorId === sc.id ? "Removing..." : "Remove"}
+                                  Preview
                                 </Button>
+                              )}
+                              {isAdmin && (
+                                <>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleSendContract(sc.id, contractType, collaboratorName)}
+                                    disabled={!song.masterLocked || isGenerating || isSigned}
+                                  >
+                                    {isSigned ? "Signed" : canResend ? "Re-Send" : "Send"}
+                                  </Button>
+                                  <Button
+                                    variant="destructive"
+                                    size="sm"
+                                    onClick={() => handleDeleteCollaborator(sc.id, collaboratorName)}
+                                    disabled={deletingCollaboratorId === sc.id}
+                                  >
+                                    {deletingCollaboratorId === sc.id ? "Removing..." : "Remove"}
+                                  </Button>
+                                </>
                               )}
                             </div>
                           </div>
@@ -1002,8 +1029,16 @@ export default function SongDetailPage() {
                         const master = sc.masterOwnership ? parseFloat(sc.masterOwnership.toString()) : 0
                         return master > 0
                       })
+                      .filter((sc) => {
+                        // If user can't see all shares, only show their own
+                        if (!canSeeAllShares) {
+                          return sc.collaborator.id === session?.user?.id
+                        }
+                        return true
+                      })
                       .map((sc) => {
                         const master = sc.masterOwnership ? parseFloat(sc.masterOwnership.toString()) : 0
+                        const isCurrentUser = sc.collaborator.id === session?.user?.id
                         const collaboratorName = [sc.collaborator.firstName, sc.collaborator.middleName, sc.collaborator.lastName].filter(Boolean).join(" ")
                         const roleLabel = sc.roleInSong === "writer" ? "Writer" : 
                                          sc.roleInSong === "producer" ? "Producer" :
@@ -1025,7 +1060,7 @@ export default function SongDetailPage() {
                             <div className="flex-1">
                               <div className="font-medium">{collaboratorName}</div>
                               <div className="text-sm text-muted-foreground">
-                                {roleLabel} • Master Revenue: {master.toFixed(2)}%
+                                {canSeeAllShares && `${roleLabel} • `}Master Revenue: {master.toFixed(2)}%
                                 {contractStatus.status && (
                                   <span className={`ml-2 px-2 py-0.5 rounded text-xs ${
                                     isSigned 
@@ -1042,31 +1077,35 @@ export default function SongDetailPage() {
                               </div>
                             </div>
                             <div className="flex gap-2 ml-4">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handlePreviewContract(sc.id, contractType, collaboratorName)}
-                                disabled={!song.masterLocked || isGenerating}
-                              >
-                                Preview
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleSendContract(sc.id, contractType, collaboratorName)}
-                                disabled={!song.masterLocked || isGenerating || isSigned}
-                              >
-                                {isSigned ? "Signed" : canResend ? "Re-Send" : "Send"}
-                              </Button>
-                              {isAdmin && (
+                              {(isCurrentUser || isAdmin) && (
                                 <Button
-                                  variant="destructive"
+                                  variant="outline"
                                   size="sm"
-                                  onClick={() => handleDeleteCollaborator(sc.id, collaboratorName)}
-                                  disabled={deletingCollaboratorId === sc.id}
+                                  onClick={() => handlePreviewContract(sc.id, contractType, collaboratorName)}
+                                  disabled={!song.masterLocked || isGenerating}
                                 >
-                                  {deletingCollaboratorId === sc.id ? "Removing..." : "Remove"}
+                                  Preview
                                 </Button>
+                              )}
+                              {isAdmin && (
+                                <>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleSendContract(sc.id, contractType, collaboratorName)}
+                                    disabled={!song.masterLocked || isGenerating || isSigned}
+                                  >
+                                    {isSigned ? "Signed" : canResend ? "Re-Send" : "Send"}
+                                  </Button>
+                                  <Button
+                                    variant="destructive"
+                                    size="sm"
+                                    onClick={() => handleDeleteCollaborator(sc.id, collaboratorName)}
+                                    disabled={deletingCollaboratorId === sc.id}
+                                  >
+                                    {deletingCollaboratorId === sc.id ? "Removing..." : "Remove"}
+                                  </Button>
+                                </>
                               )}
                             </div>
                           </div>
@@ -1091,19 +1130,21 @@ export default function SongDetailPage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Split Visualization</CardTitle>
-            <CardDescription>Visual representation of ownership splits</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <SplitPieChart
-              songCollaborators={song.songCollaborators}
-              songPublishingEntities={song.songPublishingEntities}
-              labelMasterShare={song.labelMasterShare}
-            />
-          </CardContent>
-        </Card>
+        {canSeeAllShares && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Split Visualization</CardTitle>
+              <CardDescription>Visual representation of ownership splits</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <SplitPieChart
+                songCollaborators={song.songCollaborators}
+                songPublishingEntities={song.songPublishingEntities}
+                labelMasterShare={song.labelMasterShare}
+              />
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* Contract Preview Modal */}
