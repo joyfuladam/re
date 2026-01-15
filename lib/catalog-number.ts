@@ -38,3 +38,5 @@ export async function generateNextCatalogNumber(): Promise<string> {
   return nextNumber.toString().padStart(5, "0")
 }
 
+
+

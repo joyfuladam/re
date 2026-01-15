@@ -334,7 +334,7 @@ export default function CollaboratorDetailPage() {
       <Card>
         <CardHeader>
           <CardTitle>Industry Information</CardTitle>
-          <CardDescription>Professional and publishing details</CardDescription>
+          <CardDescription>Professional and publishing details - For Writers only</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">

@@ -41,3 +41,5 @@ echo "   2. git commit -m 'Migration: $MIGRATION_NAME'"
 echo "   3. git push origin main"
 echo "   4. supabase db push  (to apply to production)"
 
+
+

@@ -56,6 +56,9 @@ export default function DashboardLayout({
                   </Link>
                 </>
               )}
+              <Link href="/dashboard/faq" className="hover:underline">
+                FAQ
+              </Link>
               {!isAdmin && (
                 <Link href="/dashboard/songs" className="hover:underline">
                   My Songs
