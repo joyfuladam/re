@@ -465,26 +465,30 @@ export default function SongDetailPage() {
 
     setSaving(true)
     try {
+      const payload = {
+        title: editFormData.title,
+        isrcCode: editFormData.isrcCode || null,
+        iswcCode: editFormData.iswcCode || null,
+        catalogNumber: editFormData.catalogNumber || null,
+        releaseDate: editFormData.releaseDate || null,
+        proWorkRegistrationNumber: editFormData.proWorkRegistrationNumber || null,
+        publishingAdmin: editFormData.publishingAdmin || null,
+        masterOwner: editFormData.masterOwner || null,
+        genre: editFormData.genre || null,
+        subGenre: editFormData.subGenre || null,
+        duration: editFormData.duration ? parseInt(editFormData.duration) : null,
+        recordingDate: editFormData.recordingDate || null,
+        recordingLocation: editFormData.recordingLocation || null,
+        notes: editFormData.notes || null,
+        promoMaterialsFolderId: editFormData.promoMaterialsFolderId || null,
+      }
+      
+      console.log("Saving song with payload:", payload)
+      
       const response = await fetch(`/api/songs/${song.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-          title: editFormData.title,
-          isrcCode: editFormData.isrcCode || null,
-          iswcCode: editFormData.iswcCode || null,
-          catalogNumber: editFormData.catalogNumber || null,
-          releaseDate: editFormData.releaseDate || null,
-          proWorkRegistrationNumber: editFormData.proWorkRegistrationNumber || null,
-          publishingAdmin: editFormData.publishingAdmin || null,
-          masterOwner: editFormData.masterOwner || null,
-          genre: editFormData.genre || null,
-          subGenre: editFormData.subGenre || null,
-          duration: editFormData.duration ? parseInt(editFormData.duration) : null,
-          recordingDate: editFormData.recordingDate || null,
-          recordingLocation: editFormData.recordingLocation || null,
-          notes: editFormData.notes || null,
-          promoMaterialsFolderId: editFormData.promoMaterialsFolderId || null,
-        }),
+        body: JSON.stringify(payload),
       })
 
       if (response.ok) {
