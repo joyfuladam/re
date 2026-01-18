@@ -1175,42 +1175,6 @@ export default function SongDetailPage() {
           </CardContent>
         </Card>
 
-        {/* Promo Materials Section - Visible to all users */}
-        {song.promoMaterialsFolderId && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Promo Materials</CardTitle>
-              <CardDescription>
-                Browse and download promotional assets for this song
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div className="w-full h-[500px] border rounded-lg overflow-hidden">
-                  <iframe
-                    src={`https://drive.google.com/embeddedfolderview?id=${song.promoMaterialsFolderId}#grid`}
-                    width="100%"
-                    height="100%"
-                    style={{ border: 0 }}
-                    allow="autoplay"
-                    title="Promo Materials"
-                  />
-                </div>
-                <div className="text-sm text-muted-foreground flex items-center gap-2">
-                  <a
-                    href={`https://drive.google.com/drive/folders/${song.promoMaterialsFolderId}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-primary hover:underline"
-                  >
-                    Open in Google Drive ↗
-                  </a>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
         {canSeeAllShares && (
           <Card>
             <CardHeader>
@@ -1227,6 +1191,42 @@ export default function SongDetailPage() {
           </Card>
         )}
       </div>
+
+      {/* Promo Materials Section - Visible to all users - Always at bottom */}
+      {song.promoMaterialsFolderId && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Promo Materials</CardTitle>
+            <CardDescription>
+              Browse and download promotional assets for this song
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <div className="w-full h-[500px] border rounded-lg overflow-hidden">
+                <iframe
+                  src={`https://drive.google.com/embeddedfolderview?id=${song.promoMaterialsFolderId}#grid`}
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0 }}
+                  allow="autoplay"
+                  title="Promo Materials"
+                />
+              </div>
+              <div className="text-sm text-muted-foreground flex items-center gap-2">
+                <a
+                  href={`https://drive.google.com/drive/folders/${song.promoMaterialsFolderId}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  Open in Google Drive ↗
+                </a>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Contract Preview Modal */}
       {viewingContract && (
