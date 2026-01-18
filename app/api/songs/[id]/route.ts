@@ -20,6 +20,7 @@ const songUpdateSchema = z.object({
   recordingDate: z.string().datetime().optional().nullable(),
   recordingLocation: z.string().optional().nullable(),
   notes: z.string().optional().nullable(),
+  promoMaterialsFolderId: z.string().optional().nullable(),
   status: z.enum(["draft", "active", "archived"]).optional(),
 })
 

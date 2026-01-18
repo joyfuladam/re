@@ -31,6 +31,7 @@ interface Song {
   recordingDate: string | null
   recordingLocation: string | null
   notes: string | null
+  promoMaterialsFolderId: string | null
   status: string
   publishingLocked: boolean
   masterLocked: boolean
@@ -87,6 +88,7 @@ export default function SongDetailPage() {
     recordingDate: "",
     recordingLocation: "",
     notes: "",
+    promoMaterialsFolderId: "",
   })
   const [viewingContract, setViewingContract] = useState<{
     html: string
@@ -380,6 +382,7 @@ export default function SongDetailPage() {
           recordingDate: processedData.recordingDate || "",
           recordingLocation: processedData.recordingLocation || "",
           notes: processedData.notes || "",
+          promoMaterialsFolderId: processedData.promoMaterialsFolderId || "",
         })
         // #region agent log
         fetch('http://127.0.0.1:7243/ingest/4c8d8774-18d6-406e-b702-2dc324f31e07',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app/dashboard/songs/[id]/page.tsx:96',message:'Song set in state',data:{songId:processedData?.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
@@ -452,6 +455,7 @@ export default function SongDetailPage() {
       recordingDate: song.recordingDate || "",
       recordingLocation: song.recordingLocation || "",
       notes: song.notes || "",
+      promoMaterialsFolderId: song.promoMaterialsFolderId || "",
     })
     setEditing(false)
   }
@@ -711,6 +715,21 @@ export default function SongDetailPage() {
                     value={editFormData.recordingLocation}
                     onChange={(e) => setEditFormData({ ...editFormData, recordingLocation: e.target.value })}
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="edit-promoMaterialsFolderId">
+                    Promo Materials Folder ID
+                  </Label>
+                  <Input
+                    id="edit-promoMaterialsFolderId"
+                    value={editFormData.promoMaterialsFolderId}
+                    onChange={(e) => setEditFormData({ ...editFormData, promoMaterialsFolderId: e.target.value })}
+                    placeholder="Get from Google Drive folder URL"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Copy the folder ID from your Google Drive URL: drive.google.com/drive/folders/<strong>FOLDER_ID</strong>
+                  </p>
                 </div>
               </div>
               <div className="space-y-2">
@@ -1129,6 +1148,42 @@ export default function SongDetailPage() {
             )}
           </CardContent>
         </Card>
+
+        {/* Promo Materials Section - Visible to all users */}
+        {song.promoMaterialsFolderId && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Promo Materials</CardTitle>
+              <CardDescription>
+                Browse and download promotional assets for this song
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <div className="w-full h-[500px] border rounded-lg overflow-hidden">
+                  <iframe
+                    src={`https://drive.google.com/embeddedfolderview?id=${song.promoMaterialsFolderId}#grid`}
+                    width="100%"
+                    height="100%"
+                    style={{ border: 0 }}
+                    allow="autoplay"
+                    title="Promo Materials"
+                  />
+                </div>
+                <div className="text-sm text-muted-foreground flex items-center gap-2">
+                  <a
+                    href={`https://drive.google.com/drive/folders/${song.promoMaterialsFolderId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline"
+                  >
+                    Open in Google Drive ↗
+                  </a>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {canSeeAllShares && (
           <Card>

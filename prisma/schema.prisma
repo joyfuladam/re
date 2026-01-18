@@ -139,6 +139,7 @@ model Song {
   // Metadata
   status                    String                 @default("draft") // draft, active, archived
   notes                     String?
+  promoMaterialsFolderId    String? // Google Drive folder ID for promo materials
   createdAt                 DateTime               @default(now())
   updatedAt                 DateTime               @updatedAt
   // Relations
