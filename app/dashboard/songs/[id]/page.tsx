@@ -89,6 +89,7 @@ export default function SongDetailPage() {
     recordingLocation: "",
     notes: "",
     promoMaterialsFolderId: "",
+    status: "draft",
   })
   const [viewingContract, setViewingContract] = useState<{
     html: string
@@ -383,6 +384,7 @@ export default function SongDetailPage() {
           recordingLocation: processedData.recordingLocation || "",
           notes: processedData.notes || "",
           promoMaterialsFolderId: processedData.promoMaterialsFolderId || "",
+          status: processedData.status || "draft",
         })
         // #region agent log
         fetch('http://127.0.0.1:7243/ingest/4c8d8774-18d6-406e-b702-2dc324f31e07',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app/dashboard/songs/[id]/page.tsx:96',message:'Song set in state',data:{songId:processedData?.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
@@ -456,6 +458,7 @@ export default function SongDetailPage() {
       recordingLocation: song.recordingLocation || "",
       notes: song.notes || "",
       promoMaterialsFolderId: song.promoMaterialsFolderId || "",
+      status: song.status || "draft",
     })
     setEditing(false)
   }
@@ -481,6 +484,7 @@ export default function SongDetailPage() {
         recordingLocation: editFormData.recordingLocation || null,
         notes: editFormData.notes || null,
         promoMaterialsFolderId: editFormData.promoMaterialsFolderId || null,
+        status: editFormData.status,
       }
       
       console.log("Saving song with payload:", payload)
@@ -734,6 +738,23 @@ export default function SongDetailPage() {
                   />
                   <p className="text-xs text-muted-foreground">
                     Copy the folder ID from your Google Drive URL: drive.google.com/drive/folders/<strong>FOLDER_ID</strong>
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="edit-status">Status</Label>
+                  <select
+                    id="edit-status"
+                    className="w-full border rounded-md p-2"
+                    value={editFormData.status}
+                    onChange={(e) => setEditFormData({ ...editFormData, status: e.target.value })}
+                  >
+                    <option value="draft">Draft</option>
+                    <option value="active">Active</option>
+                    <option value="archived">Archived</option>
+                  </select>
+                  <p className="text-xs text-muted-foreground">
+                    Draft songs are in progress. Active songs are released and visible. Archived songs are no longer active.
                   </p>
                 </div>
               </div>
