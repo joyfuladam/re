@@ -19,8 +19,13 @@ export async function GET(request: NextRequest) {
     }
 
     // Build where clauses based on permissions
-    const songWhere: any = { status: "active" }
+    const songWhere: any = {}
     const collaboratorWhere: any = { status: "active" }
+    
+    // Admins only see active songs, collaborators see all their songs regardless of status
+    if (permissions.isAdmin) {
+      songWhere.status = "active"
+    }
     
     // Collaborators can only see their own songs
     if (!permissions.isAdmin && permissions.collaboratorId) {
