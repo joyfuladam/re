@@ -483,6 +483,7 @@ export default function SongDetailPage() {
           recordingDate: editFormData.recordingDate || null,
           recordingLocation: editFormData.recordingLocation || null,
           notes: editFormData.notes || null,
+          promoMaterialsFolderId: editFormData.promoMaterialsFolderId || null,
         }),
       })
 
