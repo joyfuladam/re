@@ -3,6 +3,7 @@ import puppeteer from "puppeteer"
 /**
  * Convert HTML string to PDF buffer
  * Uses puppeteer to render HTML and generate PDF
+ * Configured for both local and serverless environments (Vercel)
  */
 export async function convertHTMLToPDF(html: string): Promise<Buffer> {
   let browser
@@ -19,20 +20,49 @@ export async function convertHTMLToPDF(html: string): Promise<Buffer> {
         "--disable-accelerated-2d-canvas",
         "--no-first-run",
         "--no-zygote",
-        "--single-process", // Required for some serverless environments
+        "--single-process", // Required for serverless environments
         "--disable-gpu",
+        "--disable-extensions",
+        "--disable-background-networking",
+        "--disable-background-timer-throttling",
+        "--disable-renderer-backgrounding",
+        "--disable-backgrounding-occluded-windows",
+        "--disable-breakpad",
+        "--disable-component-extensions-with-background-pages",
+        "--disable-features=TranslateUI",
+        "--disable-ipc-flooding-protection",
+        "--disable-sync",
+        "--metrics-recording-only",
+        "--mute-audio",
+        "--no-default-browser-check",
+        "--no-pings",
+        "--use-mock-keychain",
       ],
     }
 
-    // For serverless environments (Vercel, etc.), try to use the bundled Chrome
-    // If PUPPETEER_EXECUTABLE_PATH is set, use it
+    // For Vercel/serverless environments
+    if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) {
+      // Try to use puppeteer's bundled Chrome
+      // Vercel should have Chrome available, but we need to ensure it's found
+      try {
+        // Use puppeteer-core approach or let puppeteer find Chrome automatically
+        const { executablePath } = require("puppeteer")
+        if (executablePath && typeof executablePath === "function") {
+          const chromePath = await executablePath()
+          if (chromePath) {
+            launchOptions.executablePath = chromePath
+            console.log("Using Puppeteer Chrome at:", chromePath)
+          }
+        }
+      } catch (e) {
+        console.log("Could not get executable path, using default")
+      }
+    }
+
+    // If PUPPETEER_EXECUTABLE_PATH is explicitly set, use it
     if (process.env.PUPPETEER_EXECUTABLE_PATH) {
       launchOptions.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH
-    } else if (process.env.VERCEL) {
-      // For Vercel, we need to use the bundled Chrome
-      // Vercel automatically bundles Chrome with Puppeteer
-      // The executable should be available in the default location
-      console.log("Running on Vercel - using bundled Chrome")
+      console.log("Using explicit Chrome path:", launchOptions.executablePath)
     }
 
     browser = await puppeteer.launch(launchOptions)
