@@ -271,11 +271,13 @@ export default function SongDetailPage() {
 
       if (!sendResponse.ok) {
         const error = await sendResponse.json()
-        alert(`Error sending contract: ${error.error || "Unknown error"}`)
+        alert(`Error uploading contract: ${error.error || "Unknown error"}`)
         return
       }
 
-      alert(`Contract sent to ${collaboratorName} for e-signature`)
+      const sendData = await sendResponse.json()
+      const message = sendData.message || `Contract uploaded to DocuSeal. Please log into DocuSeal to manually send it to ${collaboratorName}.`
+      alert(message)
       // Refresh contracts to show updated status
       if (song) {
         await fetchContracts(song.id)
@@ -1081,8 +1083,9 @@ export default function SongDetailPage() {
                                     size="sm"
                                     onClick={() => handleSendContract(sc.id, contractType, collaboratorName)}
                                     disabled={!song.masterLocked || isGenerating || isSigned}
+                                    title="Upload to DocuSeal (you'll need to send manually from DocuSeal UI)"
                                   >
-                                    {isSigned ? "Signed" : canResend ? "Re-Send" : "Send"}
+                                    {isSigned ? "Signed" : canResend ? "Re-Upload" : "Upload"}
                                   </Button>
                                   <Button
                                     variant="destructive"
@@ -1197,8 +1200,9 @@ export default function SongDetailPage() {
                                     size="sm"
                                     onClick={() => handleSendContract(sc.id, contractType, collaboratorName)}
                                     disabled={!song.masterLocked || isGenerating || isSigned}
+                                    title="Upload to DocuSeal (you'll need to send manually from DocuSeal UI)"
                                   >
-                                    {isSigned ? "Signed" : canResend ? "Re-Send" : "Send"}
+                                    {isSigned ? "Signed" : canResend ? "Re-Upload" : "Upload"}
                                   </Button>
                                   <Button
                                     variant="destructive"

@@ -215,8 +215,10 @@ export async function POST(request: NextRequest) {
       .filter(Boolean)
       .join(" ")
 
-    console.log(`🚀 Sending contract to DocuSeal...`)
-    const result = await client.sendContract({
+    console.log(`🚀 Uploading contract to DocuSeal (draft mode - manual send required)...`)
+    // Use uploadContractDraft instead of sendContract to avoid automatic sending
+    // User will manually send from DocuSeal UI
+    const result = await client.uploadContractDraft({
       pdfBuffer,
       signerEmail: contract.songCollaborator.collaborator.email,
       signerName,
@@ -227,19 +229,25 @@ export async function POST(request: NextRequest) {
 
     console.log(`💾 Updating contract in database...`)
     // Update contract with signature request ID and status
+    // Status is "pending" because it hasn't been sent yet (user must send manually)
     await db.contract.update({
       where: { id: validated.contractId },
       data: {
         esignatureDocId: result.signatureRequestId,
-        esignatureStatus: "sent",
+        esignatureStatus: "pending", // Changed from "sent" - user must send manually
         signerEmail: contract.songCollaborator.collaborator.email,
         // Reset signedAt if re-sending
         signedAt: null,
       },
     })
 
-    console.log(`✅ Contract sent and saved successfully!`)
-    return NextResponse.json({ success: true, signatureRequestId: result.signatureRequestId })
+    console.log(`✅ Contract uploaded successfully!`)
+    console.log(`   Please log into DocuSeal to manually send this contract`)
+    return NextResponse.json({ 
+      success: true, 
+      signatureRequestId: result.signatureRequestId,
+      message: "Contract uploaded to DocuSeal. Please log into DocuSeal to manually send it."
+    })
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.errors }, { status: 400 })
