@@ -151,16 +151,20 @@ export class DocuSealClient {
       console.log("   Note: Draft mode creates a template instead of submission")
       console.log("   You can create a submission from this template in DocuSeal UI")
 
-      // Create template from PDF
-      const formData = new FormData()
+      // Convert PDF buffer to base64
+      const pdfBase64 = params.pdfBuffer.toString('base64')
       
-      // Add PDF file as Buffer converted to Blob
-      const pdfUint8Array = new Uint8Array(params.pdfBuffer)
-      const pdfBlob = new Blob([pdfUint8Array], { type: "application/pdf" })
-      formData.append("template[source]", pdfBlob, `contract-${Date.now()}.pdf`)
-
-      // Add template name/title
-      formData.append("template[name]", params.title)
+      // Create template from PDF using JSON API
+      // DocuSeal expects JSON with base64-encoded PDF, not FormData
+      const templatePayload = {
+        name: params.title,
+        documents: [
+          {
+            name: params.title,
+            file: pdfBase64, // Base64-encoded PDF
+          }
+        ]
+      }
 
       console.log("📤 Uploading PDF as template to DocuSeal...")
       
@@ -170,9 +174,9 @@ export class DocuSealClient {
         method: "POST",
         headers: {
           "X-Auth-Token": this.apiKey,
-          // Don't set Content-Type header - let fetch set it with boundary for FormData
+          "Content-Type": "application/json",
         },
-        body: formData,
+        body: JSON.stringify(templatePayload),
       })
 
       if (!templateResponse.ok) {
