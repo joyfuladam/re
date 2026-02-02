@@ -9,6 +9,8 @@ const nextConfig = {
   serverRuntimeConfig: {
     maxDuration: 30, // 30 seconds for Vercel Pro, adjust as needed
   },
+  // Optimize output for Railway
+  output: 'standalone',
 }
 
 module.exports = nextConfig
