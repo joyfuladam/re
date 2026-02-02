@@ -40,6 +40,12 @@ export class DocuSealClient {
       console.log("📄 Preparing contract for DocuSeal...")
       console.log(`   Title: ${params.title}`)
 
+      // If draft mode, create a template instead of a submission
+      // This works on free edition since send_email: false requires Pro
+      if (params.draft) {
+        return await this.createDraftTemplate(params)
+      }
+
       // Build submitters array (parallel signing - no order required)
       const submitters: DocuSealSubmitter[] = []
       
@@ -80,22 +86,12 @@ export class DocuSealClient {
       // Add submission name/title
       formData.append("submission[name]", params.title)
 
-      // If draft mode, disable email sending
-      if (params.draft) {
-        formData.append("submission[send_email]", "false")
-        console.log("   Draft mode: emails will not be sent automatically")
-      }
-
       // Add submitters as array fields per DocuSeal API format
       submitters.forEach((submitter, index) => {
         formData.append(`submission[submitters_attributes][${index}][email]`, submitter.email)
         formData.append(`submission[submitters_attributes][${index}][name]`, submitter.name)
         if (submitter.role) {
           formData.append(`submission[submitters_attributes][${index}][role]`, submitter.role)
-        }
-        // If draft mode, also disable email for individual submitters
-        if (params.draft) {
-          formData.append(`submission[submitters_attributes][${index}][send_email]`, "false")
         }
       })
 
@@ -126,14 +122,8 @@ export class DocuSealClient {
         throw new Error("Submission ID not found in response")
       }
 
-      if (params.draft) {
-        console.log(`✅ Draft contract created successfully!`)
-        console.log(`   Submission ID: ${submissionId}`)
-        console.log(`   📝 Log into DocuSeal to review and send manually`)
-      } else {
-        console.log(`✅ Contract sent successfully!`)
-        console.log(`   Submission ID: ${submissionId}`)
-      }
+      console.log(`✅ Contract sent successfully!`)
+      console.log(`   Submission ID: ${submissionId}`)
 
       return {
         signatureRequestId: submissionId,
@@ -146,6 +136,76 @@ export class DocuSealClient {
       }
       throw new Error(
         `Failed to send contract via DocuSeal: ${error instanceof Error ? error.message : "Unknown error"}`
+      )
+    }
+  }
+
+  /**
+   * Create a template from PDF for draft mode
+   * This works on free edition since send_email: false requires Pro
+   * User can then manually create submission from template in DocuSeal UI
+   */
+  private async createDraftTemplate(params: SendContractParams): Promise<{ signatureRequestId: string }> {
+    try {
+      console.log("📝 Creating template for draft mode...")
+      console.log("   Note: Draft mode creates a template instead of submission")
+      console.log("   You can create a submission from this template in DocuSeal UI")
+
+      // Create template from PDF
+      const formData = new FormData()
+      
+      // Add PDF file as Buffer converted to Blob
+      const pdfUint8Array = new Uint8Array(params.pdfBuffer)
+      const pdfBlob = new Blob([pdfUint8Array], { type: "application/pdf" })
+      formData.append("template[source]", pdfBlob, `contract-${Date.now()}.pdf`)
+
+      // Add template name/title
+      formData.append("template[name]", params.title)
+
+      console.log("📤 Uploading PDF as template to DocuSeal...")
+      
+      // Create template from PDF
+      // Use X-Auth-Token header per DocuSeal API documentation
+      const templateResponse = await fetch(`${this.apiUrl}/api/templates`, {
+        method: "POST",
+        headers: {
+          "X-Auth-Token": this.apiKey,
+          // Don't set Content-Type header - let fetch set it with boundary for FormData
+        },
+        body: formData,
+      })
+
+      if (!templateResponse.ok) {
+        const errorText = await templateResponse.text()
+        console.error("❌ DocuSeal template creation error:", errorText)
+        throw new Error(`Failed to create template: ${templateResponse.status} ${errorText}`)
+      }
+
+      const templateData = await templateResponse.json()
+      const templateId = templateData.id || templateData.template?.id || templateData.data?.id
+
+      if (!templateId) {
+        console.error("Response data:", JSON.stringify(templateData, null, 2))
+        throw new Error("Template ID not found in response")
+      }
+
+      console.log(`✅ Draft template created successfully!`)
+      console.log(`   Template ID: ${templateId}`)
+      console.log(`   📝 Log into DocuSeal to create submission from this template`)
+
+      // Return template ID as signatureRequestId for tracking
+      // Note: This is actually a template ID, not a submission ID
+      return {
+        signatureRequestId: `template_${templateId}`,
+      }
+    } catch (error) {
+      console.error("❌ DocuSeal template creation error:", error)
+      if (error instanceof Error) {
+        console.error("   Error message:", error.message)
+        console.error("   Error stack:", error.stack)
+      }
+      throw new Error(
+        `Failed to create draft template: ${error instanceof Error ? error.message : "Unknown error"}`
       )
     }
   }

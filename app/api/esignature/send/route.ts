@@ -217,7 +217,7 @@ export async function POST(request: NextRequest) {
       .join(" ")
 
     if (validated.draft) {
-      console.log(`📝 Creating draft contract in DocuSeal...`)
+      console.log(`📝 Creating draft template in DocuSeal...`)
     } else {
       console.log(`🚀 Sending contract to DocuSeal...`)
     }
@@ -234,6 +234,7 @@ export async function POST(request: NextRequest) {
 
     console.log(`💾 Updating contract in database...`)
     // Update contract with signature request ID and status
+    // Note: For drafts, signatureRequestId will be prefixed with "template_"
     await db.contract.update({
       where: { id: validated.contractId },
       data: {
@@ -246,12 +247,15 @@ export async function POST(request: NextRequest) {
     })
 
     if (validated.draft) {
-      console.log(`✅ Draft contract created and saved successfully!`)
+      console.log(`✅ Draft template created and saved successfully!`)
+      // Extract template ID from the prefixed string
+      const templateId = result.signatureRequestId.replace("template_", "")
       return NextResponse.json({ 
         success: true, 
         signatureRequestId: result.signatureRequestId,
+        templateId,
         draft: true,
-        message: "Draft created. Log into DocuSeal to review and send manually."
+        message: "Template created. Log into DocuSeal to create a submission from this template and send manually."
       })
     } else {
       console.log(`✅ Contract sent and saved successfully!`)

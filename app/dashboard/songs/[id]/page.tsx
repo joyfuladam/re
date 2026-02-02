@@ -278,7 +278,7 @@ export default function SongDetailPage() {
 
       const sendData = await sendResponse.json()
       if (draft) {
-        alert(`Draft created! Log into DocuSeal to review and send manually.`)
+        alert(`Template created! Log into DocuSeal to create a submission from this template and send manually.`)
       } else {
         alert(`Contract sent to ${collaboratorName} for e-signature`)
       }
