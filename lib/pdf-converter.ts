@@ -41,22 +41,12 @@ export async function convertHTMLToPDF(html: string): Promise<Buffer> {
     }
 
     // For Vercel/serverless environments
-    if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) {
-      // Try to use puppeteer's bundled Chrome
-      // Vercel should have Chrome available, but we need to ensure it's found
-      try {
-        // Use puppeteer-core approach or let puppeteer find Chrome automatically
-        const { executablePath } = require("puppeteer")
-        if (executablePath && typeof executablePath === "function") {
-          const chromePath = await executablePath()
-          if (chromePath) {
-            launchOptions.executablePath = chromePath
-            console.log("Using Puppeteer Chrome at:", chromePath)
-          }
-        }
-      } catch (e) {
-        console.log("Could not get executable path, using default")
-      }
+    // Note: Vercel requires Chrome to be bundled or available in the environment
+    // If Chrome is not found, you may need to use an external PDF service
+    if (process.env.VERCEL) {
+      console.log("Running on Vercel - attempting to use bundled Chrome")
+      // Vercel should have Chrome available via Puppeteer
+      // If this fails, consider using an external PDF generation service
     }
 
     // If PUPPETEER_EXECUTABLE_PATH is explicitly set, use it
