@@ -209,42 +209,65 @@ postgresql://postgres:your-password@db.xxxxx.supabase.co:5432/postgres?sslmode=r
 
 ---
 
-#### Optional Variables (for HelloSign E-Signature):
+#### Optional Variables (for DocuSeal E-Signature):
 
-**HELLOSIGN_API_KEY**
-- **Key:** `HELLOSIGN_API_KEY`
-- **Value:** `31d7779d63c8b9aab6c8303815e2e5914314d7fc650e6c2f5c52d0da4b4a58b6`
+**DOCUSEAL_API_KEY**
+- **Key:** `DOCUSEAL_API_KEY`
+- **Value:** (Your DocuSeal API key from Railway instance)
 - **Environments:** ✅ Production, ✅ Preview, ✅ Development
 
 **What it does:**
-- Authenticates your application with HelloSign/Dropbox Sign API
+- Authenticates your application with DocuSeal API
 - Allows your app to send contracts for e-signature
-- Identifies your account to HelloSign's servers
+- Identifies your account to DocuSeal's servers
 
 **Why it's needed:**
-- Without it, you can't send contracts via HelloSign
+- Without it, you can't send contracts via DocuSeal
 - Contract sending functionality will fail
 - Required for e-signature features to work
 
 **How to get it:**
-1. Log into HelloSign: https://app.hellosign.com
-2. Go to Settings → API
-3. Copy your API key
+1. Deploy DocuSeal on Railway: https://railway.com/template/IGoDnc
+2. Access your DocuSeal instance
+3. Go to Settings → API (or Integrations → API)
+4. Generate and copy your API key
 
 **Security note:**
 - Treat this like a password - keep it secret
 - Never commit to Git
-- If exposed, regenerate it in HelloSign dashboard
+- If exposed, regenerate it in DocuSeal dashboard
 
 ---
 
-**HELLOSIGN_WEBHOOK_SECRET**
-- **Key:** `HELLOSIGN_WEBHOOK_SECRET`
+**DOCUSEAL_API_URL**
+- **Key:** `DOCUSEAL_API_URL`
+- **Value:** `https://your-docuseal.railway.app` (Your Railway DocuSeal instance URL)
+- **Environments:** ✅ Production, ✅ Preview, ✅ Development
+
+**What it does:**
+- URL of your self-hosted DocuSeal instance
+- Used to make API calls to DocuSeal
+- Must be accessible from your application server
+
+**Why it's needed:**
+- Without it, your app doesn't know where to send API requests
+- Contract sending functionality will fail
+- Required for e-signature features to work
+
+**Format:**
+- Must include `https://`
+- No trailing slash
+- Example: `https://docuseal-production.railway.app`
+
+---
+
+**DOCUSEAL_WEBHOOK_SECRET**
+- **Key:** `DOCUSEAL_WEBHOOK_SECRET`
 - **Value:** (You'll get this in Step 8)
 - **Environments:** ✅ Production, ✅ Preview, ✅ Development
 
 **What it does:**
-- Secret key used to verify that webhook requests are actually from HelloSign
+- Secret key used to verify that webhook requests are actually from DocuSeal
 - Prevents unauthorized requests from updating contract statuses
 - Ensures webhook security
 
@@ -254,39 +277,13 @@ postgresql://postgres:your-password@db.xxxxx.supabase.co:5432/postgres?sslmode=r
 - Required for automatic contract status updates
 
 **How it works:**
-- HelloSign signs each webhook request with this secret
+- DocuSeal signs each webhook request with this secret
 - Your app verifies the signature before processing the webhook
 - If signature doesn't match, request is rejected
 
 **When to set:**
-- After configuring HelloSign webhook (Step 8)
-- HelloSign generates this when you create a webhook
-
----
-
-**HELLOSIGN_TEST_MODE**
-- **Key:** `HELLOSIGN_TEST_MODE`
-- **Value:** `true` (for testing) or `false` (for production)
-- **Environments:** ✅ Production, ✅ Preview, ✅ Development
-
-**What it does:**
-- Controls whether HelloSign API calls use test mode or live mode
-- In test mode: no real signatures, no API credits used, only works with emails in your account domain
-- In live mode: real signatures, uses API credits, works with any email
-
-**Why it's needed:**
-- Allows testing e-signature features without using real API credits
-- Prevents accidental sending of real contracts during development
-- Test mode is free but limited
-
-**When to use:**
-- `true`: During development and testing
-- `false`: In production when sending real contracts
-
-**Test mode limitations:**
-- Can only send to emails in your HelloSign account domain
-- Signatures are not legally binding
-- Contracts don't count toward your plan limits
+- After configuring DocuSeal webhook (Step 8)
+- DocuSeal generates this when you create a webhook
 
 ---
 
@@ -298,17 +295,17 @@ postgresql://postgres:your-password@db.xxxxx.supabase.co:5432/postgres?sslmode=r
 **What it does:**
 - Email address of the CEO/Publisher who signs contracts as the first signer
 - Used in contract generation to identify the company signer
-- Appears in contract templates and HelloSign signature requests
+- Appears in contract templates and DocuSeal signature requests
 
 **Why it's needed:**
 - Contracts require two signers: CEO/Publisher and Collaborator
 - This identifies who signs on behalf of the company
-- Must be a valid email address that can receive HelloSign signature requests
+- Must be a valid email address that can receive DocuSeal signature requests
 
 **How it's used:**
-- In contract generation: CEO signs first (signer1), then collaborator (signer2)
+- In contract generation: CEO and collaborator sign in parallel (no order required)
 - Appears in contract metadata
-- Used for HelloSign API calls
+- Used for DocuSeal API calls
 
 **When to update:**
 - If CEO email changes
@@ -479,7 +476,7 @@ npx prisma studio
 
 ---
 
-### Step 8: Configure HelloSign Webhook (Optional)
+### Step 8: Configure DocuSeal Webhook (Optional)
 
 **What this does:** Sets up automatic updates when contracts are signed or declined, so your app knows the status without manual checking.
 
@@ -489,34 +486,34 @@ npx prisma studio
 - Automatically updates contract status in your database
 
 **How webhooks work:**
-1. HelloSign sends HTTP POST request to your webhook URL when events occur
-2. Your app receives the webhook and verifies it's from HelloSign
+1. DocuSeal sends HTTP POST request to your webhook URL when events occur
+2. Your app receives the webhook and verifies it's from DocuSeal
 3. Your app updates the contract status in the database
 4. Your dashboard shows updated status automatically
 
 If you're using e-signatures:
 
-1. Log into HelloSign Dashboard: https://app.hellosign.com
-2. Go to **Settings** → **API** → **Webhooks**
-3. Click **"Add Webhook"**
+1. Log into your DocuSeal instance (Railway deployment)
+2. Go to **Settings** → **Webhooks** (or **Integrations** → **Webhooks**)
+3. Click **"Add Webhook"** or **"Create Webhook"**
 4. Webhook URL: `https://your-app.vercel.app/api/esignature/webhook`
 5. Select events: 
-   - `signature_request_signed` - When contract is fully signed
-   - `signature_request_declined` - When signer declines
-   - `signature_request_canceled` - When request is canceled
-6. Click **"Save"**
+   - `submission.completed` - When contract is fully signed
+   - `submission.declined` - When signer declines
+   - `submission.canceled` - When request is canceled
+6. Click **"Save"** or **"Create"**
 7. Copy the **Webhook Secret** that's generated
 8. Go back to Vercel → **Settings** → **Environment Variables**
-9. Update `HELLOSIGN_WEBHOOK_SECRET` with the secret you copied
+9. Update `DOCUSEAL_WEBHOOK_SECRET` with the secret you copied
 10. **Redeploy** your application
 
 **What each event means:**
-- **signed**: All parties have signed, contract is complete
+- **completed**: All parties have signed, contract is complete
 - **declined**: A signer refused to sign the contract
 - **canceled**: The signature request was canceled before completion
 
 **Security:**
-- Webhook secret ensures requests are from HelloSign
+- Webhook secret ensures requests are from DocuSeal
 - Your app verifies the signature before processing
 - Prevents unauthorized status updates
 
@@ -536,7 +533,7 @@ If you're using e-signatures:
 2. Try to register a new account
 3. Log in and test the dashboard
 4. Create a test song and collaborator
-5. Test contract generation (if HelloSign is configured)
+5. Test contract generation (if DocuSeal is configured)
 
 **What to test:**
 - **Registration**: Can you create a new account?
@@ -544,7 +541,7 @@ If you're using e-signatures:
 - **Dashboard**: Does the dashboard load and show data?
 - **Data Creation**: Can you create songs and collaborators?
 - **Contract Generation**: Can you preview contracts?
-- **Contract Sending**: Can you send contracts via HelloSign? (if configured)
+- **Contract Sending**: Can you send contracts via DocuSeal? (if configured)
 
 **Common issues to check:**
 - Database connection errors
@@ -701,29 +698,27 @@ Your application should now be live on Vercel!
 
 ---
 
-### HelloSign Not Working
+### DocuSeal Not Working
 
 **Symptoms:**
 - Can't send contracts
 - "API key invalid" errors
-- Contracts not appearing in HelloSign
+- Contracts not appearing in DocuSeal
 
 **Possible causes:**
-- Incorrect `HELLOSIGN_API_KEY`
-- `HELLOSIGN_TEST_MODE` restrictions
+- Incorrect `DOCUSEAL_API_KEY`
+- Incorrect `DOCUSEAL_API_URL`
+- DocuSeal instance not accessible
 - Webhook not configured
 
 **Solutions:**
-- Verify `HELLOSIGN_API_KEY` is correct in HelloSign dashboard
-- Check `HELLOSIGN_TEST_MODE` setting (test mode only works with emails in your domain)
+- Verify `DOCUSEAL_API_KEY` is correct in DocuSeal dashboard
+- Check `DOCUSEAL_API_URL` is correct and accessible
+- Ensure DocuSeal instance is running on Railway
 - Ensure webhook is configured if using status updates
-- Check HelloSign API status
+- Check DocuSeal API status in your instance
 - Verify email addresses are valid
-
-**Test mode limitations:**
-- Can only send to emails in your HelloSign account domain
-- Signatures are not legally binding
-- Set `HELLOSIGN_TEST_MODE=false` for production
+- Check Railway logs for DocuSeal service errors
 
 ---
 
@@ -751,9 +746,9 @@ Your application should now be live on Vercel!
 | `DATABASE_URL` | ✅ Yes | Database connection string | `postgresql://user:pass@host:5432/db` |
 | `NEXTAUTH_SECRET` | ✅ Yes | Authentication encryption key | `base64-encoded-secret` |
 | `NEXTAUTH_URL` | ✅ Yes | Application base URL | `https://app.vercel.app` |
-| `HELLOSIGN_API_KEY` | ⚠️ Optional | HelloSign API authentication | `hex-string` |
-| `HELLOSIGN_WEBHOOK_SECRET` | ⚠️ Optional | Webhook verification secret | `webhook-secret` |
-| `HELLOSIGN_TEST_MODE` | ⚠️ Optional | Enable test mode | `true` or `false` |
+| `DOCUSEAL_API_KEY` | ⚠️ Optional | DocuSeal API authentication | `api-key-string` |
+| `DOCUSEAL_API_URL` | ⚠️ Optional | DocuSeal instance URL | `https://your-docuseal.railway.app` |
+| `DOCUSEAL_WEBHOOK_SECRET` | ⚠️ Optional | Webhook verification secret | `webhook-secret` |
 | `CEO_EMAIL` | ⚠️ Optional | CEO email for contracts | `ceo@company.com` |
 
 ---
@@ -786,7 +781,8 @@ Your application should now be live on Vercel!
 - **Next.js Documentation:** https://nextjs.org/docs
 - **Prisma Documentation:** https://www.prisma.io/docs
 - **Supabase Documentation:** https://supabase.com/docs
-- **HelloSign API Docs:** https://developers.hellosign.com/api
+- **DocuSeal API Docs:** https://www.docuseal.com/docs/api
+- **DocuSeal Railway Deployment:** https://railway.com/template/IGoDnc
 
 ---
 

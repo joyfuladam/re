@@ -97,6 +97,7 @@ export default function SongDetailPage() {
     collaboratorName: string
   } | null>(null)
   const [generatingContractId, setGeneratingContractId] = useState<string | null>(null)
+  const [refreshingStatusId, setRefreshingStatusId] = useState<string | null>(null)
   const [contracts, setContracts] = useState<Array<{
     id: string
     songCollaboratorId: string
@@ -188,6 +189,39 @@ export default function SongDetailPage() {
       status: contract?.esignatureStatus || null,
       signedAt: contract?.signedAt || null,
       contractId: contract?.id || null,
+    }
+  }
+
+  const handleRefreshStatus = async (contractId: string) => {
+    if (!contractId) return
+    
+    setRefreshingStatusId(contractId)
+    try {
+      const response = await fetch(`/api/esignature/status?contractId=${contractId}`)
+      if (response.ok) {
+        const data = await response.json()
+        // Update the contract in state
+        setContracts((prev) =>
+          prev.map((c) =>
+            c.id === contractId
+              ? {
+                  ...c,
+                  esignatureStatus: data.status,
+                  signedAt: data.signedAt,
+                }
+              : c
+          )
+        )
+      } else {
+        const error = await response.json()
+        console.error("Error refreshing status:", error)
+        alert(`Error refreshing status: ${error.error || "Unknown error"}`)
+      }
+    } catch (error) {
+      console.error("Error refreshing status:", error)
+      alert("An unexpected error occurred while refreshing status.")
+    } finally {
+      setRefreshingStatusId(null)
     }
   }
 
@@ -1017,7 +1051,19 @@ export default function SongDetailPage() {
                                 )}
                               </div>
                             </div>
-                            <div className="flex gap-2 ml-4">
+                            <div className="flex gap-2 ml-4 items-center">
+                              {isAdmin && contractStatus.contractId && contractStatus.status && contractStatus.status !== "pending" && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleRefreshStatus(contractStatus.contractId!)}
+                                  disabled={refreshingStatusId === contractStatus.contractId}
+                                  title="Refresh status from DocuSeal"
+                                  className="h-8 w-8 p-0"
+                                >
+                                  {refreshingStatusId === contractStatus.contractId ? "⟳" : "↻"}
+                                </Button>
+                              )}
                               {(isCurrentUser || isAdmin) && (
                                 <Button
                                   variant="outline"
@@ -1121,7 +1167,19 @@ export default function SongDetailPage() {
                                 )}
                               </div>
                             </div>
-                            <div className="flex gap-2 ml-4">
+                            <div className="flex gap-2 ml-4 items-center">
+                              {isAdmin && contractStatus.contractId && contractStatus.status && contractStatus.status !== "pending" && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleRefreshStatus(contractStatus.contractId!)}
+                                  disabled={refreshingStatusId === contractStatus.contractId}
+                                  title="Refresh status from DocuSeal"
+                                  className="h-8 w-8 p-0"
+                                >
+                                  {refreshingStatusId === contractStatus.contractId ? "⟳" : "↻"}
+                                </Button>
+                              )}
                               {(isCurrentUser || isAdmin) && (
                                 <Button
                                   variant="outline"

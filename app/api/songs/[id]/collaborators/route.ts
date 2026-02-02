@@ -157,9 +157,7 @@ export async function DELETE(
         { error: "Forbidden: Only admins can remove collaborators from songs" },
         { status: 403 }
       )
-    }
-
-    // Get songCollaboratorId from query params
+    }    // Get songCollaboratorId from query params
     const { searchParams } = new URL(request.url)
     const songCollaboratorId = searchParams.get("songCollaboratorId")
 

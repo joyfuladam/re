@@ -3,21 +3,22 @@ import { db } from "@/lib/db"
 import crypto from "crypto"
 
 /**
- * HelloSign webhook endpoint
- * Receives notifications when signature requests are signed, declined, or canceled
+ * DocuSeal webhook endpoint
+ * Receives notifications when submissions are completed, declined, or canceled
  * 
  * Webhook events to handle:
- * - signature_request_signed: Contract was signed
- * - signature_request_declined: Contract was declined
- * - signature_request_canceled: Contract was canceled
+ * - submission.completed: Contract was signed
+ * - submission.declined: Contract was declined
+ * - submission.canceled: Contract was canceled
  */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.text()
-    const signature = request.headers.get("x-hellosign-signature")
+    const signature = request.headers.get("x-docuseal-signature") || 
+                      request.headers.get("x-signature")
 
     // Verify webhook signature if secret is configured
-    const webhookSecret = process.env.HELLOSIGN_WEBHOOK_SECRET
+    const webhookSecret = process.env.DOCUSEAL_WEBHOOK_SECRET
     if (webhookSecret && signature) {
       const expectedSignature = crypto
         .createHmac("sha256", webhookSecret)
@@ -33,7 +34,7 @@ export async function POST(request: NextRequest) {
     // Parse webhook event
     let eventData: any
     try {
-      // HelloSign sends JSON data
+      // DocuSeal sends JSON data
       eventData = JSON.parse(body)
     } catch (error) {
       // Some webhook providers send form-encoded data
@@ -46,46 +47,55 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Extract event type and signature request ID
-    const eventType = eventData.event?.event_type || eventData.event_type
-    const signatureRequestId =
-      eventData.event?.event_hash?.signature_request?.signature_request_id ||
-      eventData.signature_request?.signature_request_id
+    // Extract event type and submission ID
+    // DocuSeal webhook format: { event: "submission.completed", data: { submission: { id: ... } } }
+    const eventType = eventData.event || eventData.type
+    const submissionId =
+      eventData.data?.submission?.id ||
+      eventData.submission?.id ||
+      eventData.id
 
-    if (!eventType || !signatureRequestId) {
+    if (!eventType || !submissionId) {
       console.error("Invalid webhook event data:", eventData)
       return NextResponse.json({ error: "Invalid event data" }, { status: 400 })
     }
 
-    // Find contract by signature request ID
+    // Find contract by submission ID (stored in esignatureDocId)
     const contract = await db.contract.findFirst({
-      where: { esignatureDocId: signatureRequestId },
+      where: { esignatureDocId: submissionId },
     })
 
     if (!contract) {
-      console.warn(`Contract not found for signature request ID: ${signatureRequestId}`)
+      console.warn(`Contract not found for submission ID: ${submissionId}`)
       // Return 200 to acknowledge receipt (contract might be from another system)
       return NextResponse.json({ received: true })
     }
 
     // Handle different event types
+    // DocuSeal events: submission.completed, submission.declined, submission.canceled
     switch (eventType) {
-      case "signature_request_signed":
+      case "submission.completed":
+      case "submission.finished":
         // Contract was signed
         const signedAt =
-          eventData.event?.event_hash?.signature_request?.signed_at ||
-          eventData.signature_request?.signed_at
+          eventData.data?.submission?.completed_at ||
+          eventData.data?.submission?.finished_at ||
+          eventData.submission?.completed_at ||
+          eventData.submission?.finished_at ||
+          eventData.completed_at ||
+          eventData.finished_at
 
         await db.contract.update({
           where: { id: contract.id },
           data: {
             esignatureStatus: "signed",
-            signedAt: signedAt ? new Date(signedAt * 1000) : new Date(),
+            signedAt: signedAt ? new Date(signedAt) : new Date(),
           },
         })
         break
 
-      case "signature_request_declined":
+      case "submission.declined":
+      case "submission.rejected":
         // Contract was declined
         await db.contract.update({
           where: { id: contract.id },
@@ -95,7 +105,8 @@ export async function POST(request: NextRequest) {
         })
         break
 
-      case "signature_request_canceled":
+      case "submission.canceled":
+      case "submission.cancelled":
         // Contract was canceled
         await db.contract.update({
           where: { id: contract.id },
@@ -114,7 +125,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ received: true })
   } catch (error) {
     console.error("Error processing webhook:", error)
-    // Still return 200 to prevent HelloSign from retrying
+    // Still return 200 to prevent DocuSeal from retrying
     // Log the error for debugging
     return NextResponse.json({ received: true, error: "Processing failed" }, { status: 200 })
   }

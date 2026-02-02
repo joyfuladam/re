@@ -11,7 +11,7 @@ A comprehensive web-based record label management application with strict role-b
   - Master splits (all eligible roles) - available after publishing is locked
 - **Role-Based Revenue Eligibility**: Strict enforcement of revenue streams per role
 - **Contract Generation**: Role-specific contract templates with PDF generation
-- **E-Signature Integration**: HelloSign/Dropbox Sign API integration for contract signing
+- **E-Signature Integration**: DocuSeal self-hosted e-signature integration for contract signing
 - **Dashboard**: Overview with statistics and quick actions
 
 ## Tech Stack
@@ -21,7 +21,7 @@ A comprehensive web-based record label management application with strict role-b
 - **Authentication**: NextAuth.js
 - **UI**: Tailwind CSS with shadcn/ui components
 - **Charts**: Recharts
-- **E-Signature**: HelloSign/Dropbox Sign API
+- **E-Signature**: DocuSeal (self-hosted)
 
 ## Getting Started
 
@@ -29,7 +29,7 @@ A comprehensive web-based record label management application with strict role-b
 
 - Node.js 18+ and npm
 - PostgreSQL database
-- HelloSign/Dropbox Sign API key (optional, for e-signatures)
+- DocuSeal instance on Railway (optional, for e-signatures)
 
 ### Installation
 
@@ -54,7 +54,8 @@ Edit `.env` with your configuration:
 DATABASE_URL="postgresql://user:password@localhost:5432/river_ember"
 NEXTAUTH_SECRET="your-secret-key-here"
 NEXTAUTH_URL="http://localhost:3000"
-HELLOSIGN_API_KEY="your-hellosign-api-key"
+DOCUSEAL_API_KEY="your-docuseal-api-key"
+DOCUSEAL_API_URL="https://your-docuseal.railway.app"
 ```
 
 4. Set up the database:

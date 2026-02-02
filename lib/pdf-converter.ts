@@ -9,10 +9,33 @@ export async function convertHTMLToPDF(html: string): Promise<Buffer> {
 
   try {
     // Launch browser in headless mode
-    browser = await puppeteer.launch({
+    // Configure for serverless environments (Vercel, Railway, etc.)
+    const launchOptions: any = {
       headless: true,
-      args: ["--no-sandbox", "--disable-setuid-sandbox"], // Required for some environments
-    })
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-accelerated-2d-canvas",
+        "--no-first-run",
+        "--no-zygote",
+        "--single-process", // Required for some serverless environments
+        "--disable-gpu",
+      ],
+    }
+
+    // For serverless environments (Vercel, etc.), try to use the bundled Chrome
+    // If PUPPETEER_EXECUTABLE_PATH is set, use it
+    if (process.env.PUPPETEER_EXECUTABLE_PATH) {
+      launchOptions.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH
+    } else if (process.env.VERCEL) {
+      // For Vercel, we need to use the bundled Chrome
+      // Vercel automatically bundles Chrome with Puppeteer
+      // The executable should be available in the default location
+      console.log("Running on Vercel - using bundled Chrome")
+    }
+
+    browser = await puppeteer.launch(launchOptions)
 
     const page = await browser.newPage()
 
