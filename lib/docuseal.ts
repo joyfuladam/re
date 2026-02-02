@@ -79,22 +79,23 @@ export class DocuSealClient {
       // Add submission name/title
       formData.append("submission[name]", params.title)
 
-      // Add submitters as JSON string (DocuSeal expects this format)
-      formData.append("submission[submitters_attributes]", JSON.stringify(
-        submitters.map((submitter) => ({
-          email: submitter.email,
-          name: submitter.name,
-          role: submitter.role || "signer",
-        }))
-      ))
+      // Add submitters as array fields per DocuSeal API format
+      submitters.forEach((submitter, index) => {
+        formData.append(`submission[submitters_attributes][${index}][email]`, submitter.email)
+        formData.append(`submission[submitters_attributes][${index}][name]`, submitter.name)
+        if (submitter.role) {
+          formData.append(`submission[submitters_attributes][${index}][role]`, submitter.role)
+        }
+      })
 
       console.log("📤 Creating submission directly in DocuSeal...")
       
       // Create submission directly with PDF
-      const submissionResponse = await fetch(`${this.apiUrl}/api/submissions`, {
+      // Use X-Auth-Token header per DocuSeal API documentation
+      const submissionResponse = await fetch(`${this.apiUrl}/api/submissions/pdf`, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${this.apiKey}`,
+          "X-Auth-Token": this.apiKey,
           // Don't set Content-Type header - let fetch set it with boundary for FormData
         },
         body: formData,
@@ -107,9 +108,10 @@ export class DocuSealClient {
       }
 
       const submissionData = await submissionResponse.json()
-      const submissionId = submissionData.id || submissionData.submission?.id
+      const submissionId = submissionData.id || submissionData.submission?.id || submissionData.data?.id
 
       if (!submissionId) {
+        console.error("Response data:", JSON.stringify(submissionData, null, 2))
         throw new Error("Submission ID not found in response")
       }
 
@@ -140,7 +142,7 @@ export class DocuSealClient {
       const response = await fetch(`${this.apiUrl}/api/submissions/${submissionId}`, {
         method: "GET",
         headers: {
-          Authorization: `Bearer ${this.apiKey}`,
+          "X-Auth-Token": this.apiKey,
         },
       })
 
