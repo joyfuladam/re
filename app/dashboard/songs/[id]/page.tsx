@@ -225,7 +225,7 @@ export default function SongDetailPage() {
     }
   }
 
-  const handleSendContract = async (songCollaboratorId: string, contractType: ContractType, collaboratorName: string) => {
+  const handleSendContract = async (songCollaboratorId: string, contractType: ContractType, collaboratorName: string, draft: boolean = false) => {
     if (!song) return
     
     setGeneratingContractId(`${songCollaboratorId}-${contractType}`)
@@ -258,7 +258,7 @@ export default function SongDetailPage() {
 
       const generateData = await generateResponse.json()
       
-      // Then send via e-signature
+      // Then send via e-signature (or create draft)
       const sendResponse = await fetch("/api/esignature/send", {
         method: "POST",
         headers: {
@@ -266,25 +266,29 @@ export default function SongDetailPage() {
         },
         body: JSON.stringify({
           contractId: generateData.contractId,
+          draft,
         }),
       })
 
       if (!sendResponse.ok) {
         const error = await sendResponse.json()
-        alert(`Error uploading contract: ${error.error || "Unknown error"}`)
+        alert(`Error ${draft ? 'creating draft' : 'sending contract'}: ${error.error || "Unknown error"}`)
         return
       }
 
       const sendData = await sendResponse.json()
-      const message = sendData.message || `Contract uploaded to DocuSeal. Please log into DocuSeal to manually send it to ${collaboratorName}.`
-      alert(message)
+      if (draft) {
+        alert(`Draft created! Log into DocuSeal to review and send manually.`)
+      } else {
+        alert(`Contract sent to ${collaboratorName} for e-signature`)
+      }
       // Refresh contracts to show updated status
       if (song) {
         await fetchContracts(song.id)
       }
     } catch (error) {
-      console.error("Error sending contract:", error)
-      alert("An unexpected error occurred while sending the contract.")
+      console.error(`Error ${draft ? 'creating draft' : 'sending contract'}:`, error)
+      alert(`An unexpected error occurred while ${draft ? 'creating the draft' : 'sending the contract'}.`)
     } finally {
       setGeneratingContractId(null)
     }
@@ -1044,11 +1048,13 @@ export default function SongDetailPage() {
                                       ? "bg-green-100 text-green-800" 
                                       : contractStatus.status === "sent"
                                       ? "bg-blue-100 text-blue-800"
+                                      : contractStatus.status === "draft"
+                                      ? "bg-yellow-100 text-yellow-800"
                                       : contractStatus.status === "declined"
                                       ? "bg-red-100 text-red-800"
                                       : "bg-gray-100 text-gray-800"
                                   }`}>
-                                    {isSigned ? "Signed" : contractStatus.status === "sent" ? "Sent" : contractStatus.status === "declined" ? "Declined" : contractStatus.status}
+                                    {isSigned ? "Signed" : contractStatus.status === "sent" ? "Sent" : contractStatus.status === "draft" ? "Draft" : contractStatus.status === "declined" ? "Declined" : contractStatus.status}
                                   </span>
                                 )}
                               </div>
@@ -1081,11 +1087,19 @@ export default function SongDetailPage() {
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    onClick={() => handleSendContract(sc.id, contractType, collaboratorName)}
+                                    onClick={() => handleSendContract(sc.id, contractType, collaboratorName, true)}
                                     disabled={!song.masterLocked || isGenerating || isSigned}
-                                    title="Upload to DocuSeal (you'll need to send manually from DocuSeal UI)"
+                                    title="Create draft in DocuSeal (no emails sent)"
                                   >
-                                    {isSigned ? "Signed" : canResend ? "Re-Upload" : "Upload"}
+                                    Draft
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleSendContract(sc.id, contractType, collaboratorName, false)}
+                                    disabled={!song.masterLocked || isGenerating || isSigned}
+                                  >
+                                    {isSigned ? "Signed" : canResend ? "Re-Send" : "Send"}
                                   </Button>
                                   <Button
                                     variant="destructive"
@@ -1161,11 +1175,13 @@ export default function SongDetailPage() {
                                       ? "bg-green-100 text-green-800" 
                                       : contractStatus.status === "sent"
                                       ? "bg-blue-100 text-blue-800"
+                                      : contractStatus.status === "draft"
+                                      ? "bg-yellow-100 text-yellow-800"
                                       : contractStatus.status === "declined"
                                       ? "bg-red-100 text-red-800"
                                       : "bg-gray-100 text-gray-800"
                                   }`}>
-                                    {isSigned ? "Signed" : contractStatus.status === "sent" ? "Sent" : contractStatus.status === "declined" ? "Declined" : contractStatus.status}
+                                    {isSigned ? "Signed" : contractStatus.status === "sent" ? "Sent" : contractStatus.status === "draft" ? "Draft" : contractStatus.status === "declined" ? "Declined" : contractStatus.status}
                                   </span>
                                 )}
                               </div>
@@ -1198,11 +1214,19 @@ export default function SongDetailPage() {
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    onClick={() => handleSendContract(sc.id, contractType, collaboratorName)}
+                                    onClick={() => handleSendContract(sc.id, contractType, collaboratorName, true)}
                                     disabled={!song.masterLocked || isGenerating || isSigned}
-                                    title="Upload to DocuSeal (you'll need to send manually from DocuSeal UI)"
+                                    title="Create draft in DocuSeal (no emails sent)"
                                   >
-                                    {isSigned ? "Signed" : canResend ? "Re-Upload" : "Upload"}
+                                    Draft
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleSendContract(sc.id, contractType, collaboratorName, false)}
+                                    disabled={!song.masterLocked || isGenerating || isSigned}
+                                  >
+                                    {isSigned ? "Signed" : canResend ? "Re-Send" : "Send"}
                                   </Button>
                                   <Button
                                     variant="destructive"

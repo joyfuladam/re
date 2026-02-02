@@ -12,6 +12,7 @@ export interface SendContractParams {
   title: string
   ceoEmail?: string // Optional CEO email - if provided, CEO signs in parallel with collaborator
   ceoName?: string
+  draft?: boolean // If true, creates a draft without sending emails
 }
 
 export interface DocuSealSubmitter {
@@ -79,12 +80,22 @@ export class DocuSealClient {
       // Add submission name/title
       formData.append("submission[name]", params.title)
 
+      // If draft mode, disable email sending
+      if (params.draft) {
+        formData.append("submission[send_email]", "false")
+        console.log("   Draft mode: emails will not be sent automatically")
+      }
+
       // Add submitters as array fields per DocuSeal API format
       submitters.forEach((submitter, index) => {
         formData.append(`submission[submitters_attributes][${index}][email]`, submitter.email)
         formData.append(`submission[submitters_attributes][${index}][name]`, submitter.name)
         if (submitter.role) {
           formData.append(`submission[submitters_attributes][${index}][role]`, submitter.role)
+        }
+        // If draft mode, also disable email for individual submitters
+        if (params.draft) {
+          formData.append(`submission[submitters_attributes][${index}][send_email]`, "false")
         }
       })
 
@@ -115,8 +126,14 @@ export class DocuSealClient {
         throw new Error("Submission ID not found in response")
       }
 
-      console.log(`✅ Contract sent successfully!`)
-      console.log(`   Submission ID: ${submissionId}`)
+      if (params.draft) {
+        console.log(`✅ Draft contract created successfully!`)
+        console.log(`   Submission ID: ${submissionId}`)
+        console.log(`   📝 Log into DocuSeal to review and send manually`)
+      } else {
+        console.log(`✅ Contract sent successfully!`)
+        console.log(`   Submission ID: ${submissionId}`)
+      }
 
       return {
         signatureRequestId: submissionId,
@@ -129,108 +146,6 @@ export class DocuSealClient {
       }
       throw new Error(
         `Failed to send contract via DocuSeal: ${error instanceof Error ? error.message : "Unknown error"}`
-      )
-    }
-  }
-
-  /**
-   * Upload contract to DocuSeal as a draft submission (does not send automatically)
-   * This allows manual review and sending from the DocuSeal UI
-   */
-  async uploadContractDraft(params: SendContractParams): Promise<{ signatureRequestId: string }> {
-    try {
-      console.log("📄 Preparing contract for DocuSeal upload (draft mode)...")
-      console.log(`   Title: ${params.title}`)
-
-      // Build submitters array (parallel signing - no order required)
-      const submitters: DocuSealSubmitter[] = []
-      
-      if (params.ceoEmail && params.ceoName) {
-        submitters.push({
-          email: params.ceoEmail,
-          name: params.ceoName,
-          role: "signer",
-        })
-        submitters.push({
-          email: params.signerEmail,
-          name: params.signerName,
-          role: "signer",
-        })
-        console.log(`   CEO: ${params.ceoName} (${params.ceoEmail})`)
-        console.log(`   Collaborator: ${params.signerName} (${params.signerEmail})`)
-      } else {
-        submitters.push({
-          email: params.signerEmail,
-          name: params.signerName,
-          role: "signer",
-        })
-        console.log(`   Signer: ${params.signerName} (${params.signerEmail})`)
-      }
-
-      // Create submission from PDF but don't send automatically
-      // We'll create it with submitters but in a draft state
-      const formData = new FormData()
-      
-      // Add PDF file
-      const pdfUint8Array = new Uint8Array(params.pdfBuffer)
-      const pdfBlob = new Blob([pdfUint8Array], { type: "application/pdf" })
-      formData.append("submission[source]", pdfBlob, `contract-${Date.now()}.pdf`)
-
-      // Add submission name
-      formData.append("submission[name]", params.title)
-
-      // IMPORTANT: Don't add submitters here to prevent automatic sending
-      // The user will add signers manually in DocuSeal UI after upload
-      // This ensures the submission is created as a draft and won't send automatically
-      
-      // Store submitter info in submission metadata/notes for reference
-      // User can see this info when they open the submission in DocuSeal
-      const submitterInfo = submitters.map(s => `${s.name} (${s.email})`).join(", ")
-      formData.append("submission[metadata]", JSON.stringify({
-        note: `Signers to add: ${submitterInfo}`,
-        signers: submitters.map(s => ({ name: s.name, email: s.email, role: s.role }))
-      }))
-
-      console.log("📤 Uploading contract to DocuSeal (draft mode - not sending automatically)...")
-      
-      const submissionResponse = await fetch(`${this.apiUrl}/api/submissions/pdf`, {
-        method: "POST",
-        headers: {
-          "X-Auth-Token": this.apiKey,
-          // Don't set Content-Type - let fetch set it with boundary for FormData
-        },
-        body: formData,
-      })
-
-      if (!submissionResponse.ok) {
-        const errorText = await submissionResponse.text()
-        console.error("❌ DocuSeal draft upload error:", errorText)
-        throw new Error(`Failed to upload draft: ${submissionResponse.status} ${errorText}`)
-      }
-
-      const submissionData = await submissionResponse.json()
-      const submissionId = submissionData.id || submissionData.submission?.id || submissionData.data?.id
-
-      if (!submissionId) {
-        console.error("Response data:", JSON.stringify(submissionData, null, 2))
-        throw new Error("Submission ID not found in response")
-      }
-
-      console.log(`✅ Contract uploaded successfully (draft mode)!`)
-      console.log(`   Submission ID: ${submissionId}`)
-      console.log(`   Note: Please log into DocuSeal to manually send this contract`)
-
-      return {
-        signatureRequestId: submissionId.toString(),
-      }
-    } catch (error) {
-      console.error("❌ DocuSeal API error:", error)
-      if (error instanceof Error) {
-        console.error("   Error message:", error.message)
-        console.error("   Error stack:", error.stack)
-      }
-      throw new Error(
-        `Failed to upload contract to DocuSeal: ${error instanceof Error ? error.message : "Unknown error"}`
       )
     }
   }

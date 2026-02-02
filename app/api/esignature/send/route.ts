@@ -12,6 +12,7 @@ import { z } from "zod"
 
 const sendContractSchema = z.object({
   contractId: z.string(),
+  draft: z.boolean().optional().default(false), // If true, creates draft without sending
 })
 
 export async function POST(request: NextRequest) {
@@ -215,39 +216,47 @@ export async function POST(request: NextRequest) {
       .filter(Boolean)
       .join(" ")
 
-    console.log(`🚀 Uploading contract to DocuSeal (draft mode - manual send required)...`)
-    // Use uploadContractDraft instead of sendContract to avoid automatic sending
-    // User will manually send from DocuSeal UI
-    const result = await client.uploadContractDraft({
+    if (validated.draft) {
+      console.log(`📝 Creating draft contract in DocuSeal...`)
+    } else {
+      console.log(`🚀 Sending contract to DocuSeal...`)
+    }
+    
+    const result = await client.sendContract({
       pdfBuffer,
       signerEmail: contract.songCollaborator.collaborator.email,
       signerName,
       title: `Contract for ${contract.song.title}`,
       ceoEmail: contractConfig.publisher.managerEmail,
       ceoName: contractConfig.publisher.managerName,
+      draft: validated.draft,
     })
 
     console.log(`💾 Updating contract in database...`)
     // Update contract with signature request ID and status
-    // Status is "pending" because it hasn't been sent yet (user must send manually)
     await db.contract.update({
       where: { id: validated.contractId },
       data: {
         esignatureDocId: result.signatureRequestId,
-        esignatureStatus: "pending", // Changed from "sent" - user must send manually
+        esignatureStatus: validated.draft ? "draft" : "sent",
         signerEmail: contract.songCollaborator.collaborator.email,
         // Reset signedAt if re-sending
         signedAt: null,
       },
     })
 
-    console.log(`✅ Contract uploaded successfully!`)
-    console.log(`   Please log into DocuSeal to manually send this contract`)
-    return NextResponse.json({ 
-      success: true, 
-      signatureRequestId: result.signatureRequestId,
-      message: "Contract uploaded to DocuSeal. Please log into DocuSeal to manually send it."
-    })
+    if (validated.draft) {
+      console.log(`✅ Draft contract created and saved successfully!`)
+      return NextResponse.json({ 
+        success: true, 
+        signatureRequestId: result.signatureRequestId,
+        draft: true,
+        message: "Draft created. Log into DocuSeal to review and send manually."
+      })
+    } else {
+      console.log(`✅ Contract sent and saved successfully!`)
+      return NextResponse.json({ success: true, signatureRequestId: result.signatureRequestId })
+    }
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.errors }, { status: 400 })
