@@ -5,6 +5,8 @@ import { db } from "@/lib/db"
 import { createDocuSealClient } from "@/lib/docuseal"
 import { z } from "zod"
 
+export const dynamic = 'force-dynamic'
+
 const statusSchema = z.object({
   contractId: z.string(),
 })
