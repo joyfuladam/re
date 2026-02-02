@@ -86,7 +86,7 @@ export class DocuSealClient {
       console.log("📤 Creating template in DocuSeal...")
       
       // Create template first
-      const templateResponse = await fetch(`${this.apiUrl}/api/v1/templates`, {
+      const templateResponse = await fetch(`${this.apiUrl}/api/templates`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${this.apiKey}`,
@@ -122,7 +122,7 @@ export class DocuSealClient {
         })),
       }
 
-      const submissionResponse = await fetch(`${this.apiUrl}/api/v1/submissions`, {
+      const submissionResponse = await fetch(`${this.apiUrl}/api/submissions`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${this.apiKey}`,
@@ -168,7 +168,7 @@ export class DocuSealClient {
     signers?: Array<{ email: string; name: string; status: string; signedAt?: string | null }>
   }> {
     try {
-      const response = await fetch(`${this.apiUrl}/api/v1/submissions/${submissionId}`, {
+      const response = await fetch(`${this.apiUrl}/api/submissions/${submissionId}`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${this.apiKey}`,
