@@ -71,8 +71,9 @@ export class DocuSealClient {
       const formData = new FormData()
       
       // Add PDF file as Buffer converted to Blob
-      // In Node.js 18+, FormData accepts Blob
-      const pdfBlob = new Blob([params.pdfBuffer], { type: "application/pdf" })
+      // Convert Buffer to Uint8Array first for proper type compatibility
+      const pdfUint8Array = new Uint8Array(params.pdfBuffer)
+      const pdfBlob = new Blob([pdfUint8Array], { type: "application/pdf" })
       formData.append("template[source]", pdfBlob, `contract-${Date.now()}.pdf`)
 
       // Add template name
