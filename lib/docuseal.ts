@@ -66,69 +66,38 @@ export class DocuSealClient {
         console.log(`   Signer: ${params.signerName} (${params.signerEmail})`)
       }
 
-      // Create form data for multipart upload
-      // Using native FormData (available in Node.js 18+)
+      // Create submission directly with PDF (DocuSeal doesn't require templates)
+      // Using FormData to send PDF and submission data together
       const formData = new FormData()
       
       // Add PDF file as Buffer converted to Blob
       // Convert Buffer to Uint8Array first for proper type compatibility
       const pdfUint8Array = new Uint8Array(params.pdfBuffer)
       const pdfBlob = new Blob([pdfUint8Array], { type: "application/pdf" })
-      formData.append("template[source]", pdfBlob, `contract-${Date.now()}.pdf`)
+      formData.append("submission[source]", pdfBlob, `contract-${Date.now()}.pdf`)
 
-      // Add template name
-      formData.append("template[name]", params.title)
+      // Add submission name/title
+      formData.append("submission[name]", params.title)
 
-      // Create submission with submitters
-      // First, we need to create a template, then create a submission
-      // DocuSeal API typically requires: create template -> create submission
+      // Add submitters as JSON string (DocuSeal expects this format)
+      formData.append("submission[submitters_attributes]", JSON.stringify(
+        submitters.map((submitter) => ({
+          email: submitter.email,
+          name: submitter.name,
+          role: submitter.role || "signer",
+        }))
+      ))
+
+      console.log("📤 Creating submission directly in DocuSeal...")
       
-      console.log("📤 Creating template in DocuSeal...")
-      
-      // Create template first
-      const templateResponse = await fetch(`${this.apiUrl}/api/templates`, {
+      // Create submission directly with PDF
+      const submissionResponse = await fetch(`${this.apiUrl}/api/submissions`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${this.apiKey}`,
           // Don't set Content-Type header - let fetch set it with boundary for FormData
         },
         body: formData,
-      })
-
-      if (!templateResponse.ok) {
-        const errorText = await templateResponse.text()
-        console.error("❌ DocuSeal template creation error:", errorText)
-        throw new Error(`Failed to create template: ${templateResponse.status} ${errorText}`)
-      }
-
-      const templateData = await templateResponse.json()
-      const templateId = templateData.id || templateData.template?.id
-
-      if (!templateId) {
-        throw new Error("Template ID not found in response")
-      }
-
-      console.log(`✅ Template created: ${templateId}`)
-
-      // Now create submission with submitters
-      console.log("📤 Creating submission in DocuSeal...")
-      
-      const submissionPayload = {
-        template_id: templateId,
-        submitters: submitters.map((submitter) => ({
-          email: submitter.email,
-          name: submitter.name,
-          role: submitter.role || "signer",
-        })),
-      }
-
-      const submissionResponse = await fetch(`${this.apiUrl}/api/submissions`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${this.apiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(submissionPayload),
       })
 
       if (!submissionResponse.ok) {
