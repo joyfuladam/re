@@ -225,6 +225,70 @@ export default function SongDetailPage() {
     }
   }
 
+  const handleDownloadContract = async (songCollaboratorId: string, contractType: ContractType) => {
+    if (!song) return
+    
+    setGeneratingContractId(`${songCollaboratorId}-${contractType}`)
+    try {
+      // First generate the contract to get the contract ID
+      const generateResponse = await fetch("/api/contracts/generate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          songId: song.id,
+          songCollaboratorId: songCollaboratorId,
+          contractType,
+        }),
+      })
+
+      if (!generateResponse.ok) {
+        const error = await generateResponse.json()
+        alert(`Error generating contract: ${error.error || "Unknown error"}`)
+        return
+      }
+
+      const generateData = await generateResponse.json()
+      
+      // Download the PDF
+      const downloadResponse = await fetch(`/api/contracts/${generateData.contractId}/download`)
+      
+      if (!downloadResponse.ok) {
+        const error = await downloadResponse.json().catch(() => ({ error: "Unknown error" }))
+        alert(`Error downloading contract: ${error.error || "Unknown error"}`)
+        return
+      }
+
+      // Get the PDF blob and trigger download
+      const blob = await downloadResponse.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      
+      // Extract filename from Content-Disposition header or use default
+      const contentDisposition = downloadResponse.headers.get("Content-Disposition")
+      let filename = `contract_${Date.now()}.pdf`
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="(.+)"/)
+        if (filenameMatch) {
+          filename = filenameMatch[1]
+        }
+      }
+      
+      a.download = filename
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+    } catch (error) {
+      console.error("Error downloading contract:", error)
+      alert("An unexpected error occurred while downloading the contract.")
+    } finally {
+      setGeneratingContractId(null)
+    }
+  }
+
   const handleSendContract = async (songCollaboratorId: string, contractType: ContractType, collaboratorName: string, draft: boolean = false) => {
     if (!song) return
     
@@ -1073,14 +1137,25 @@ export default function SongDetailPage() {
                                 </Button>
                               )}
                               {(isCurrentUser || isAdmin) && (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handlePreviewContract(sc.id, contractType, collaboratorName)}
-                                  disabled={!song.masterLocked || isGenerating}
-                                >
-                                  Preview
-                                </Button>
+                                <>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handlePreviewContract(sc.id, contractType, collaboratorName)}
+                                    disabled={!song.masterLocked || isGenerating}
+                                  >
+                                    Preview
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleDownloadContract(sc.id, contractType)}
+                                    disabled={!song.masterLocked || isGenerating}
+                                    title="Download contract as PDF"
+                                  >
+                                    Download
+                                  </Button>
+                                </>
                               )}
                               {isAdmin && (
                                 <>
@@ -1200,14 +1275,25 @@ export default function SongDetailPage() {
                                 </Button>
                               )}
                               {(isCurrentUser || isAdmin) && (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handlePreviewContract(sc.id, contractType, collaboratorName)}
-                                  disabled={!song.masterLocked || isGenerating}
-                                >
-                                  Preview
-                                </Button>
+                                <>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handlePreviewContract(sc.id, contractType, collaboratorName)}
+                                    disabled={!song.masterLocked || isGenerating}
+                                  >
+                                    Preview
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleDownloadContract(sc.id, contractType)}
+                                    disabled={!song.masterLocked || isGenerating}
+                                    title="Download contract as PDF"
+                                  >
+                                    Download
+                                  </Button>
+                                </>
                               )}
                               {isAdmin && (
                                 <>
