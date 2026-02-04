@@ -64,12 +64,16 @@ export async function GET(
 <head>
   <meta charset="UTF-8">
   <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; max-width: 800px; margin: 0 auto; padding: 40px; }
-    h1 { text-align: center; margin-bottom: 30px; }
-    h2 { margin-top: 30px; margin-bottom: 15px; }
-    .contract-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-    .contract-table th, .contract-table td { border: 1px solid #000; padding: 8px; }
+        body { font-family: Arial, sans-serif; font-size: 10pt; line-height: 1.5; max-width: 800px; margin: 0 auto; padding: 40px; }
+    h1 { text-align: center; margin-bottom: 30px; font-size: 14pt; }
+    h2 { margin-top: 30px; margin-bottom: 15px; font-size: 11pt; }
+    h3 { margin-top: 20px; margin-bottom: 10px; font-size: 10pt; }
+    .contract-table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 9pt; }
+    .contract-table th, .contract-table td { border: 1px solid #000; padding: 6px 8px; }
     .contract-table th { background-color: #f0f0f0; font-weight: bold; }
+    p { margin-bottom: 10px; text-align: justify; }
+    p + p { text-indent: 0.5in; }
+    ul, ol { margin-left: 20px; }
   </style>
 </head>
 <body>${contractHTML}</body>
