@@ -93,8 +93,9 @@ export class SignWellClient {
       // SignWell API: fields should be nested inside recipients
       // Text tags in PDF (like [sig|req|signer1]) will be auto-detected
       // Create recipients (simple structure - no fields nested)
+      // Recipient IDs must match text tags in PDF: {{sig_1}}, {{sig_2}}, etc.
       const recipients = signers.map((signer, index) => {
-        const recipientId = `signer${index + 1}`
+        const recipientId = `${index + 1}`
         // #region agent log
         fetch('http://127.0.0.1:7243/ingest/4c8d8774-18d6-406e-b702-2dc324f31e07',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'lib/signwell.ts:95',message:'Creating recipient',data:{recipientId,email:signer.email,name:signer.name,role:signer.role,index},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
         // #endregion
