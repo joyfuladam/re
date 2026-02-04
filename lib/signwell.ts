@@ -154,6 +154,7 @@ export class SignWellClient {
         ],
         recipients: recipients,
         fields: fields, // 2D array: [[fields_for_file_1]]
+        text_tags: true, // Enable text tag detection from PDF
         send: !params.draft,
       }
 
@@ -197,24 +198,32 @@ export class SignWellClient {
         body: JSON.stringify(documentPayload),
       })
 
-      // #region agent log
+      // Read response body once (can only be read once)
+      const responseText = await documentResponse.text().catch(() => '')
       const responseStatus = documentResponse.status
-      const responseText = await documentResponse.text().catch(()=>'')
+
+      // #region agent log
       fetch('http://127.0.0.1:7243/ingest/4c8d8774-18d6-406e-b702-2dc324f31e07',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'lib/signwell.ts:142',message:'SignWell API response received',data:{status:responseStatus,ok:documentResponse.ok,responseText,headers:Object.fromEntries(documentResponse.headers.entries())},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
       // #endregion
 
       if (!documentResponse.ok) {
-        const errorText = responseText || await documentResponse.text().catch(()=>'')
         let parsedError = null
-        try { parsedError = JSON.parse(errorText) } catch {}
+        try { parsedError = JSON.parse(responseText) } catch {}
         // #region agent log
-        fetch('http://127.0.0.1:7243/ingest/4c8d8774-18d6-406e-b702-2dc324f31e07',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'lib/signwell.ts:145',message:'SignWell API error response',data:{status:documentResponse.status,errorText,parsedError},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+        fetch('http://127.0.0.1:7243/ingest/4c8d8774-18d6-406e-b702-2dc324f31e07',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'lib/signwell.ts:145',message:'SignWell API error response',data:{status:documentResponse.status,errorText:responseText,parsedError},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
         // #endregion
-        console.error("❌ SignWell document creation error:", errorText)
-        throw new Error(`Failed to create document: ${documentResponse.status} ${errorText}`)
+        console.error("❌ SignWell document creation error:", responseText)
+        throw new Error(`Failed to create document: ${documentResponse.status} ${responseText}`)
       }
 
-      const documentData = await documentResponse.json()
+      // Parse the already-read response text as JSON
+      let documentData
+      try {
+        documentData = JSON.parse(responseText)
+      } catch (parseError) {
+        console.error("❌ Failed to parse SignWell response as JSON:", responseText)
+        throw new Error(`Failed to parse response: ${responseText}`)
+      }
       const documentId = documentData.id || documentData.document?.id || documentData.data?.id
 
       if (!documentId) {
