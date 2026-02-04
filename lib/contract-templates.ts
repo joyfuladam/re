@@ -35,7 +35,7 @@ Writer has created certain musical compositions for recording and release under 
    Publisher shall administer the assigned rights worldwide through its chosen publishing administrator (e.g., Sentric Music). Publisher shall account to Writer quarterly for Publisher's collected share (for transparency only—no payment due to Writer from publisher's share).
 
 5. **Advances (Optional)**  
-   {% if advance_amount %}Publisher shall pay Writer a non-returnable advance of $${tplVar('advance_amount')}, recoupable solely from Publisher's share of royalties from the Compositions.{% else %}No advance is provided under this Agreement.{% endif %}
+   {% if advance_amount %}Publisher shall pay Writer a non-returnable advance of ${{advance_amount}}, recoupable solely from Publisher's share of royalties from the Compositions.{% else %}No advance is provided under this Agreement.{% endif %}
 
 6. **Morals & Conduct Clause**  
    Writer agrees to conduct themselves, both publicly and privately, in a manner consistent with biblical Christian principles. Material breach (as reasonably determined by Publisher, e.g., public conduct contrary to Scripture) shall allow Publisher immediate termination of this Agreement and reversion of rights to Writer.
