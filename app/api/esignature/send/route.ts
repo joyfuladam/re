@@ -175,19 +175,13 @@ export async function POST(request: NextRequest) {
                 margin-left: 20px;
                 margin-bottom: 10px;
               }
-              /* Hide SignWell text tags - they should be invisible but detectable */
-              .signwell-tag {
-                color: white !important;
-                background: white !important;
-                font-size: 1px !important;
-                opacity: 0 !important;
-              }
-              /* Also hide any text matching SignWell tag pattern */
-              [class*="sig|req"], [class*="date|req"] {
-                color: white !important;
-                background: white !important;
-                font-size: 1px !important;
-                opacity: 0 !important;
+              /* SignWell text tags should be in PDF text layer for detection
+                 Make them very small and nearly transparent so they're invisible but detectable */
+              .signwell-tag, [class*="signwell"] {
+                font-size: 0.1px !important;
+                color: transparent !important;
+                line-height: 0 !important;
+                display: inline !important;
               }
             </style>
           </head>

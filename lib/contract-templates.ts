@@ -179,13 +179,10 @@ export function renderContractTemplate(
   const rendered = renderTemplate(template, data)
   let html = markdownToHTML(rendered)
   
-  // Hide HelloSign text tags after markdown conversion
-  // Match HelloSign text tags: [field|req|signerN] or [field|req|signerN|label|id]
-  const textTagRegex = /\[([a-z_]+)\|([a-z]+)\|([a-z0-9]+)(?:\|([^\]]+))?\]/gi
-  html = html.replace(textTagRegex, (match) => {
-    // Wrap the text tag in a span with white color to make it invisible
-    return `<span style="color: white; background: white;">${match}</span>`
-  })
+  // SignWell text tags should remain in the PDF text layer for detection
+  // Don't hide them with white color - SignWell will replace them with signature fields
+  // The text tags are already in the correct format: [sig|req|recipient_1], [date|req|recipient_1]
+  // SignWell will automatically detect and replace these tags with signature/date fields
 
   return html
 }
