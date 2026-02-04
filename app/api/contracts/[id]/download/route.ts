@@ -94,8 +94,11 @@ export async function GET(
     const filename = `${contract.templateType}_${contract.song.title}_${collaboratorName}.pdf`
       .replace(/[^a-zA-Z0-9_\-.]/g, "_")
 
+    // Convert Buffer to Uint8Array for NextResponse
+    const pdfArray = new Uint8Array(pdfBuffer)
+
     // Return PDF as download
-    return new NextResponse(pdfBuffer, {
+    return new NextResponse(pdfArray, {
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": `attachment; filename="${filename}"`,
