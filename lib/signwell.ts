@@ -77,56 +77,58 @@ export class SignWellClient {
       const pdfBase64 = params.pdfBuffer.toString('base64')
 
       // Create document payload
-      // SignWell API expects files array with file_base64 and recipients with fields
+      // Based on SignWell API: fields should reference recipient_id, not be nested in recipients
+      const recipients = signers.map((signer, index) => ({
+        id: `recipient_${index + 1}`,
+        email: signer.email,
+        name: signer.name,
+        role: signer.role || "signer",
+      }))
+
+      // Fields should be defined separately with recipient_id references
+      const fields: any[] = []
+      signers.forEach((signer, index) => {
+        const signerTag = `signer${index + 1}`
+        const recipientId = `recipient_${index + 1}`
+        
+        // Signature field
+        fields.push({
+          type: "signature",
+          file_id: "file_1",
+          recipient_id: recipientId, // Link field to recipient
+          text_tag: `sig|req|${signerTag}`, // Text tag format: sig|req|signer1
+          page: 1,
+          x: 100,
+          y: 700 - (index * 100),
+          width: 200,
+          height: 50,
+        })
+        
+        // Date field
+        fields.push({
+          type: "date",
+          file_id: "file_1",
+          recipient_id: recipientId, // Link field to recipient
+          text_tag: `date|req|${signerTag}`,
+          page: 1,
+          x: 350,
+          y: 700 - (index * 100),
+          width: 100,
+          height: 20,
+        })
+      })
+
       const documentPayload: any = {
         name: params.title,
-        // SignWell expects files as an array with file_base64 (not file)
-        // Files need id field for field references
         files: [
           {
-            id: "file_1", // File ID for field references
+            id: "file_1",
             name: `${params.title}.pdf`,
-            file_base64: pdfBase64, // Use file_base64 instead of file
+            file_base64: pdfBase64,
           }
         ],
-        // Recipients need id field and fields associated
-        // SignWell requires fields array with proper structure
-        // Fields should reference the file and include type and position
-        recipients: signers.map((signer, index) => {
-          const signerTag = `signer${index + 1}` // Matches [sig|req|signer1], [sig|req|signer2], etc.
-          return {
-            id: `recipient_${index + 1}`, // SignWell requires id field
-            email: signer.email,
-            name: signer.name,
-            role: signer.role || "signer",
-            // Fields array - use text tags to match PDF tags like [sig|req|signer1]
-            // SignWell will automatically place fields based on text tags in the PDF
-            fields: [
-              {
-                type: "signature",
-                file_id: "file_1", // Reference to file in files array
-                text_tag: `sig|req|${signerTag}`, // Text tag format: sig|req|signer1 (matches [sig|req|signer1] in PDF)
-                // Fallback coordinates if text tag not found
-                page: 1,
-                x: 100,
-                y: 700 - (index * 100), // Adjust Y for multiple signers
-                width: 200,
-                height: 50,
-              },
-              {
-                type: "date",
-                file_id: "file_1",
-                text_tag: `date|req|${signerTag}`, // Date field text tag
-                page: 1,
-                x: 350,
-                y: 700 - (index * 100),
-                width: 100,
-                height: 20,
-              },
-            ],
-          }
-        }),
-        // If draft mode, don't send immediately
+        recipients: recipients,
+        fields: fields, // Fields defined separately with recipient_id references
         send: !params.draft,
       }
 
