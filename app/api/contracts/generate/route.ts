@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
             <meta charset="UTF-8">
             <style>
               body {
-                font-family: 'Times New Roman', serif;
+                font-family: Arial, sans-serif;
                 line-height: 1.6;
                 max-width: 800px;
                 margin: 0 auto;

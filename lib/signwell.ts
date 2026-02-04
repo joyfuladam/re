@@ -90,8 +90,8 @@ export class SignWellClient {
           }
         ],
         // Recipients need id field and fields associated
-        // SignWell can use text tags in PDF (like [sig|req|signer1]) or explicit fields
-        // Using text tags approach - fields will reference text tags in the PDF
+        // SignWell requires fields array with proper structure
+        // Fields should reference the file and include type and position
         recipients: signers.map((signer, index) => {
           const signerTag = `signer${index + 1}` // Matches [sig|req|signer1], [sig|req|signer2], etc.
           return {
@@ -99,20 +99,18 @@ export class SignWellClient {
             email: signer.email,
             name: signer.name,
             role: signer.role || "signer",
-            // Fields must reference the file and can use text tags or coordinates
-            // Text tags format in PDF: [sig|req|signer1], [sig|req|signer2], etc.
+            // Fields array - each field must have type, file reference, and position
             fields: [
               {
                 type: "signature",
                 file_id: "file_1", // Reference to file in files array
-                // Try text tag first - if PDF has [sig|req|signer1] tags, SignWell will use them
-                text_tag: `sig|req|${signerTag}`, // Matches [sig|req|signer1] in PDF
-                // Fallback coordinates if text tags not found
-                page: 1,
-                x: 100,
-                y: 700,
+                page: 1, // Page number (1-indexed)
+                x: 100, // X coordinate
+                y: 700, // Y coordinate (from bottom of page)
                 width: 200,
                 height: 50,
+                // Optional: text tag if PDF contains SignWell text tags
+                // text_tag: `sig|req|${signerTag}`,
               }
             ],
           }

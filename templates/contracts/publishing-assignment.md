@@ -56,15 +56,4 @@ Date: [date|req|signer2]
 {% for song in compositions %}| {{song.title}}         | {{song.writers}}                              |
 {% endfor %}
 
-**Exhibit B: In-Kind Services Provided by Publisher**  
-Publisher provides the following services at no cash cost to Writer, with estimated fair market value:  
-
-- In-house studio recording, engineering, and mixing: ${{studio_value}}  
-- Publishing administration setup (Sentric/CCLI registrations): ${{admin_value}}  
-- Marketing and playlist pitching (Wings Access, social media): ${{marketing_value}}  
-- Production and promotion of alternative versions (acoustic, instrumental, live, features, etc.): ${{alternative_versions_value}}  
-
-**Total Estimated Value**: ${{total_value}}  
-
-These services are recoupable from Publisher's share of royalties from the Compositions.
 

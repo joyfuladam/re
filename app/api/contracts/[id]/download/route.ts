@@ -64,7 +64,7 @@ export async function GET(
 <head>
   <meta charset="UTF-8">
   <style>
-    body { font-family: 'Times New Roman', serif; line-height: 1.6; max-width: 800px; margin: 0 auto; padding: 40px; }
+        body { font-family: Arial, sans-serif; line-height: 1.6; max-width: 800px; margin: 0 auto; padding: 40px; }
     h1 { text-align: center; margin-bottom: 30px; }
     h2 { margin-top: 30px; margin-bottom: 15px; }
     .contract-table { width: 100%; border-collapse: collapse; margin: 20px 0; }

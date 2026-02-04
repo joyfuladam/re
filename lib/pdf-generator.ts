@@ -47,7 +47,6 @@ export interface ContractData {
   reversionCondition?: string
   advanceAmount?: number
 
-  // In-kind services (Exhibit B)
   inKindServices?: {
     studioValue: number
     adminValue: number
@@ -102,7 +101,7 @@ export function generateContractHTML(data: ContractData): string {
       <meta charset="UTF-8">
       <style>
         body {
-          font-family: 'Times New Roman', serif;
+          font-family: Arial, sans-serif;
           line-height: 1.6;
           max-width: 800px;
           margin: 0 auto;

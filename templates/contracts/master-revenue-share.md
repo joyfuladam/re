@@ -61,10 +61,4 @@ Date: [date|req|signer2]
 | ISRC (if available)    | {{song_isrc}}                            |
 | Notes                  | {{additional_notes}}                     |
 
-**Exhibit B: In-Kind Services Provided by Label** (Fair Market Value)  
-- In-house studio recording, engineering, mixing: ${{studio_value}}  
-- Publishing admin setup (Sentric/CCLI): ${{admin_value}}  
-- Marketing/playlist pitching (Wings Access): ${{marketing_value}}  
-- Alternative versions production: ${{alternative_versions_value}}  
-**Total Value**: ${{total_value}} (recoupable solely from Label's share)
 
