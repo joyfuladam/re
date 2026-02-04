@@ -21,19 +21,16 @@ Writer has created certain musical compositions for recording and release under 
 4. **Administration**  
    Publisher shall administer the assigned rights worldwide through its chosen publishing administrator (e.g., Sentric Music). Publisher shall account to Writer quarterly for Publisher's collected share (for transparency only—no payment due to Writer from publisher's share).
 
-5. **Advances (Optional)**  
-   {% if advance_amount %}Publisher shall pay Writer a non-returnable advance of ${{advance_amount}}, recoupable solely from Publisher's share of royalties from the Compositions.{% else %}No advance is provided under this Agreement.{% endif %}
-
-6. **Morals & Conduct Clause**  
+5. **Morals & Conduct Clause**  
    Writer agrees to conduct themselves, both publicly and privately, in a manner consistent with biblical Christian principles. Material breach (as reasonably determined by Publisher, e.g., public conduct contrary to Scripture) shall allow Publisher immediate termination of this Agreement and reversion of rights to Writer.
 
-7. **Warranties & Representations**  
+6. **Warranties & Representations**  
    Writer warrants that the Compositions are original, do not infringe third-party rights, and Writer has full authority to grant these rights.
 
-8. **Governing Law**  
+7. **Governing Law**  
    This Agreement shall be governed by the laws of the State of {{governing_state}}, without regard to conflict of laws principles.
 
-9. **Alternative Versions & Expanded Releases**  
+8. **Alternative Versions & Expanded Releases**  
    Publisher, at its discretion and expense, may create, record, and release alternative versions of the Compositions (including but not limited to acoustic, instrumental, live, radio edit, or featured artist collaborations) to enhance visibility, congregational adoption, and revenue potential. Such versions shall be subject to the same publishing assignment terms herein. Publisher will consult with Writer on creative decisions where practicable and credit Writer appropriately. This provision is intended to maximize the Compositions' ministry impact through diverse formats suitable for church use, streaming, and sync opportunities.
 
 IN WITNESS WHEREOF, the parties have executed this Agreement as of the Effective Date.
