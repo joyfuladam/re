@@ -76,9 +76,38 @@ export class SignWellClient {
       // Convert PDF buffer to base64 for SignWell API
       const pdfBase64 = params.pdfBuffer.toString('base64')
 
+      // #region agent log
+      fetch('http://127.0.0.1:7243/ingest/4c8d8774-18d6-406e-b702-2dc324f31e07',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'lib/signwell.ts:77',message:'PDF buffer converted to base64',data:{pdfSize:params.pdfBuffer.length,base64Length:pdfBase64.length,pdfPreview:params.pdfBuffer.toString('utf8',0,Math.min(500,params.pdfBuffer.length))},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+      // #endregion
+
+      // Check if PDF contains expected text tags
+      const pdfText = params.pdfBuffer.toString('utf8')
+      const hasRecipient1Tag = pdfText.includes('[sig|req|recipient_1]') || pdfText.includes('sig|req|recipient_1')
+      const hasRecipient2Tag = pdfText.includes('[sig|req|recipient_2]') || pdfText.includes('sig|req|recipient_2')
+      
+      // #region agent log
+      fetch('http://127.0.0.1:7243/ingest/4c8d8774-18d6-406e-b702-2dc324f31e07',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'lib/signwell.ts:84',message:'Checking PDF for text tags',data:{hasRecipient1Tag,hasRecipient2Tag,pdfTextSample:pdfText.substring(0,1000)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+      // #endregion
+
       // Create document payload
       // SignWell API: fields should be nested inside recipients
       // Text tags in PDF (like [sig|req|signer1]) will be auto-detected
+      const recipients = signers.map((signer, index) => {
+        const recipientId = `recipient_${index + 1}`
+        // #region agent log
+        fetch('http://127.0.0.1:7243/ingest/4c8d8774-18d6-406e-b702-2dc324f31e07',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'lib/signwell.ts:92',message:'Creating recipient',data:{recipientId,email:signer.email,name:signer.name,role:signer.role,index},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+        // #endregion
+        return {
+          id: recipientId,
+          email: signer.email,
+          name: signer.name,
+          role: signer.role || "signer",
+          // Note: According to SignWell documentation, if PDF contains text tags
+          // like [sig|req|signer1], fields should be auto-detected.
+          // If this doesn't work, we may need to define fields separately with recipient_id.
+        }
+      })
+
       const documentPayload: any = {
         name: params.title,
         files: [
@@ -88,20 +117,13 @@ export class SignWellClient {
             file_base64: pdfBase64,
           }
         ],
-        recipients: signers.map((signer, index) => {
-          const signerTag = `signer${index + 1}` // Matches [sig|req|signer1] in PDF
-          return {
-            id: `recipient_${index + 1}`,
-            email: signer.email,
-            name: signer.name,
-            role: signer.role || "signer",
-            // Note: According to SignWell documentation, if PDF contains text tags
-            // like [sig|req|signer1], fields should be auto-detected.
-            // If this doesn't work, we may need to define fields separately with recipient_id.
-          }
-        }),
+        recipients: recipients,
         send: !params.draft,
       }
+
+      // #region agent log
+      fetch('http://127.0.0.1:7243/ingest/4c8d8774-18d6-406e-b702-2dc324f31e07',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'lib/signwell.ts:115',message:'Document payload created',data:{recipientsCount:recipients.length,recipients:recipients.map((r:any)=>({id:r.id,email:r.email,hasFields:!!r.fields,fieldsCount:r.fields?.length||0})),filesCount:documentPayload.files.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
 
       // Add test mode parameter per SignWell API documentation
       // Reference: https://developers.signwell.com/reference/getting-started-with-your-api-1#test-mode
@@ -123,6 +145,11 @@ export class SignWellClient {
         }))
       }, null, 2))
       
+      // #region agent log
+      const payloadForLog = JSON.stringify(documentPayload)
+      fetch('http://127.0.0.1:7243/ingest/4c8d8774-18d6-406e-b702-2dc324f31e07',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'lib/signwell.ts:128',message:'Sending request to SignWell API',data:{url:`${this.apiUrl}/v1/documents`,payloadSize:payloadForLog.length,recipients:documentPayload.recipients,hasFieldsInRecipients:documentPayload.recipients.some((r:any)=>r.fields),fullPayload:documentPayload},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
+      
       // Create document via SignWell API
       // POST /v1/documents
       const documentResponse = await fetch(`${this.apiUrl}/v1/documents`, {
@@ -134,8 +161,19 @@ export class SignWellClient {
         body: JSON.stringify(documentPayload),
       })
 
+      // #region agent log
+      const responseStatus = documentResponse.status
+      const responseText = await documentResponse.text().catch(()=>'')
+      fetch('http://127.0.0.1:7243/ingest/4c8d8774-18d6-406e-b702-2dc324f31e07',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'lib/signwell.ts:142',message:'SignWell API response received',data:{status:responseStatus,ok:documentResponse.ok,responseText,headers:Object.fromEntries(documentResponse.headers.entries())},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
+
       if (!documentResponse.ok) {
-        const errorText = await documentResponse.text()
+        const errorText = responseText || await documentResponse.text().catch(()=>'')
+        let parsedError = null
+        try { parsedError = JSON.parse(errorText) } catch {}
+        // #region agent log
+        fetch('http://127.0.0.1:7243/ingest/4c8d8774-18d6-406e-b702-2dc324f31e07',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'lib/signwell.ts:145',message:'SignWell API error response',data:{status:documentResponse.status,errorText,parsedError},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+        // #endregion
         console.error("❌ SignWell document creation error:", errorText)
         throw new Error(`Failed to create document: ${documentResponse.status} ${errorText}`)
       }
