@@ -99,19 +99,30 @@ export class SignWellClient {
             email: signer.email,
             name: signer.name,
             role: signer.role || "signer",
-            // Fields array - each field must have type, file reference, and position
+            // Fields array - use text tags to match PDF tags like [sig|req|signer1]
+            // SignWell will automatically place fields based on text tags in the PDF
             fields: [
               {
                 type: "signature",
                 file_id: "file_1", // Reference to file in files array
-                page: 1, // Page number (1-indexed)
-                x: 100, // X coordinate
-                y: 700, // Y coordinate (from bottom of page)
+                text_tag: `sig|req|${signerTag}`, // Text tag format: sig|req|signer1 (matches [sig|req|signer1] in PDF)
+                // Fallback coordinates if text tag not found
+                page: 1,
+                x: 100,
+                y: 700 - (index * 100), // Adjust Y for multiple signers
                 width: 200,
                 height: 50,
-                // Optional: text tag if PDF contains SignWell text tags
-                // text_tag: `sig|req|${signerTag}`,
-              }
+              },
+              {
+                type: "date",
+                file_id: "file_1",
+                text_tag: `date|req|${signerTag}`, // Date field text tag
+                page: 1,
+                x: 350,
+                y: 700 - (index * 100),
+                width: 100,
+                height: 20,
+              },
             ],
           }
         }),
