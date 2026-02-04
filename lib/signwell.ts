@@ -77,24 +77,46 @@ export class SignWellClient {
       const pdfBase64 = params.pdfBuffer.toString('base64')
 
       // Create document payload
-      // SignWell API expects files array and recipients with id fields
-      // Based on error: recipients need "id" and files should be an array
+      // SignWell API expects files array with file_base64 and recipients with fields
       const documentPayload: any = {
         name: params.title,
-        // SignWell expects files as an array
+        // SignWell expects files as an array with file_base64 (not file)
+        // Files need id field for field references
         files: [
           {
+            id: "file_1", // File ID for field references
             name: `${params.title}.pdf`,
-            file: pdfBase64, // Base64-encoded PDF
+            file_base64: pdfBase64, // Use file_base64 instead of file
           }
         ],
-        // Recipients need id field (use email as id or generate unique id)
-        recipients: signers.map((signer, index) => ({
-          id: `recipient_${index + 1}`, // SignWell requires id field
-          email: signer.email,
-          name: signer.name,
-          role: signer.role || "signer",
-        })),
+        // Recipients need id field and fields associated
+        // SignWell can use text tags in PDF (like [sig|req|signer1]) or explicit fields
+        // Using text tags approach - fields will reference text tags in the PDF
+        recipients: signers.map((signer, index) => {
+          const signerTag = `signer${index + 1}` // Matches [sig|req|signer1], [sig|req|signer2], etc.
+          return {
+            id: `recipient_${index + 1}`, // SignWell requires id field
+            email: signer.email,
+            name: signer.name,
+            role: signer.role || "signer",
+            // Fields must reference the file and can use text tags or coordinates
+            // Text tags format in PDF: [sig|req|signer1], [sig|req|signer2], etc.
+            fields: [
+              {
+                type: "signature",
+                file_id: "file_1", // Reference to file in files array
+                // Try text tag first - if PDF has [sig|req|signer1] tags, SignWell will use them
+                text_tag: `sig|req|${signerTag}`, // Matches [sig|req|signer1] in PDF
+                // Fallback coordinates if text tags not found
+                page: 1,
+                x: 100,
+                y: 700,
+                width: 200,
+                height: 50,
+              }
+            ],
+          }
+        }),
         // If draft mode, don't send immediately
         send: !params.draft,
       }
