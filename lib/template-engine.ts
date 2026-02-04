@@ -186,6 +186,10 @@ export function markdownToHTML(markdown: string): string {
     return `<p>${trimmed}</p>`
   }).join("\n\n")
 
+  // Hide SignWell text tags by wrapping them in spans with white color
+  // Pattern: [sig|req|recipient_1], [date|req|recipient_1], etc.
+  html = html.replace(/\[(sig|date)\|req\|([^\]]+)\]/g, '<span class="signwell-tag">[$1|req|$2]</span>')
+
   return html
 }
 

@@ -107,30 +107,32 @@ export class SignWellClient {
       })
 
       // Create fields array - SignWell requires 2D array: [[fields_for_file_1], [fields_for_file_2], ...]
+      // When text_tags: true, SignWell will auto-detect field positions from text tags in the PDF
+      // The coordinates below are fallbacks in case text tag detection fails
       // Each field must have: x, y, page, recipient_id, type (all required)
       const fieldsForFile1: any[] = []
       signers.forEach((signer, index) => {
         const recipientId = `recipient_${index + 1}`
         
-        // Signature field
+        // Signature field - coordinates are fallback; text tags should override when detected
         fieldsForFile1.push({
           type: "signature",
           recipient_id: recipientId, // Required: links field to recipient
           page: 1,
-          x: 100,
-          y: 700 - (index * 100), // Adjust Y for multiple signers
+          x: 100, // Approximate position - text tags will override if detected
+          y: 650 - (index * 120), // Approximate Y position, adjusted for multiple signers
           width: 200,
           height: 50,
           required: true,
         })
         
-        // Date field
+        // Date field - coordinates are fallback; text tags should override when detected
         fieldsForFile1.push({
           type: "date",
           recipient_id: recipientId, // Required: links field to recipient
           page: 1,
-          x: 350,
-          y: 700 - (index * 100),
+          x: 350, // Approximate position - text tags will override if detected
+          y: 650 - (index * 120), // Same Y as signature field
           width: 100,
           height: 20,
           required: true,

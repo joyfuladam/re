@@ -175,10 +175,19 @@ export async function POST(request: NextRequest) {
                 margin-left: 20px;
                 margin-bottom: 10px;
               }
-              /* SignWell signature fields will be added via API */
-              span[style*="color: white"] {
+              /* Hide SignWell text tags - they should be invisible but detectable */
+              .signwell-tag {
                 color: white !important;
                 background: white !important;
+                font-size: 1px !important;
+                opacity: 0 !important;
+              }
+              /* Also hide any text matching SignWell tag pattern */
+              [class*="sig|req"], [class*="date|req"] {
+                color: white !important;
+                background: white !important;
+                font-size: 1px !important;
+                opacity: 0 !important;
               }
             </style>
           </head>
