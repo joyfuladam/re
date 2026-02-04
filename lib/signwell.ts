@@ -106,62 +106,29 @@ export class SignWellClient {
         }
       })
 
-      // Create fields array - SignWell requires 2D array: [[fields_for_file_1], [fields_for_file_2], ...]
-      // When text_tags: true, SignWell will auto-detect field positions from text tags in the PDF
-      // The coordinates below are fallbacks in case text tag detection fails
-      // Each field must have: x, y, page, recipient_id, type (all required)
-      const fieldsForFile1: any[] = []
-      signers.forEach((signer, index) => {
-        const recipientId = `recipient_${index + 1}`
-        
-        // Signature field - coordinates are fallback; text tags should override when detected
-        fieldsForFile1.push({
-          type: "signature",
-          recipient_id: recipientId, // Required: links field to recipient
-          page: 1,
-          x: 100, // Approximate position - text tags will override if detected
-          y: 650 - (index * 120), // Approximate Y position, adjusted for multiple signers
-          width: 200,
-          height: 50,
-          required: true,
-        })
-        
-        // Date field - coordinates are fallback; text tags should override when detected
-        fieldsForFile1.push({
-          type: "date",
-          recipient_id: recipientId, // Required: links field to recipient
-          page: 1,
-          x: 350, // Approximate position - text tags will override if detected
-          y: 650 - (index * 120), // Same Y as signature field
-          width: 100,
-          height: 20,
-          required: true,
-        })
-      })
-
-      // Fields must be 2D array: one array per file
-      const fields = [fieldsForFile1]
-
-      // #region agent log
-      fetch('http://127.0.0.1:7243/ingest/4c8d8774-18d6-406e-b702-2dc324f31e07',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'lib/signwell.ts:135',message:'Fields array created',data:{fieldsIs2D:Array.isArray(fields) && Array.isArray(fields[0]),fieldsCount:fields.length,fieldsForFile1Count:fieldsForFile1.length,fieldsSample:fieldsForFile1.slice(0,2).map((f:any)=>({type:f.type,recipient_id:f.recipient_id,page:f.page}))},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
+      // When text_tags: true is enabled, SignWell will auto-detect fields from text tags in the PDF
+      // According to SignWell docs: https://developers.signwell.com/reference/enabling-text-tags
+      // We should NOT provide explicit coordinates - SignWell will use the text tag positions
+      // Text tags in PDF should be in format: [sig|req|recipient_1] and [date|req|recipient_1]
+      // Do NOT include 'fields' property - SignWell will auto-detect from text tags
 
       const documentPayload: any = {
         name: params.title,
         files: [
           {
-            name: `${params.title}.pdf`, // Note: API spec shows 'name' not 'id'
+            name: `${params.title}.pdf`,
             file_base64: pdfBase64,
           }
         ],
         recipients: recipients,
-        fields: fields, // 2D array: [[fields_for_file_1]]
-        text_tags: true, // Enable text tag detection from PDF
+        text_tags: true, // Enable text tag detection from PDF - SignWell will auto-detect fields
+        // Note: When text_tags is true, we don't provide explicit fields/coordinates
+        // SignWell will detect fields from text tags like [sig|req|recipient_1] and [date|req|recipient_1]
         send: !params.draft,
       }
 
       // #region agent log
-      fetch('http://127.0.0.1:7243/ingest/4c8d8774-18d6-406e-b702-2dc324f31e07',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'lib/signwell.ts:115',message:'Document payload created',data:{recipientsCount:recipients.length,recipients:recipients.map((r:any)=>({id:r.id,email:r.email,hasFields:!!r.fields,fieldsCount:r.fields?.length||0})),filesCount:documentPayload.files.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      fetch('http://127.0.0.1:7243/ingest/4c8d8774-18d6-406e-b702-2dc324f31e07',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'lib/signwell.ts:115',message:'Document payload created with text_tags enabled',data:{recipientsCount:recipients.length,recipients:recipients.map((r:any)=>({id:r.id,email:r.email})),filesCount:documentPayload.files.length,textTagsEnabled:documentPayload.text_tags},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
       // #endregion
 
       // Add test mode parameter per SignWell API documentation
@@ -176,12 +143,11 @@ export class SignWellClient {
         name: documentPayload.name,
         files_count: documentPayload.files.length,
         recipients_count: documentPayload.recipients.length,
-        recipients_with_fields: documentPayload.recipients.map((r: any) => ({
+        recipients: documentPayload.recipients.map((r: any) => ({
           id: r.id,
           email: r.email,
-          fields_count: r.fields?.length || 0,
-          fields: r.fields?.map((f: any) => ({ type: f.type, file_id: f.file_id, page: f.page }))
-        }))
+        })),
+        text_tags_enabled: documentPayload.text_tags,
       }, null, 2))
       
       // #region agent log
