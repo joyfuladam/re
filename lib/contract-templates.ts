@@ -72,7 +72,7 @@ Date: <span style="color: white;">{{date:2:y}}</span>
 
 const MASTER_REVENUE_SHARE_TEMPLATE = `# Song-by-Song Master Revenue Share Agreement Template
 
-**SONG-BY-SONG MASTER REVENUE SHARE AGREEMENT**
+**MASTER REVENUE SHARE AGREEMENT**
 
 This Agreement is made effective as of {{effective_date}} ("Effective Date"), between **River and Ember, LLC** ("Label"), a {{label_state}} limited liability company with principal place of business at {{label_address}}, and **{{artist_full_name}}**, an individual residing at {% if artist_address %}{{artist_address}}{% else %}<span style="color: red;">[Address not provided]</span>{% endif %} ({% if is_musician %}"Musician"{% else %}{% if is_producer %}"Producer"{% else %}"Artist"{% endif %}{% endif %}).
 
@@ -114,9 +114,8 @@ Name: {{publisher_manager_name}}<br>
 Title: {{publisher_manager_title}}<br>
 Signature: <span style="color: white;">{{signature:1:y}}</span><br>
 Date: <span style="color: white;">{{date:1:y}}</span>
-
-{% if is_musician %}**Musician:**{% else %}{% if is_producer %}**Producer:**{% else %}**Artist:**{% endif %}{% endif %}  
-Name: {{artist_full_name}}<br>
+ 
+Collaborator Name: {{artist_full_name}}<br>
 Signature: <span style="color: white;">{{signature:2:y}}</span><br>
 Date: <span style="color: white;">{{date:2:y}}</span>
 
