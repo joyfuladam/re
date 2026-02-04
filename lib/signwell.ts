@@ -95,28 +95,9 @@ export class SignWellClient {
             email: signer.email,
             name: signer.name,
             role: signer.role || "signer",
-            // Fields array - required for SignWell to associate fields with recipients
-            // Using coordinates only (text tags may be auto-detected from PDF)
-            fields: [
-              {
-                type: "signature",
-                file_id: "file_1",
-                page: 1,
-                x: 100,
-                y: 700 - (index * 100), // Y coordinate from bottom of page
-                width: 200,
-                height: 50,
-              },
-              {
-                type: "date",
-                file_id: "file_1",
-                page: 1,
-                x: 350,
-                y: 700 - (index * 100),
-                width: 100,
-                height: 20,
-              },
-            ],
+            // Note: According to SignWell documentation, if PDF contains text tags
+            // like [sig|req|signer1], fields should be auto-detected.
+            // If this doesn't work, we may need to define fields separately with recipient_id.
           }
         }),
         send: !params.draft,
