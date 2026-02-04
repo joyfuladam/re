@@ -342,7 +342,7 @@ export default function SongDetailPage() {
 
       const sendData = await sendResponse.json()
       if (draft) {
-        alert(`Template created! Log into DocuSeal to create a submission from this template and send manually.`)
+        alert(`Draft document created! Log into SignWell to review and send manually.`)
       } else {
         alert(`Contract sent to ${collaboratorName} for e-signature`)
       }
@@ -1130,7 +1130,7 @@ export default function SongDetailPage() {
                                   size="sm"
                                   onClick={() => handleRefreshStatus(contractStatus.contractId!)}
                                   disabled={refreshingStatusId === contractStatus.contractId}
-                                  title="Refresh status from DocuSeal"
+                                  title="Refresh status from SignWell"
                                   className="h-8 w-8 p-0"
                                 >
                                   {refreshingStatusId === contractStatus.contractId ? "⟳" : "↻"}
@@ -1164,7 +1164,7 @@ export default function SongDetailPage() {
                                     size="sm"
                                     onClick={() => handleSendContract(sc.id, contractType, collaboratorName, true)}
                                     disabled={!song.masterLocked || isGenerating || isSigned}
-                                    title="Create draft in DocuSeal (no emails sent)"
+                                    title="Create draft in SignWell (no emails sent)"
                                   >
                                     Draft
                                   </Button>
@@ -1268,7 +1268,7 @@ export default function SongDetailPage() {
                                   size="sm"
                                   onClick={() => handleRefreshStatus(contractStatus.contractId!)}
                                   disabled={refreshingStatusId === contractStatus.contractId}
-                                  title="Refresh status from DocuSeal"
+                                  title="Refresh status from SignWell"
                                   className="h-8 w-8 p-0"
                                 >
                                   {refreshingStatusId === contractStatus.contractId ? "⟳" : "↻"}
@@ -1302,7 +1302,7 @@ export default function SongDetailPage() {
                                     size="sm"
                                     onClick={() => handleSendContract(sc.id, contractType, collaboratorName, true)}
                                     disabled={!song.masterLocked || isGenerating || isSigned}
-                                    title="Create draft in DocuSeal (no emails sent)"
+                                    title="Create draft in SignWell (no emails sent)"
                                   >
                                     Draft
                                   </Button>

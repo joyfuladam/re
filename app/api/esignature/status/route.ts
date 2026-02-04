@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { db } from "@/lib/db"
-import { createDocuSealClient } from "@/lib/docuseal"
+import { createSignWellClient } from "@/lib/signwell"
 import { z } from "zod"
 
 export const dynamic = 'force-dynamic'
@@ -50,50 +50,50 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    // Initialize DocuSeal client
-    const apiKey = process.env.DOCUSEAL_API_KEY
-    const apiUrl = process.env.DOCUSEAL_API_URL
+    // Initialize SignWell client
+    const apiKey = process.env.SIGNWELL_API_KEY
+    const apiUrl = process.env.SIGNWELL_API_URL // Optional, defaults to https://api.signwell.com
 
-    if (!apiKey || !apiUrl) {
-      // If DocuSeal not configured, return database status
+    if (!apiKey) {
+      // If SignWell not configured, return database status
       return NextResponse.json({
         status: contract.esignatureStatus || "pending",
         signedAt: contract.signedAt?.toISOString() || null,
         source: "database",
-        warning: "DocuSeal not configured, returning database status",
+        warning: "SignWell not configured, returning database status",
       })
     }
 
-    // Get status from DocuSeal API
+    // Get status from SignWell API
     try {
-      const client = createDocuSealClient(apiKey, apiUrl)
-      const docuSealStatus = await client.getSignatureStatus(contract.esignatureDocId)
+      const client = createSignWellClient(apiKey, apiUrl)
+      const signWellStatus = await client.getSignatureStatus(contract.esignatureDocId)
 
       // Update database if status changed
-      if (docuSealStatus.status !== contract.esignatureStatus) {
+      if (signWellStatus.status !== contract.esignatureStatus) {
         await db.contract.update({
           where: { id: contract.id },
           data: {
-            esignatureStatus: docuSealStatus.status,
-            signedAt: docuSealStatus.signedAt ? new Date(docuSealStatus.signedAt) : null,
+            esignatureStatus: signWellStatus.status,
+            signedAt: signWellStatus.signedAt ? new Date(signWellStatus.signedAt) : null,
           },
         })
       }
 
       return NextResponse.json({
-        status: docuSealStatus.status,
-        signedAt: docuSealStatus.signedAt,
-        signers: docuSealStatus.signers,
-        source: "docuseal",
+        status: signWellStatus.status,
+        signedAt: signWellStatus.signedAt,
+        signers: signWellStatus.signers,
+        source: "signwell",
       })
     } catch (error) {
-      console.error("Error fetching status from DocuSeal:", error)
+      console.error("Error fetching status from SignWell:", error)
       // Return database status as fallback
       return NextResponse.json({
         status: contract.esignatureStatus || "pending",
         signedAt: contract.signedAt?.toISOString() || null,
         source: "database",
-        error: error instanceof Error ? error.message : "Failed to fetch from DocuSeal",
+        error: error instanceof Error ? error.message : "Failed to fetch from SignWell",
       })
     }
   } catch (error) {

@@ -11,7 +11,7 @@ A comprehensive web-based record label management application with strict role-b
   - Master splits (all eligible roles) - available after publishing is locked
 - **Role-Based Revenue Eligibility**: Strict enforcement of revenue streams per role
 - **Contract Generation**: Role-specific contract templates with PDF generation
-- **E-Signature Integration**: DocuSeal self-hosted e-signature integration for contract signing
+- **E-Signature Integration**: SignWell e-signature integration for contract signing
 - **Dashboard**: Overview with statistics and quick actions
 
 ## Tech Stack
@@ -21,7 +21,7 @@ A comprehensive web-based record label management application with strict role-b
 - **Authentication**: NextAuth.js
 - **UI**: Tailwind CSS with shadcn/ui components
 - **Charts**: Recharts
-- **E-Signature**: DocuSeal (self-hosted)
+- **E-Signature**: SignWell
 
 ## Getting Started
 
@@ -29,7 +29,7 @@ A comprehensive web-based record label management application with strict role-b
 
 - Node.js 18+ and npm
 - PostgreSQL database
-- DocuSeal instance on Railway (optional, for e-signatures)
+- SignWell API key (optional, for e-signatures)
 
 ### Installation
 
@@ -54,8 +54,8 @@ Edit `.env` with your configuration:
 DATABASE_URL="postgresql://user:password@localhost:5432/river_ember"
 NEXTAUTH_SECRET="your-secret-key-here"
 NEXTAUTH_URL="http://localhost:3000"
-DOCUSEAL_API_KEY="your-docuseal-api-key"
-DOCUSEAL_API_URL="https://your-docuseal.railway.app"
+SIGNWELL_API_KEY="your-signwell-api-key"
+SIGNWELL_API_URL="https://www.signwell.com/api"  # Optional, defaults to https://www.signwell.com/api
 ```
 
 4. Set up the database:
@@ -123,12 +123,32 @@ Contracts are automatically generated based on collaborator role:
 
 ## E-Signature Integration
 
-The application integrates with HelloSign/Dropbox Sign API for contract signing:
+The application integrates with SignWell API for contract signing:
 
 1. Generate contract from song detail page
-2. Send contract via HelloSign API
+2. Send contract via SignWell API
 3. Track signature status
 4. Store signed documents
+
+### Setting Up SignWell E-Signature
+
+1. **Create a SignWell Account**: Sign up at https://www.signwell.com/
+
+2. **Get API Key**:
+   - Log into your SignWell account
+   - Navigate to Settings → API
+   - Generate or copy your API key
+   - Add to `.env`: `SIGNWELL_API_KEY="your-api-key-here"`
+
+3. **Configure Webhook** (for production):
+   - In SignWell dashboard, go to Settings → Webhooks
+   - Add webhook URL: `https://your-domain.com/api/esignature/webhook`
+   - Copy the webhook secret
+   - Add to `.env`: `SIGNWELL_WEBHOOK_SECRET="your-webhook-secret-here"`
+
+4. **API URL** (optional):
+   - Defaults to `https://api.signwell.com`
+   - Only set `SIGNWELL_API_URL` if using a custom API endpoint
 
 ## Development
 
@@ -160,30 +180,10 @@ npm start
 - `NEXTAUTH_URL`: Base URL of your application (e.g., `http://localhost:3000` for local dev)
 
 ### Optional (for E-Signature)
-- `HELLOSIGN_API_KEY`: HelloSign/Dropbox Sign API key (get from your HelloSign account settings)
-- `HELLOSIGN_WEBHOOK_SECRET`: Webhook secret for verifying webhook requests (configure in HelloSign dashboard)
-- `HELLOSIGN_TEST_MODE`: Set to `"false"` to disable test mode (defaults to `true` in development). **Note:** In test mode, HelloSign only allows sending to emails within your account's domain. To test with external emails, set this to `"false"` (uses real API credits).
-
-### Setting Up HelloSign E-Signature
-
-1. **Create a HelloSign Account**: Sign up at https://www.hellosign.com/ or https://www.dropbox.com/sign
-
-2. **Get API Key**:
-   - Log into your HelloSign/Dropbox Sign account
-   - Navigate to Settings → API
-   - Generate or copy your API key
-   - Add to `.env`: `HELLOSIGN_API_KEY="your-api-key-here"`
-
-3. **Configure Webhook** (for production):
-   - In HelloSign dashboard, go to Settings → API → Event Callbacks
-   - Add callback URL: `https://your-domain.com/api/esignature/webhook`
-   - Copy the webhook secret
-   - Add to `.env`: `HELLOSIGN_WEBHOOK_SECRET="your-webhook-secret-here"`
-
-4. **Testing Locally** (optional):
-   - Use ngrok to expose your local server: `ngrok http 3000`
-   - Use the ngrok URL as your webhook callback URL in HelloSign dashboard
-   - The webhook secret is optional for local testing but recommended for production
+- `SIGNWELL_API_KEY`: SignWell API key (get from your SignWell account settings)
+- `SIGNWELL_API_URL`: SignWell API URL (optional, defaults to `https://www.signwell.com/api`)
+- `SIGNWELL_WEBHOOK_SECRET`: Webhook secret for verifying webhook requests (configure in SignWell dashboard)
+- `SIGNWELL_TEST_MODE`: Set to `"false"` to disable test mode (defaults to `true` for safety). **Note:** SignWell test mode behavior depends on your account settings. You may need to use a separate test API key or configure test mode in your SignWell dashboard.
 
 ## License
 

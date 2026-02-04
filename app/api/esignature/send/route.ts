@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { db } from "@/lib/db"
-import { createDocuSealClient } from "@/lib/docuseal"
+import { createSignWellClient } from "@/lib/signwell"
 import { convertHTMLToPDF } from "@/lib/pdf-converter"
 import { hasTemplate, renderContractTemplate } from "@/lib/contract-templates"
 import { buildContractData } from "@/lib/contract-data-builder"
@@ -67,27 +67,22 @@ export async function POST(request: NextRequest) {
     }
 
     // If re-sending, we'll create a new signature request
-    // The old one will remain in DocuSeal but we'll track the new one
+    // The old one will remain in SignWell but we'll track the new one
 
-    // Initialize DocuSeal client
-    const apiKey = process.env.DOCUSEAL_API_KEY
-    const apiUrl = process.env.DOCUSEAL_API_URL
+    // Initialize SignWell client
+    const apiKey = process.env.SIGNWELL_API_KEY
+    const apiUrl = process.env.SIGNWELL_API_URL // Optional, defaults to https://api.signwell.com
     if (!apiKey) {
-      console.error("❌ DOCUSEAL_API_KEY not found in environment variables")
+      console.error("❌ SIGNWELL_API_KEY not found in environment variables")
       return NextResponse.json(
-        { error: "DocuSeal API key not configured" },
+        { error: "SignWell API key not configured" },
         { status: 500 }
       )
     }
-    if (!apiUrl) {
-      console.error("❌ DOCUSEAL_API_URL not found in environment variables")
-      return NextResponse.json(
-        { error: "DocuSeal API URL not configured" },
-        { status: 500 }
-      )
+    console.log("🔑 SignWell API key loaded (length:", apiKey.length, "chars)")
+    if (apiUrl) {
+      console.log("🔗 SignWell API URL:", apiUrl)
     }
-    console.log("🔑 DocuSeal API key loaded (length:", apiKey.length, "chars)")
-    console.log("🔗 DocuSeal API URL:", apiUrl)
 
     // Generate contract HTML (reuse logic from generate endpoint)
     const contractData = await buildContractData(
@@ -180,7 +175,7 @@ export async function POST(request: NextRequest) {
                 margin-left: 20px;
                 margin-bottom: 10px;
               }
-              /* DocuSeal signature fields will be added via API */
+              /* SignWell signature fields will be added via API */
               span[style*="color: white"] {
                 color: white !important;
                 background: white !important;
@@ -205,8 +200,8 @@ export async function POST(request: NextRequest) {
     const pdfBuffer = await convertHTMLToPDF(contractHTML)
     console.log(`✅ PDF generated (${pdfBuffer.length} bytes)`)
 
-    // Initialize DocuSeal client and send contract
-    const client = createDocuSealClient(apiKey, apiUrl)
+    // Initialize SignWell client and send contract
+    const client = createSignWellClient(apiKey, apiUrl)
     
     const signerName = [
       contract.songCollaborator.collaborator.firstName,
@@ -217,9 +212,9 @@ export async function POST(request: NextRequest) {
       .join(" ")
 
     if (validated.draft) {
-      console.log(`📝 Creating draft template in DocuSeal...`)
+      console.log(`📝 Creating draft document in SignWell...`)
     } else {
-      console.log(`🚀 Sending contract to DocuSeal...`)
+      console.log(`🚀 Sending contract to SignWell...`)
     }
     
     const result = await client.sendContract({
@@ -247,15 +242,12 @@ export async function POST(request: NextRequest) {
     })
 
     if (validated.draft) {
-      console.log(`✅ Draft template created and saved successfully!`)
-      // Extract template ID from the prefixed string
-      const templateId = result.signatureRequestId.replace("template_", "")
+      console.log(`✅ Draft document created and saved successfully!`)
       return NextResponse.json({ 
         success: true, 
         signatureRequestId: result.signatureRequestId,
-        templateId,
         draft: true,
-        message: "Template created. Log into DocuSeal to create a submission from this template and send manually."
+        message: "Draft document created. Log into SignWell to review and send manually."
       })
     } else {
       console.log(`✅ Contract sent and saved successfully!`)
