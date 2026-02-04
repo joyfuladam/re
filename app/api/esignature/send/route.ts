@@ -106,7 +106,8 @@ export async function POST(request: NextRequest) {
             <style>
               body {
                 font-family: Arial, sans-serif;
-                line-height: 1.6;
+                font-size: 10pt;
+                line-height: 1.5;
                 max-width: 800px;
                 margin: 0 auto;
                 padding: 40px;
@@ -114,14 +115,17 @@ export async function POST(request: NextRequest) {
               h1 {
                 text-align: center;
                 margin-bottom: 30px;
+                font-size: 14pt;
               }
               h2 {
                 margin-top: 30px;
                 margin-bottom: 15px;
+                font-size: 11pt;
               }
               h3 {
                 margin-top: 20px;
                 margin-bottom: 10px;
+                font-size: 10pt;
               }
               .section {
                 margin-bottom: 20px;
@@ -137,11 +141,12 @@ export async function POST(request: NextRequest) {
                 border-spacing: 0;
                 margin: 20px 0;
                 table-layout: fixed;
+                font-size: 9pt;
               }
               .contract-table th,
               .contract-table td {
                 border: 1px solid #000;
-                padding: 8px;
+                padding: 6px 8px;
                 text-align: left;
                 word-wrap: break-word;
                 margin: 0;
@@ -168,8 +173,18 @@ export async function POST(request: NextRequest) {
               .contract-table tbody tr:first-child td {
                 border-top-width: 0;
               }
+              /* Legal document style: indent body text under numbered sections */
               p {
                 margin-bottom: 10px;
+                text-align: justify;
+              }
+              /* Indent paragraphs that follow numbered headings (legal document style) */
+              p:has(strong) {
+                margin-left: 0;
+                text-indent: 0;
+              }
+              p + p {
+                text-indent: 0.5in;
               }
               ul, ol {
                 margin-left: 20px;
