@@ -92,43 +92,68 @@ export class SignWellClient {
       // Create document payload
       // SignWell API: fields should be nested inside recipients
       // Text tags in PDF (like [sig|req|signer1]) will be auto-detected
+      // Create recipients (simple structure - no fields nested)
       const recipients = signers.map((signer, index) => {
         const recipientId = `recipient_${index + 1}`
         // #region agent log
-        fetch('http://127.0.0.1:7243/ingest/4c8d8774-18d6-406e-b702-2dc324f31e07',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'lib/signwell.ts:92',message:'Creating recipient',data:{recipientId,email:signer.email,name:signer.name,role:signer.role,index},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+        fetch('http://127.0.0.1:7243/ingest/4c8d8774-18d6-406e-b702-2dc324f31e07',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'lib/signwell.ts:95',message:'Creating recipient',data:{recipientId,email:signer.email,name:signer.name,role:signer.role,index},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
         // #endregion
         return {
           id: recipientId,
           email: signer.email,
           name: signer.name,
-          role: signer.role || "signer",
-          // SignWell requires explicit fields - even with text tags, fields must be defined
-          // Using minimal field structure with text_tag reference
-          fields: [
-            {
-              type: "signature",
-              file_id: "file_1",
-              text_tag: `sig|req|${recipientId}`, // Match recipient ID in text tag
-            },
-            {
-              type: "date",
-              file_id: "file_1",
-              text_tag: `date|req|${recipientId}`, // Match recipient ID in text tag
-            },
-          ],
+          // Note: role is not in the API spec, removing it
         }
       })
+
+      // Create fields array - SignWell requires 2D array: [[fields_for_file_1], [fields_for_file_2], ...]
+      // Each field must have: x, y, page, recipient_id, type (all required)
+      const fieldsForFile1: any[] = []
+      signers.forEach((signer, index) => {
+        const recipientId = `recipient_${index + 1}`
+        
+        // Signature field
+        fieldsForFile1.push({
+          type: "signature",
+          recipient_id: recipientId, // Required: links field to recipient
+          page: 1,
+          x: 100,
+          y: 700 - (index * 100), // Adjust Y for multiple signers
+          width: 200,
+          height: 50,
+          required: true,
+        })
+        
+        // Date field
+        fieldsForFile1.push({
+          type: "date",
+          recipient_id: recipientId, // Required: links field to recipient
+          page: 1,
+          x: 350,
+          y: 700 - (index * 100),
+          width: 100,
+          height: 20,
+          required: true,
+        })
+      })
+
+      // Fields must be 2D array: one array per file
+      const fields = [fieldsForFile1]
+
+      // #region agent log
+      fetch('http://127.0.0.1:7243/ingest/4c8d8774-18d6-406e-b702-2dc324f31e07',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'lib/signwell.ts:135',message:'Fields array created',data:{fieldsIs2D:Array.isArray(fields) && Array.isArray(fields[0]),fieldsCount:fields.length,fieldsForFile1Count:fieldsForFile1.length,fieldsSample:fieldsForFile1.slice(0,2).map((f:any)=>({type:f.type,recipient_id:f.recipient_id,page:f.page}))},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
 
       const documentPayload: any = {
         name: params.title,
         files: [
           {
-            id: "file_1",
-            name: `${params.title}.pdf`,
+            name: `${params.title}.pdf`, // Note: API spec shows 'name' not 'id'
             file_base64: pdfBase64,
           }
         ],
         recipients: recipients,
+        fields: fields, // 2D array: [[fields_for_file_1]]
         send: !params.draft,
       }
 
