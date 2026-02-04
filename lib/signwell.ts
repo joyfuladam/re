@@ -77,47 +77,8 @@ export class SignWellClient {
       const pdfBase64 = params.pdfBuffer.toString('base64')
 
       // Create document payload
-      // Based on SignWell API: fields should reference recipient_id, not be nested in recipients
-      const recipients = signers.map((signer, index) => ({
-        id: `recipient_${index + 1}`,
-        email: signer.email,
-        name: signer.name,
-        role: signer.role || "signer",
-      }))
-
-      // Fields should be defined separately with recipient_id references
-      const fields: any[] = []
-      signers.forEach((signer, index) => {
-        const signerTag = `signer${index + 1}`
-        const recipientId = `recipient_${index + 1}`
-        
-        // Signature field
-        fields.push({
-          type: "signature",
-          file_id: "file_1",
-          recipient_id: recipientId, // Link field to recipient
-          text_tag: `sig|req|${signerTag}`, // Text tag format: sig|req|signer1
-          page: 1,
-          x: 100,
-          y: 700 - (index * 100),
-          width: 200,
-          height: 50,
-        })
-        
-        // Date field
-        fields.push({
-          type: "date",
-          file_id: "file_1",
-          recipient_id: recipientId, // Link field to recipient
-          text_tag: `date|req|${signerTag}`,
-          page: 1,
-          x: 350,
-          y: 700 - (index * 100),
-          width: 100,
-          height: 20,
-        })
-      })
-
+      // SignWell API: fields should be nested inside recipients
+      // Text tags in PDF (like [sig|req|signer1]) will be auto-detected
       const documentPayload: any = {
         name: params.title,
         files: [
@@ -127,8 +88,39 @@ export class SignWellClient {
             file_base64: pdfBase64,
           }
         ],
-        recipients: recipients,
-        fields: fields, // Fields defined separately with recipient_id references
+        recipients: signers.map((signer, index) => {
+          const signerTag = `signer${index + 1}` // Matches [sig|req|signer1] in PDF
+          return {
+            id: `recipient_${index + 1}`,
+            email: signer.email,
+            name: signer.name,
+            role: signer.role || "signer",
+            // Fields array - SignWell will auto-detect from text tags in PDF
+            // But we still need to define them to associate with recipient
+            fields: [
+              {
+                type: "signature",
+                file_id: "file_1",
+                text_tag: `sig|req|${signerTag}`, // Text tag in PDF: [sig|req|signer1]
+                page: 1,
+                x: 100,
+                y: 700 - (index * 100),
+                width: 200,
+                height: 50,
+              },
+              {
+                type: "date",
+                file_id: "file_1",
+                text_tag: `date|req|${signerTag}`, // Text tag in PDF: [date|req|signer1]
+                page: 1,
+                x: 350,
+                y: 700 - (index * 100),
+                width: 100,
+                height: 20,
+              },
+            ],
+          }
+        }),
         send: !params.draft,
       }
 
