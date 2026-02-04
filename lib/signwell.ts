@@ -82,8 +82,8 @@ export class SignWellClient {
 
       // Check if PDF contains expected text tags
       const pdfText = params.pdfBuffer.toString('utf8')
-      const hasRecipient1Tag = pdfText.includes('[sig|req|recipient_1]') || pdfText.includes('sig|req|recipient_1')
-      const hasRecipient2Tag = pdfText.includes('[sig|req|recipient_2]') || pdfText.includes('sig|req|recipient_2')
+      const hasRecipient1Tag = pdfText.includes('[sig|req|signer1]') || pdfText.includes('sig|req|signer1')
+      const hasRecipient2Tag = pdfText.includes('[sig|req|signer2]') || pdfText.includes('sig|req|signer2')
       
       // #region agent log
       fetch('http://127.0.0.1:7243/ingest/4c8d8774-18d6-406e-b702-2dc324f31e07',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'lib/signwell.ts:84',message:'Checking PDF for text tags',data:{hasRecipient1Tag,hasRecipient2Tag,pdfTextSample:pdfText.substring(0,1000)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
@@ -94,7 +94,7 @@ export class SignWellClient {
       // Text tags in PDF (like [sig|req|signer1]) will be auto-detected
       // Create recipients (simple structure - no fields nested)
       const recipients = signers.map((signer, index) => {
-        const recipientId = `recipient_${index + 1}`
+        const recipientId = `signer${index + 1}`
         // #region agent log
         fetch('http://127.0.0.1:7243/ingest/4c8d8774-18d6-406e-b702-2dc324f31e07',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'lib/signwell.ts:95',message:'Creating recipient',data:{recipientId,email:signer.email,name:signer.name,role:signer.role,index},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
         // #endregion
@@ -109,7 +109,7 @@ export class SignWellClient {
       // When text_tags: true is enabled, SignWell will auto-detect fields from text tags in the PDF
       // According to SignWell docs: https://developers.signwell.com/reference/enabling-text-tags
       // We should NOT provide explicit coordinates - SignWell will use the text tag positions
-      // Text tags in PDF should be in format: [sig|req|recipient_1] and [date|req|recipient_1]
+      // Text tags in PDF should be in format: [sig|req|signer1] and [date|req|signer1]
       // Do NOT include 'fields' property - SignWell will auto-detect from text tags
 
       const documentPayload: any = {

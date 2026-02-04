@@ -199,8 +199,8 @@ export async function POST(request: NextRequest) {
     }
 
     // #region agent log
-    const hasRecipient1InHTML = contractHTML.includes('[sig|req|recipient_1]') || contractHTML.includes('sig|req|recipient_1')
-    const hasRecipient2InHTML = contractHTML.includes('[sig|req|recipient_2]') || contractHTML.includes('sig|req|recipient_2')
+    const hasRecipient1InHTML = contractHTML.includes('[sig|req|signer1]') || contractHTML.includes('sig|req|signer1')
+    const hasRecipient2InHTML = contractHTML.includes('[sig|req|signer2]') || contractHTML.includes('sig|req|signer2')
     fetch('http://127.0.0.1:7243/ingest/4c8d8774-18d6-406e-b702-2dc324f31e07',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app/api/esignature/send/route.ts:199',message:'Contract HTML generated - checking for text tags',data:{hasRecipient1InHTML,hasRecipient2InHTML,htmlLength:contractHTML.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
     // #endregion
 
@@ -211,8 +211,8 @@ export async function POST(request: NextRequest) {
 
     // #region agent log
     const pdfTextCheck = pdfBuffer.toString('utf8',0,Math.min(5000,pdfBuffer.length))
-    const hasRecipient1InPDF = pdfTextCheck.includes('[sig|req|recipient_1]') || pdfTextCheck.includes('sig|req|recipient_1')
-    const hasRecipient2InPDF = pdfTextCheck.includes('[sig|req|recipient_2]') || pdfTextCheck.includes('sig|req|recipient_2')
+    const hasRecipient1InPDF = pdfTextCheck.includes('[sig|req|signer1]') || pdfTextCheck.includes('sig|req|signer1')
+    const hasRecipient2InPDF = pdfTextCheck.includes('[sig|req|signer2]') || pdfTextCheck.includes('sig|req|signer2')
     fetch('http://127.0.0.1:7243/ingest/4c8d8774-18d6-406e-b702-2dc324f31e07',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app/api/esignature/send/route.ts:205',message:'PDF generated - checking for text tags',data:{hasRecipient1InPDF,hasRecipient2InPDF,pdfSize:pdfBuffer.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
     // #endregion
 
