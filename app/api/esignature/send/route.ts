@@ -175,14 +175,8 @@ export async function POST(request: NextRequest) {
                 margin-left: 20px;
                 margin-bottom: 10px;
               }
-              /* SignWell text tags should be in PDF text layer for detection
-                 Make them very small and nearly transparent so they're invisible but detectable */
-              .signwell-tag, [class*="signwell"] {
-                font-size: 0.1px !important;
-                color: transparent !important;
-                line-height: 0 !important;
-                display: inline !important;
-              }
+              /* SignWell text tags remain as plain text in PDF for detection
+                 SignWell will automatically replace them with signature fields when text_tags: true */
             </style>
           </head>
           <body>

@@ -186,14 +186,10 @@ export function markdownToHTML(markdown: string): string {
     return `<p>${trimmed}</p>`
   }).join("\n\n")
 
-  // SignWell text tags must remain in the PDF text layer for detection
-  // Format: [sig|req|recipient_1] for signatures, [date|req|recipient_1] for dates
-  // Make them very small and nearly invisible but keep them in text layer for SignWell detection
-  html = html.replace(/\[(sig|date)\|req\|([^\]]+)\]/g, (match) => {
-    // Keep text tags in text layer but make them invisible
-    // Use tiny font and transparent color so they're detectable but not visible
-    return `<span style="font-size: 0.1px; color: transparent; line-height: 0; display: inline;">${match}</span>`
-  })
+  // SignWell text tags MUST remain as plain text in the PDF for detection
+  // DO NOT wrap them in spans or modify them - SignWell will automatically replace them
+  // Format: [sig|req|signer1] for signatures, [date|req|signer1] for dates
+  // SignWell detects these when text_tags: true is enabled and replaces them with signature fields
 
   return html
 }

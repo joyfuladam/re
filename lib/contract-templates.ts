@@ -182,10 +182,10 @@ export function renderContractTemplate(
   const rendered = renderTemplate(template, data)
   let html = markdownToHTML(rendered)
   
-  // SignWell text tags should remain in the PDF text layer for detection
-  // Don't hide them with white color - SignWell will replace them with signature fields
-  // The text tags are already in the correct format: [sig|req|recipient_1], [date|req|recipient_1]
-  // SignWell will automatically detect and replace these tags with signature/date fields
+  // SignWell text tags MUST remain as plain text in the PDF for detection
+  // DO NOT wrap them in spans, hide them, or modify them in any way
+  // Format: [sig|req|signer1] for signatures, [date|req|signer1] for dates
+  // SignWell will automatically detect and replace these tags when text_tags: true is enabled
 
   return html
 }
