@@ -40,15 +40,15 @@ Label and Artist desire to collaborate on a per-song basis for the sound recordi
 IN WITNESS WHEREOF, the parties have executed this Agreement as of the Effective Date.
 
 **Label:** River and Ember, LLC  
-By: [sig|req|signer1]  
+By: [sig|req|recipient_1]  
 Name: {{publisher_manager_name}}  
 Title: {{publisher_manager_title}}  
-Date: [date|req|signer1]
+Date: [date|req|recipient_1]
 
 **Artist:**  
-[sig|req|signer2]  
+[sig|req|recipient_2]  
 {{artist_full_name}}  
-Date: [date|req|signer2]
+Date: [date|req|recipient_2]
 
 **Exhibit A: Song & Recording Details**
 
