@@ -77,11 +77,20 @@ export class SignWellClient {
       const pdfBase64 = params.pdfBuffer.toString('base64')
 
       // Create document payload
-      // SignWell API expects JSON with base64-encoded PDF
+      // SignWell API expects files array and recipients with id fields
+      // Based on error: recipients need "id" and files should be an array
       const documentPayload: any = {
         name: params.title,
-        file: pdfBase64, // Base64-encoded PDF
-        recipients: signers.map(signer => ({
+        // SignWell expects files as an array
+        files: [
+          {
+            name: `${params.title}.pdf`,
+            file: pdfBase64, // Base64-encoded PDF
+          }
+        ],
+        // Recipients need id field (use email as id or generate unique id)
+        recipients: signers.map((signer, index) => ({
+          id: `recipient_${index + 1}`, // SignWell requires id field
           email: signer.email,
           name: signer.name,
           role: signer.role || "signer",
