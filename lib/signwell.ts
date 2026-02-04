@@ -102,9 +102,20 @@ export class SignWellClient {
           email: signer.email,
           name: signer.name,
           role: signer.role || "signer",
-          // Note: According to SignWell documentation, if PDF contains text tags
-          // like [sig|req|signer1], fields should be auto-detected.
-          // If this doesn't work, we may need to define fields separately with recipient_id.
+          // SignWell requires explicit fields - even with text tags, fields must be defined
+          // Using minimal field structure with text_tag reference
+          fields: [
+            {
+              type: "signature",
+              file_id: "file_1",
+              text_tag: `sig|req|${recipientId}`, // Match recipient ID in text tag
+            },
+            {
+              type: "date",
+              file_id: "file_1",
+              text_tag: `date|req|${recipientId}`, // Match recipient ID in text tag
+            },
+          ],
         }
       })
 
