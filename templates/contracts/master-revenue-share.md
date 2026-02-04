@@ -41,15 +41,15 @@ IN WITNESS WHEREOF, the parties have executed this Agreement as of the Effective
 
 **Label:** River and Ember, LLC  
 
-Name: {{publisher_manager_name}}  
-Title: {{publisher_manager_title}}  
-Signature: <span style="color: white;">{{signature:1:y}}</span>  
+Name: {{publisher_manager_name}}<br>
+Title: {{publisher_manager_title}}<br>
+Signature: <span style="color: white;">{{signature:1:y}}</span><br>
 Date: <span style="color: white;">{{date:1:y}}</span>
 
 **Artist:**  
 
-Name: {{artist_full_name}}  
-Signature: <span style="color: white;">{{signature:2:y}}</span>  
+Name: {{artist_full_name}}<br>
+Signature: <span style="color: white;">{{signature:2:y}}</span><br>
 Date: <span style="color: white;">{{date:2:y}}</span>
 
 **Exhibit A: Song & Recording Details**
