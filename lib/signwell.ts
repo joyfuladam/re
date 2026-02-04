@@ -108,9 +108,12 @@ export class SignWellClient {
       })
 
       // When text_tags: true is enabled, SignWell will auto-detect fields from text tags in the PDF
-      // According to SignWell docs: https://developers.signwell.com/reference/enabling-text-tags
-      // We should NOT provide explicit coordinates - SignWell will use the text tag positions
-      // Text tags in PDF should be in format: [sig|req|signer1] and [date|req|signer1]
+      // According to SignWell docs: https://developers.signwell.com/reference/adding-text-tags
+      // Text tag format: {{field_type:signer_number:required}}
+      // Example: {{signature:1:y}} for required signature field for signer 1
+      //          {{date:1:y}} for required date field for signer 1
+      // Signer numbers match recipient order (1, 2, 3, etc.)
+      // Text tags should be hidden with white color to match background
       // Do NOT include 'fields' property - SignWell will auto-detect from text tags
 
       const documentPayload: any = {
