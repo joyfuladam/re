@@ -35,7 +35,7 @@ Writer has created certain musical compositions for recording and release under 
 
 IN WITNESS WHEREOF, the parties have executed this Agreement as of the Effective Date.
 
-**Publisher:** River and Ember, LLC  
+**Publisher:** River and Ember, LLC<br>  
 
 Name: {{publisher_manager_name}}<br>
 Title: {{publisher_manager_title}}<br>

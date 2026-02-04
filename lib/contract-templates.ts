@@ -48,7 +48,7 @@ Writer has created certain musical compositions for recording and release under 
 
 IN WITNESS WHEREOF, the parties have executed this Agreement as of the Effective Date.
 
-**Publisher:** River and Ember, LLC  
+**Publisher:** River and Ember, LLC<br> 
 
 Name: {{publisher_manager_name}}<br>
 Title: {{publisher_manager_title}}<br>
@@ -108,7 +108,7 @@ This Agreement is made effective as of {{effective_date}} ("Effective Date"), be
 
 IN WITNESS WHEREOF, the parties have executed this Agreement as of the Effective Date.
 
-**Label:** River and Ember, LLC  
+**Label:** River and Ember, LLC <br> 
   
 Name: {{publisher_manager_name}}<br>
 Title: {{publisher_manager_title}}<br>
@@ -125,8 +125,8 @@ Date: <span style="color: white;">{{date:2:y}}</span>
 | Detail                  | Information                              |
 |-------------------------|------------------------------------------|
 | Song Title             | {{song_title}}                           |
-| {% if is_musician %}Musician{% else %}{% if is_producer %}Producer{% else %}Artist{% endif %}{% endif %} Share           | {{artist_share_percentage}}% of Net Receipts |
-| {% if is_musician %}Musician{% else %}{% if is_producer %}Producer{% else %}Artist{% endif %}{% endif %} Role            | {{artist_role_description}}              |
+| Share           | {{artist_share_percentage}}% of Net Receipts |
+| Role            | {{artist_role_description}}              |
 `
 
 /**
