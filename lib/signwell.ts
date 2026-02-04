@@ -130,6 +130,17 @@ export class SignWellClient {
       }
 
       console.log("📤 Creating document in SignWell...")
+      console.log("📋 Payload structure:", JSON.stringify({
+        name: documentPayload.name,
+        files_count: documentPayload.files.length,
+        recipients_count: documentPayload.recipients.length,
+        recipients_with_fields: documentPayload.recipients.map((r: any) => ({
+          id: r.id,
+          email: r.email,
+          fields_count: r.fields?.length || 0,
+          fields: r.fields?.map((f: any) => ({ type: f.type, file_id: f.file_id, page: f.page }))
+        }))
+      }, null, 2))
       
       // Create document via SignWell API
       // POST /v1/documents
