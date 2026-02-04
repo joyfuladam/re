@@ -186,10 +186,11 @@ export function markdownToHTML(markdown: string): string {
     return `<p>${trimmed}</p>`
   }).join("\n\n")
 
-  // SignWell text tags MUST remain as plain text in the PDF for detection
-  // DO NOT wrap them in spans or modify them - SignWell will automatically replace them
-  // Format: [sig|req|signer1] for signatures, [date|req|signer1] for dates
-  // SignWell detects these when text_tags: true is enabled and replaces them with signature fields
+  // SignWell text tags are already wrapped in white color spans in the markdown templates
+  // Format: {{signature:1:y}} for required signature field for signer 1
+  // Format: {{date:1:y}} for required date field for signer 1
+  // SignWell will detect and replace these tags when text_tags: true is enabled
+  // Text tags are hidden with white color as per SignWell documentation
 
   return html
 }
