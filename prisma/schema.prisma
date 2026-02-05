@@ -68,6 +68,13 @@ model Collaborator {
   managerEmail       String?
   managerPhone       String?
   royaltyAccountInfo String?
+  // Social Media
+  instagramHandle    String?
+  facebookUrl        String?
+  tiktokHandle       String?
+  twitterHandle      String?
+  youtubeUrl         String?
+  spotifyArtistUrl   String?
   // Metadata
   notes              String?
   status             String             @default("active") // active, inactive

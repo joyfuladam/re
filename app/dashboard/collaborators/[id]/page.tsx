@@ -27,6 +27,12 @@ interface Collaborator {
   managerEmail: string | null
   managerPhone: string | null
   royaltyAccountInfo: string | null
+  instagramHandle: string | null
+  facebookUrl: string | null
+  tiktokHandle: string | null
+  twitterHandle: string | null
+  youtubeUrl: string | null
+  spotifyArtistUrl: string | null
   notes: string | null
   status: string
 }
@@ -54,6 +60,12 @@ export default function CollaboratorDetailPage() {
     managerEmail: "",
     managerPhone: "",
     royaltyAccountInfo: "",
+    instagramHandle: "",
+    facebookUrl: "",
+    tiktokHandle: "",
+    twitterHandle: "",
+    youtubeUrl: "",
+    spotifyArtistUrl: "",
     notes: "",
     password: "",
   })
@@ -87,6 +99,12 @@ export default function CollaboratorDetailPage() {
           managerEmail: data.managerEmail || "",
           managerPhone: data.managerPhone || "",
           royaltyAccountInfo: data.royaltyAccountInfo || "",
+          instagramHandle: data.instagramHandle || "",
+          facebookUrl: data.facebookUrl || "",
+          tiktokHandle: data.tiktokHandle || "",
+          twitterHandle: data.twitterHandle || "",
+          youtubeUrl: data.youtubeUrl || "",
+          spotifyArtistUrl: data.spotifyArtistUrl || "",
           notes: data.notes || "",
           password: "", // Password is not returned from API for security
         })
@@ -401,6 +419,81 @@ export default function CollaboratorDetailPage() {
               onChange={(e) => setFormData({ ...formData, managerPhone: e.target.value })}
               disabled={!editing}
             />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Social Media</CardTitle>
+          <CardDescription>Social media profiles and artist links</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="instagramHandle">Instagram Handle</Label>
+              <Input
+                id="instagramHandle"
+                value={formData.instagramHandle}
+                onChange={(e) => setFormData({ ...formData, instagramHandle: e.target.value })}
+                disabled={!editing}
+                placeholder="@username"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="tiktokHandle">TikTok Handle</Label>
+              <Input
+                id="tiktokHandle"
+                value={formData.tiktokHandle}
+                onChange={(e) => setFormData({ ...formData, tiktokHandle: e.target.value })}
+                disabled={!editing}
+                placeholder="@username"
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="twitterHandle">Twitter/X Handle</Label>
+              <Input
+                id="twitterHandle"
+                value={formData.twitterHandle}
+                onChange={(e) => setFormData({ ...formData, twitterHandle: e.target.value })}
+                disabled={!editing}
+                placeholder="@username"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="facebookUrl">Facebook URL</Label>
+              <Input
+                id="facebookUrl"
+                value={formData.facebookUrl}
+                onChange={(e) => setFormData({ ...formData, facebookUrl: e.target.value })}
+                disabled={!editing}
+                placeholder="https://facebook.com/..."
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="youtubeUrl">YouTube URL</Label>
+              <Input
+                id="youtubeUrl"
+                value={formData.youtubeUrl}
+                onChange={(e) => setFormData({ ...formData, youtubeUrl: e.target.value })}
+                disabled={!editing}
+                placeholder="https://youtube.com/..."
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="spotifyArtistUrl">Spotify Artist URL</Label>
+              <Input
+                id="spotifyArtistUrl"
+                value={formData.spotifyArtistUrl}
+                onChange={(e) => setFormData({ ...formData, spotifyArtistUrl: e.target.value })}
+                disabled={!editing}
+                placeholder="https://open.spotify.com/artist/..."
+              />
+            </div>
           </div>
         </CardContent>
       </Card>
