@@ -22,41 +22,47 @@ Writer has created certain musical compositions for recording and release under 
 
 **AGREEMENT**
 
-1. **Assignment of Publishing Rights**<br>
-   Writer hereby irrevocably and exclusively assigns to Publisher one hundred percent (100%) of the worldwide publisher's share (including but not limited to performance, mechanical, synchronization, print, and all other royalties) in and to the musical compositions listed in Exhibit A attached hereto (the "Compositions"), which are created for and recorded/released under Publisher's label projects. Writer retains one hundred percent (100%) of the writer's share of all royalties, which shall be paid directly to Writer by Writer's performing rights organization (e.g., ASCAP, BMI, SESAC) without interference from Publisher.
+1. **Assignment of Publishing Rights**
 
-2. **Scope & Project-Specific Nature**<br>
-   This assignment applies **solely** to the Compositions listed in Exhibit A (and any approved revisions). Writer retains full publishing rights in all other compositions not created for or released under Publisher's projects.
+<div class="indent">Writer hereby irrevocably and exclusively assigns to Publisher one hundred percent (100%) of the worldwide publisher's share (including but not limited to performance, mechanical, synchronization, print, and all other royalties) in and to the musical compositions listed in Exhibit A attached hereto (the "Compositions"), which are created for and recorded/released under Publisher's label projects. Writer retains one hundred percent (100%) of the writer's share of all royalties, which shall be paid directly to Writer by Writer's performing rights organization (e.g., ASCAP, BMI, SESAC) without interference from Publisher.</div>
 
-3. **Term**<br>
-   Perpetual, subject to reversion to Writer upon {{reversion_condition}}.
+2. **Scope & Project-Specific Nature**
 
-4. **Administration**<br>
-   Publisher shall administer the assigned rights worldwide through its chosen publishing administrator (e.g., Sentric Music). Publisher shall account to Writer quarterly for Publisher's collected share (for transparency only—no payment due to Writer from publisher's share).
+<div class="indent">This assignment applies **solely** to the Compositions listed in Exhibit A (and any approved revisions). Writer retains full publishing rights in all other compositions not created for or released under Publisher's projects.</div>
 
-5. **Morals & Conduct Clause**<br>
-   Writer agrees to conduct themselves, both publicly and privately, in a manner consistent with biblical Christian principles. Material breach (as reasonably determined by Publisher, e.g., public conduct contrary to Scripture) shall allow Publisher immediate termination of this Agreement and reversion of rights to Writer.
+3. **Term**
 
-6. **Warranties & Representations**<br>
-   Writer warrants that the Compositions are original, do not infringe third-party rights, and Writer has full authority to grant these rights.
+<div class="indent">Perpetual, subject to reversion to Writer upon {{reversion_condition}}.</div>
+
+4. **Administration**
+
+<div class="indent">Publisher shall administer the assigned rights worldwide through its chosen publishing administrator (e.g., Sentric Music). Publisher shall account to Writer quarterly for Publisher's collected share (for transparency only—no payment due to Writer from publisher's share).</div>
+
+5. **Morals & Conduct Clause**
+
+<div class="indent">Writer agrees to conduct themselves, both publicly and privately, in a manner consistent with biblical Christian principles. Material breach (as reasonably determined by Publisher, e.g., public conduct contrary to Scripture) shall allow Publisher immediate termination of this Agreement and reversion of rights to Writer.</div>
+
+6. **Warranties & Representations**
+
+<div class="indent">Writer warrants that the Compositions are original, do not infringe third-party rights, and Writer has full authority to grant these rights.</div>
 
 7. **Governing Law**<br>
    This Agreement shall be governed by the laws of the State of {{governing_state}}, without regard to conflict of laws principles.
 
-8. **Alternative Versions & Expanded Releases**<br>
-   Publisher, at its discretion and expense, may create, record, and release alternative versions of the Compositions (including but not limited to acoustic, instrumental, live, radio edit, or featured artist collaborations) to enhance visibility, congregational adoption, and revenue potential. Such versions shall be subject to the same publishing assignment terms herein. Publisher will consult with Writer on creative decisions where practicable and credit Writer appropriately. This provision is intended to maximize the Compositions' ministry impact through diverse formats suitable for church use, streaming, and sync opportunities.
+8. **Alternative Versions & Expanded Releases**
+
+<div class="indent">Publisher, at its discretion and expense, may create, record, and release alternative versions of the Compositions (including but not limited to acoustic, instrumental, live, radio edit, or featured artist collaborations) to enhance visibility, congregational adoption, and revenue potential. Such versions shall be subject to the same publishing assignment terms herein. Publisher will consult with Writer on creative decisions where practicable and credit Writer appropriately. This provision is intended to maximize the Compositions' ministry impact through diverse formats suitable for church use, streaming, and sync opportunities.</div>
 
 IN WITNESS WHEREOF, the parties have executed this Agreement as of the Effective Date.
 
-**Publisher:** River and Ember, LLC<br> 
+**Publisher** River and Ember, LLC<br> 
 
-Name: {{publisher_manager_name}}<br>
+Representative: {{publisher_manager_name}}<br>
 Title: {{publisher_manager_title}}<br>
 Signature: <span style="color: white;">{{signature:1:y}}</span><br>
 Date: <span style="color: white;">{{date:1:y}}</span><br>
 
-**Writer:** <br>
-
+**Writer** <br>
 Name: {{writer_full_name}}<br>
 Signature: <span style="color: white;">{{signature:2:y}}</span><br>
 Date: <span style="color: white;">{{date:2:y}}</span><br>
@@ -81,30 +87,39 @@ This Agreement is made effective as of {{effective_date}} ("Effective Date"), be
 
 **AGREEMENT**
 
-1. **Services & Grant of Rights**<br>
-   {% if is_musician %}Musician shall provide instrumental performance services for the Recording. Musician hereby grants and assigns to Label all right, title, and interest in and to the master sound recording(s) of the Recording (the "Master"), including all worldwide copyright and other proprietary rights therein. Musician further grants Label perpetual, worldwide rights to exploit, distribute, promote, and create derivative works from the Master (including alternative versions), and to use Musician's name, likeness, voice, and performance in connection therewith. Musician acknowledges that this assignment constitutes full transfer of ownership of the Master to Label, and Musician shall have no ownership interest therein.{% else %}{% if is_producer %}Producer shall provide production, arrangement, and creative direction services for the Recording. Producer hereby grants and assigns to Label all right, title, and interest in and to the master sound recording(s) of the Recording (the "Master"), including all worldwide copyright and other proprietary rights therein. Producer further grants Label perpetual, worldwide rights to exploit, distribute, promote, and create derivative works from the Master (including alternative versions), and to use Producer's name, likeness, voice, and performance in connection therewith. Producer acknowledges that this assignment constitutes full transfer of ownership of the Master to Label, and Producer shall have no ownership interest therein.{% else %}Artist shall provide lead performance and creative input for the Recording. Artist hereby grants and assigns to Label all right, title, and interest in and to the master sound recording(s) of the Recording (the "Master"), including all worldwide copyright and other proprietary rights therein. Artist further grants Label perpetual, worldwide rights to exploit, distribute, promote, and create derivative works from the Master (including alternative versions), and to use Artist's name, likeness, voice, and performance in connection therewith. Artist acknowledges that this assignment constitutes full transfer of ownership of the Master to Label, and Artist shall have no ownership interest therein.{% endif %}{% endif %}
+1. **Services & Grant of Rights**
 
-2. **Compensation - Master Revenue Share**<br>
-   In full consideration for {% if is_musician %}Musician's{% else %}{% if is_producer %}Producer's{% else %}Artist's{% endif %}{% endif %} services and the assignment of Master rights, Label shall pay {% if is_musician %}Musician{% else %}{% if is_producer %}Producer{% else %}Artist{% endif %}{% endif %} {{artist_share_percentage}}% of Net Receipts from digital revenue streams (streaming and downloads). "Net Receipts" means all monies actually received by Label from any source attributable to the digital exploitation of the Master (including streaming and downloads), less any third-party fees, taxes, returns, or customary deductions.  
-   {% if is_musician %}Musician{% else %}{% if is_producer %}Producer{% else %}Artist{% endif %}{% endif %} shall **not** be entitled to any revenue from the Master outside of Net Receipts, including but not limited to synchronization licenses, physical sales, live performance fees, direct licensing, or any other exploitation. Label retains 100% of such revenue to fund future ministry projects and Label operations.
+<div class="indent">{% if is_musician %}Musician shall provide instrumental performance services for the Recording. Musician hereby grants and assigns to Label all right, title, and interest in and to the master sound recording(s) of the Recording (the "Master"), including all worldwide copyright and other proprietary rights therein. Musician further grants Label perpetual, worldwide rights to exploit, distribute, promote, and create derivative works from the Master (including alternative versions), and to use Musician's name, likeness, voice, and performance in connection therewith. Musician acknowledges that this assignment constitutes full transfer of ownership of the Master to Label, and Musician shall have no ownership interest therein.{% else %}{% if is_producer %}Producer shall provide production, arrangement, and creative direction services for the Recording. Producer hereby grants and assigns to Label all right, title, and interest in and to the master sound recording(s) of the Recording (the "Master"), including all worldwide copyright and other proprietary rights therein. Producer further grants Label perpetual, worldwide rights to exploit, distribute, promote, and create derivative works from the Master (including alternative versions), and to use Producer's name, likeness, voice, and performance in connection therewith. Producer acknowledges that this assignment constitutes full transfer of ownership of the Master to Label, and Producer shall have no ownership interest therein.{% else %}Artist shall provide lead performance and creative input for the Recording. Artist hereby grants and assigns to Label all right, title, and interest in and to the master sound recording(s) of the Recording (the "Master"), including all worldwide copyright and other proprietary rights therein. Artist further grants Label perpetual, worldwide rights to exploit, distribute, promote, and create derivative works from the Master (including alternative versions), and to use Artist's name, likeness, voice, and performance in connection therewith. Artist acknowledges that this assignment constitutes full transfer of ownership of the Master to Label, and Artist shall have no ownership interest therein.{% endif %}{% endif %}</div>
 
-3. **Alternative Versions**<br>
-   Label may, at its sole discretion and expense, create, record, and release alternative versions of the Recording (including but not limited to acoustic, instrumental, live, radio edits, or featured artist collaborations) to enhance visibility, congregational adoption, church usage (e.g., CCLI), and revenue potential. All such versions shall be owned exclusively by Label. Alternative versions will be subject to separate contracts specific to those arrangements, and shall not be subject to the revenue share terms of this Agreement. Label will consult with {% if is_musician %}Musician{% else %}{% if is_producer %}Producer{% else %}Artist{% endif %}{% endif %} on creative decisions where practicable and provide appropriate credit.
+2. **Compensation - Master Revenue Share**
 
-4. **Publishing**<br>
-   Publishing rights for the underlying musical composition(s) are governed by separate Song-by-Song Publishing Assignment Agreement (if applicable). {% if is_musician %}Musician{% else %}{% if is_producer %}Producer{% else %}Artist{% endif %}{% endif %} retains full control of publishing rights in non-Label songs. This Agreement pertains solely to Master rights and revenues.
+<div class="indent">In full consideration for {% if is_musician %}Musician's{% else %}{% if is_producer %}Producer's{% else %}Artist's{% endif %}{% endif %} services and the assignment of Master rights, Label shall pay {% if is_musician %}Musician{% else %}{% if is_producer %}Producer{% else %}Artist{% endif %}{% endif %} {{artist_share_percentage}}% of Net Receipts from digital revenue streams (streaming and downloads). "Net Receipts" means all monies actually received by Label from any source attributable to the digital exploitation of the Master (including streaming and downloads), less any third-party fees, taxes, returns, or customary deductions.  
 
-5. **Conduct Standards**<br>
-   {% if is_musician %}Musician{% else %}{% if is_producer %}Producer{% else %}Artist{% endif %}{% endif %} agrees to conduct themselves, both publicly and privately, in a manner consistent with biblical Christian principles during the term of this Agreement and in connection with promotion of the Recording. {% if is_musician %}Musician{% else %}{% if is_producer %}Producer{% else %}Artist{% endif %}{% endif %} understands that any public conduct reasonably deemed by Label to be materially inconsistent with such principles may impact Label's willingness to collaborate on future projects, though it shall not affect Label's perpetual ownership of the Master or rights hereunder.
+{% if is_musician %}Musician{% else %}{% if is_producer %}Producer{% else %}Artist{% endif %}{% endif %} shall **not** be entitled to any revenue from the Master outside of Net Receipts, including but not limited to synchronization licenses, physical sales, live performance fees, direct licensing, or any other exploitation. Label retains 100% of such revenue to fund future ministry projects and Label operations.</div>
 
-6. **Warranties & Representations**<br>
-   {% if is_musician %}Musician{% else %}{% if is_producer %}Producer{% else %}Artist{% endif %}{% endif %} warrants and represents that: (i) {% if is_musician %}Musician{% else %}{% if is_producer %}Producer{% else %}Artist{% endif %}{% endif %} has full right and authority to grant the rights herein; (ii) the {% if is_musician %}performance{% else %}{% if is_producer %}production work{% else %}performance{% endif %}{% endif %} is original and does not infringe third-party rights; and (iii) {% if is_musician %}Musician{% else %}{% if is_producer %}Producer{% else %}Artist{% endif %}{% endif %} will not make any claims inconsistent with Label's ownership of the Master.
+3. **Alternative Versions**
 
-7. **Governing Law**<br>
-   This Agreement shall be governed by the laws of the State of {{governing_state}}, without regard to conflict of laws principles. Any disputes shall be resolved exclusively in the courts of {{governing_state}}.
+<div class="indent">Label may, at its sole discretion and expense, create, record, and release alternative versions of the Recording (including but not limited to acoustic, instrumental, live, radio edits, or featured artist collaborations) to enhance visibility, congregational adoption, church usage (e.g., CCLI), and revenue potential. All such versions shall be owned exclusively by Label. Alternative versions will be subject to separate contracts specific to those arrangements, and shall not be subject to the revenue share terms of this Agreement. Label will consult with {% if is_musician %}Musician{% else %}{% if is_producer %}Producer{% else %}Artist{% endif %}{% endif %} on creative decisions where practicable and provide appropriate credit.</div>
 
-8. **Entire Agreement**<br>
-   This constitutes the entire understanding between the parties and supersedes all prior agreements. No modifications except in writing signed by both parties.
+4. **Publishing**
+
+<div class="indent">Publishing rights for the underlying musical composition(s) are governed by separate Song-by-Song Publishing Assignment Agreement (if applicable). {% if is_musician %}Musician{% else %}{% if is_producer %}Producer{% else %}Artist{% endif %}{% endif %} retains full control of publishing rights in non-Label songs. This Agreement pertains solely to Master rights and revenues.</div>
+
+5. **Conduct Standards**
+
+<div class="indent">{% if is_musician %}Musician{% else %}{% if is_producer %}Producer{% else %}Artist{% endif %}{% endif %} agrees to conduct themselves, both publicly and privately, in a manner consistent with biblical Christian principles during the term of this Agreement and in connection with promotion of the Recording. {% if is_musician %}Musician{% else %}{% if is_producer %}Producer{% else %}Artist{% endif %}{% endif %} understands that any public conduct reasonably deemed by Label to be materially inconsistent with such principles may impact Label's willingness to collaborate on future projects, though it shall not affect Label's perpetual ownership of the Master or rights hereunder.</div>
+
+6. **Warranties & Representations**
+
+<div class="indent">{% if is_musician %}Musician{% else %}{% if is_producer %}Producer{% else %}Artist{% endif %}{% endif %} warrants and represents that: (i) {% if is_musician %}Musician{% else %}{% if is_producer %}Producer{% else %}Artist{% endif %}{% endif %} has full right and authority to grant the rights herein; (ii) the {% if is_musician %}performance{% else %}{% if is_producer %}production work{% else %}performance{% endif %}{% endif %} is original and does not infringe third-party rights; and (iii) {% if is_musician %}Musician{% else %}{% if is_producer %}Producer{% else %}Artist{% endif %}{% endif %} will not make any claims inconsistent with Label's ownership of the Master.</div>
+
+7. **Governing Law**
+
+<div class="indent">This Agreement shall be governed by the laws of the State of {{governing_state}}, without regard to conflict of laws principles. Any disputes shall be resolved exclusively in the courts of {{governing_state}}.</div>
+
+8. **Entire Agreement**
+
+<div class="indent">This constitutes the entire understanding between the parties and supersedes all prior agreements. No modifications except in writing signed by both parties.</div>
 
 IN WITNESS WHEREOF, the parties have executed this Agreement as of the Effective Date.
 

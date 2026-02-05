@@ -72,7 +72,7 @@ export async function GET(
     .contract-table th, .contract-table td { border: 1px solid #000; padding: 6px 8px; }
     .contract-table th { background-color: #f0f0f0; font-weight: bold; }
     p { margin-bottom: 10px; text-align: justify; }
-    p + p { text-indent: 0.5in; }
+    .indent { margin-left: 0.5in; text-align: justify; }
     ul, ol { margin-left: 20px; }
   </style>
 </head>

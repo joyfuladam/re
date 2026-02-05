@@ -178,13 +178,9 @@ export async function POST(request: NextRequest) {
                 margin-bottom: 10px;
                 text-align: justify;
               }
-              /* Indent paragraphs that follow numbered headings (legal document style) */
-              p:has(strong) {
-                margin-left: 0;
-                text-indent: 0;
-              }
-              p + p {
-                text-indent: 0.5in;
+              .indent {
+                margin-left: 0.5in;
+                text-align: justify;
               }
               ul, ol {
                 margin-left: 20px;
