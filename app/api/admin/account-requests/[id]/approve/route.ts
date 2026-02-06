@@ -65,20 +65,16 @@ export async function POST(
       })
     } catch (emailError) {
       console.error("Failed to send approval email:", emailError)
-      // Rollback the approval if email fails
-      await db.accountRequest.update({
-        where: { id: params.id },
-        data: {
-          status: "pending",
-          approvedBy: null,
-          approvedAt: null,
-          setupToken: null,
-          tokenExpiry: null,
-        },
-      })
+      
+      // Don't rollback - keep the approval but inform admin
+      const errorMessage = emailError instanceof Error ? emailError.message : "Unknown error"
       return NextResponse.json(
-        { error: "Failed to send approval email. Please try again." },
-        { status: 500 }
+        { 
+          error: `Account approved but email failed to send: ${errorMessage}. You may need to manually send the setup link to the user: ${setupLink}`,
+          setupLink,
+          approved: true
+        },
+        { status: 207 } // 207 Multi-Status - partial success
       )
     }
 

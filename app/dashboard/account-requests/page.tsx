@@ -57,11 +57,20 @@ export default function AccountRequestsPage() {
         method: "POST",
       })
 
+      const data = await response.json()
+
       if (response.ok) {
         fetchRequests()
         alert("Account request approved! An email has been sent to the user.")
+      } else if (response.status === 207 && data.approved) {
+        // Partial success - approved but email failed
+        fetchRequests()
+        const copyLink = confirm(`${data.error}\n\nSetup link copied to clipboard. Would you like to manually send it to the user?`)
+        if (copyLink) {
+          navigator.clipboard.writeText(data.setupLink)
+          alert("Setup link copied to clipboard!")
+        }
       } else {
-        const data = await response.json()
         alert(`Error: ${data.error}`)
       }
     } catch (error) {
