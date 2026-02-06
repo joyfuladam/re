@@ -178,7 +178,7 @@ function SetupAccountContent() {
             )}
             <div className="bg-muted p-3 rounded-lg text-sm text-muted-foreground">
               <p>
-                After setting your password, you'll be automatically logged in to your account.
+                After setting your password, you&apos;ll be automatically logged in to your account.
               </p>
             </div>
             <Button type="submit" className="w-full" disabled={loading}>

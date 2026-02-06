@@ -57,10 +57,10 @@ export default function RequestAccountPage() {
           <CardContent className="space-y-4">
             <div className="text-center space-y-4">
               <p className="text-muted-foreground">
-                Thank you for your interest in River & Ember. An administrator will review your request and you'll receive an email once your account is approved.
+                Thank you for your interest in River & Ember. An administrator will review your request and you&apos;ll receive an email once your account is approved.
               </p>
               <p className="text-sm text-muted-foreground">
-                Check your spam folder if you don't see our email within 24-48 hours.
+                Check your spam folder if you don&apos;t see our email within 24-48 hours.
               </p>
               <Button 
                 onClick={() => router.push("/login")} 
@@ -123,7 +123,7 @@ export default function RequestAccountPage() {
             )}
             <div className="bg-muted p-3 rounded-lg text-sm text-muted-foreground">
               <p>
-                <strong>Note:</strong> Your request will be reviewed by an administrator. You'll receive an email with instructions to set your password once approved.
+                <strong>Note:</strong> Your request will be reviewed by an administrator. You&apos;ll receive an email with instructions to set your password once approved.
               </p>
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
