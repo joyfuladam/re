@@ -11,6 +11,7 @@ interface DashboardStats {
   totalCollaborators: number
   pendingContracts: number
   lockedSongs: number
+  pendingAccountRequests?: number
 }
 
 export default function DashboardPage() {
@@ -21,6 +22,7 @@ export default function DashboardPage() {
     totalCollaborators: 0,
     pendingContracts: 0,
     lockedSongs: 0,
+    pendingAccountRequests: 0,
   })
   const [loading, setLoading] = useState(true)
 
@@ -97,6 +99,23 @@ export default function DashboardPage() {
             <p className="text-xs text-muted-foreground">Songs with locked splits</p>
           </CardContent>
         </Card>
+
+        {isAdmin && stats.pendingAccountRequests! > 0 && (
+          <Card className="border-amber-500">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Account Requests</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-amber-600">{stats.pendingAccountRequests}</div>
+              <p className="text-xs text-muted-foreground">Pending approval</p>
+              <Link href="/dashboard/account-requests">
+                <Button variant="link" className="p-0 h-auto mt-2 text-xs">
+                  Review Requests →
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">

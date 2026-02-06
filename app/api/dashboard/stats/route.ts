@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const [totalSongs, totalCollaborators, pendingContracts, lockedSongs] = await Promise.all([
+    const statsPromises = [
       db.song.count({ where: songWhere }),
       db.collaborator.count({ where: collaboratorWhere }),
       db.contract.count({ where: contractWhere }),
@@ -61,13 +61,24 @@ export async function GET(request: NextRequest) {
           AND: [{ publishingLocked: true }, { masterLocked: true }],
         },
       }),
-    ])
+    ]
+
+    // Add account requests count for admins only
+    if (permissions.isAdmin) {
+      statsPromises.push(
+        db.accountRequest.count({ where: { status: "pending" } })
+      )
+    }
+
+    const results = await Promise.all(statsPromises)
+    const [totalSongs, totalCollaborators, pendingContracts, lockedSongs, pendingAccountRequests] = results
 
     return NextResponse.json({
       totalSongs,
       totalCollaborators,
       pendingContracts,
       lockedSongs,
+      ...(permissions.isAdmin && { pendingAccountRequests }),
     })
   } catch (error) {
     console.error("Error fetching dashboard stats:", error)

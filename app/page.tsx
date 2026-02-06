@@ -16,10 +16,10 @@ export default function Home() {
           Login
         </Link>
         <Link
-          href="/register"
+          href="/request-account"
           className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90"
         >
-          Register
+          Request Account
         </Link>
       </div>
     </div>

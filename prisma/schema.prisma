@@ -283,3 +283,23 @@ model FaqSubmission {
   @@index([read])
   @@index([createdAt])
 }
+
+model AccountRequest {
+  id          String    @id @default(cuid())
+  firstName   String
+  lastName    String
+  email       String    @unique
+  status      String    @default("pending") // pending, approved, rejected
+  approvedBy  String? // Admin collaborator ID who approved
+  approvedAt  DateTime?
+  rejectedBy  String? // Admin collaborator ID who rejected
+  rejectedAt  DateTime?
+  setupToken  String?   @unique // Token for password setup link
+  tokenExpiry DateTime? // Token expiration
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([email])
+  @@index([status])
+  @@index([createdAt])
+}
