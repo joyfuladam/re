@@ -102,6 +102,29 @@ export default function AccountRequestsPage() {
     }
   }
 
+  const handleDelete = async (id: string, email: string) => {
+    if (!confirm(`Are you sure you want to delete the account request for ${email}? This cannot be undone.`)) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/admin/account-requests/${id}`, {
+        method: "DELETE",
+      })
+
+      if (response.ok) {
+        fetchRequests()
+        alert("Account request deleted successfully")
+      } else {
+        const data = await response.json()
+        alert(`Error: ${data.error}`)
+      }
+    } catch (error) {
+      console.error("Error deleting request:", error)
+      alert("Failed to delete request")
+    }
+  }
+
   if (loading) {
     return <div>Loading...</div>
   }
@@ -194,23 +217,32 @@ export default function AccountRequestsPage() {
                       {new Date(request.rejectedAt).toLocaleTimeString()}
                     </div>
                   )}
-                  {request.status === "pending" && (
-                    <div className="flex gap-2 mt-4">
-                      <Button
-                        onClick={() => handleApprove(request.id)}
-                        size="sm"
-                      >
-                        Approve
-                      </Button>
-                      <Button
-                        onClick={() => handleReject(request.id)}
-                        variant="destructive"
-                        size="sm"
-                      >
-                        Reject
-                      </Button>
-                    </div>
-                  )}
+                  <div className="flex gap-2 mt-4">
+                    {request.status === "pending" && (
+                      <>
+                        <Button
+                          onClick={() => handleApprove(request.id)}
+                          size="sm"
+                        >
+                          Approve
+                        </Button>
+                        <Button
+                          onClick={() => handleReject(request.id)}
+                          variant="destructive"
+                          size="sm"
+                        >
+                          Reject
+                        </Button>
+                      </>
+                    )}
+                    <Button
+                      onClick={() => handleDelete(request.id, request.email)}
+                      variant="outline"
+                      size="sm"
+                    >
+                      Delete
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>

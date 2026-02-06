@@ -54,6 +54,9 @@ export default function DashboardLayout({
                   <Link href="/dashboard/contracts" className="hover:underline">
                     Contracts
                   </Link>
+                  <Link href="/dashboard/account-requests" className="hover:underline">
+                    Account Requests
+                  </Link>
                   <Link href="/dashboard/faq/submissions" className="hover:underline">
                     FAQ Submissions
                   </Link>
