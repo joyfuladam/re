@@ -118,6 +118,33 @@ export default function CollaboratorDetailPage() {
     }
   }
 
+  const handleDelete = async () => {
+    if (!confirm(`Are you sure you want to delete ${collaborator?.firstName} ${collaborator?.lastName}? This action cannot be undone and will remove all associated data.`)) {
+      return
+    }
+
+    if (!confirm("This will permanently delete this collaborator and all their associations with songs. Are you absolutely sure?")) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/collaborators/${params.id}`, {
+        method: "DELETE",
+      })
+
+      if (response.ok) {
+        alert("Collaborator deleted successfully")
+        router.push("/dashboard/collaborators")
+      } else {
+        const errorData = await response.json()
+        alert(`Error: ${errorData.error || "Failed to delete collaborator"}`)
+      }
+    } catch (error) {
+      console.error("Error deleting collaborator:", error)
+      alert("Failed to delete collaborator")
+    }
+  }
+
   const handleSave = async () => {
     setSaving(true)
     try {
@@ -226,6 +253,15 @@ export default function CollaboratorDetailPage() {
           <Link href="/dashboard/collaborators">
             <Button variant="outline">Back</Button>
           </Link>
+          {isAdmin && (
+            <Button 
+              variant="destructive" 
+              onClick={handleDelete}
+              disabled={editing}
+            >
+              Delete
+            </Button>
+          )}
           <Button onClick={() => setEditing(!editing)}>
             {editing ? "Cancel" : "Edit"}
           </Button>

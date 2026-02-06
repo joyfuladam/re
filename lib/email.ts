@@ -1,17 +1,16 @@
 import nodemailer from 'nodemailer'
 
 // Create reusable transporter for Google Workspace
+// Using service: 'gmail' which handles all the SMTP configuration automatically
 const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 465,
-  secure: true, // Use SSL
+  service: 'gmail',
   auth: {
     user: process.env.SMTP_USER, // Your Google Workspace email
     pass: process.env.SMTP_PASSWORD, // App password from Google
   },
-  connectionTimeout: 10000, // 10 seconds
-  greetingTimeout: 10000,
-  socketTimeout: 10000,
+  tls: {
+    rejectUnauthorized: false
+  }
 })
 
 interface SendEmailOptions {
