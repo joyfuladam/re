@@ -58,7 +58,7 @@ export default function GettingPaidPage() {
           <div>
             <h2 className="text-xl font-semibold mb-3">Step 3: Link Your River and Ember Account</h2>
             <ol className="list-decimal list-inside space-y-2 text-muted-foreground">
-              <li>Once your Wings Access account is set up, contact River and Ember at <a href="mailto:adam@riverandember.com" className="text-primary hover:underline">adam@riverandember.com</a></li>
+              <li>Once your Wings Access account is set up, contact River and Ember at <a href="mailto:admin@riverandember.com" className="text-primary hover:underline">admin@riverandember.com</a></li>
               <li>Provide your Wings Access account email address</li>
               <li>We will link your account to your revenue shares</li>
               <li>You will receive notifications when payments are available</li>
@@ -84,7 +84,7 @@ export default function GettingPaidPage() {
               <li>Wings Access registration is completely free - there are no fees to sign up or receive payments</li>
               <li>Make sure to use the same email address for Wings Access that you use for your River and Ember account</li>
               <li>Keep your payment information up to date to avoid payment delays</li>
-              <li>If you have questions about Wings Access, contact their support team or reach out to us at <a href="mailto:adam@riverandember.com" className="text-primary hover:underline">adam@riverandember.com</a></li>
+              <li>If you have questions about Wings Access, contact their support team or reach out to us at <a href="mailto:admin@riverandember.com" className="text-primary hover:underline">admin@riverandember.com</a></li>
             </ul>
           </div>
 
@@ -92,7 +92,7 @@ export default function GettingPaidPage() {
             <h2 className="text-xl font-semibold mb-3">Need Help?</h2>
             <p className="text-muted-foreground">
               If you encounter any issues during registration or have questions about the process, please don&apos;t hesitate to reach out. 
-              You can use our <Link href="/dashboard/faq/ask-question" className="text-primary hover:underline">Ask a Question</Link> form or email us directly at <a href="mailto:adam@riverandember.com" className="text-primary hover:underline">adam@riverandember.com</a>.
+              You can use our <Link href="/dashboard/faq/ask-question" className="text-primary hover:underline">Ask a Question</Link> form or email us directly at <a href="mailto:admin@riverandember.com" className="text-primary hover:underline">admin@riverandember.com</a>.
             </p>
           </div>
         </CardContent>
