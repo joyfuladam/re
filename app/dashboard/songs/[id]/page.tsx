@@ -1412,9 +1412,13 @@ export default function SongDetailPage() {
           <CardContent>
             <div className="space-y-6">
               {/* Publishing Share Section */}
-              {song.songCollaborators.some((sc) => 
-                isPublishingEligible(sc.roleInSong as CollaboratorRole)
-              ) && (
+              {song.songCollaborators.some((sc) => {
+                const publishing = sc.publishingOwnership ? parseFloat(sc.publishingOwnership.toString()) : 0
+                const master = sc.masterOwnership ? parseFloat(sc.masterOwnership.toString()) : 0
+                const isPublishingOnly = isPublishingEligible(sc.roleInSong as CollaboratorRole) && !isMasterEligible(sc.roleInSong as CollaboratorRole)
+                // Show if: has publishing share > 0, OR is publishing-only role (not eligible for master)
+                return isPublishingEligible(sc.roleInSong as CollaboratorRole) && (publishing > 0 || (isPublishingOnly && master === 0))
+              }) && (
                 <div>
                   <div className="flex items-center justify-between mb-3 p-3">
                     <div className="flex items-center gap-2">
@@ -1507,9 +1511,13 @@ export default function SongDetailPage() {
                   )}
                   <div className="space-y-2">
                     {song.songCollaborators
-                      .filter((sc) => 
-                        isPublishingEligible(sc.roleInSong as CollaboratorRole)
-                      )
+                      .filter((sc) => {
+                        const publishing = sc.publishingOwnership ? parseFloat(sc.publishingOwnership.toString()) : 0
+                        const master = sc.masterOwnership ? parseFloat(sc.masterOwnership.toString()) : 0
+                        const isPublishingOnly = isPublishingEligible(sc.roleInSong as CollaboratorRole) && !isMasterEligible(sc.roleInSong as CollaboratorRole)
+                        // Show if: has publishing share > 0, OR is publishing-only role (not eligible for master)
+                        return isPublishingEligible(sc.roleInSong as CollaboratorRole) && (publishing > 0 || (isPublishingOnly && master === 0))
+                      })
                       .filter((sc) => {
                         // If user can't see all shares, only show their own
                         if (!canSeeAllShares) {
@@ -1840,7 +1848,11 @@ export default function SongDetailPage() {
               {/* Master Revenue Share Section */}
               {song.songCollaborators.some((sc) => {
                 const role = sc.roleInSong as CollaboratorRole
-                return isMasterEligible(role) && role !== "label"
+                const master = sc.masterOwnership ? parseFloat(sc.masterOwnership.toString()) : 0
+                const publishing = sc.publishingOwnership ? parseFloat(sc.publishingOwnership.toString()) : 0
+                const isMasterOnly = isMasterEligible(role) && !isPublishingEligible(role)
+                // Show if: has master share > 0, OR is master-only role (not eligible for publishing)
+                return isMasterEligible(role) && role !== "label" && (master > 0 || (isMasterOnly && publishing === 0))
               }) && (
                 <div>
                   <div className="flex items-center justify-between mb-3 p-3">
@@ -1926,7 +1938,11 @@ export default function SongDetailPage() {
                       const masterCollaborators = song.songCollaborators
                         .filter((sc) => {
                           const role = sc.roleInSong as CollaboratorRole
-                          return isMasterEligible(role) && role !== "label"
+                          const master = sc.masterOwnership ? parseFloat(sc.masterOwnership.toString()) : 0
+                          const publishing = sc.publishingOwnership ? parseFloat(sc.publishingOwnership.toString()) : 0
+                          const isMasterOnly = isMasterEligible(role) && !isPublishingEligible(role)
+                          // Show if: has master share > 0, OR is master-only role (not eligible for publishing)
+                          return isMasterEligible(role) && role !== "label" && (master > 0 || (isMasterOnly && publishing === 0))
                         })
                         .filter((sc) => {
                           // If user can't see all shares, only show their own
