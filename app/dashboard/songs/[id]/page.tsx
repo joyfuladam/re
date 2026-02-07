@@ -1846,11 +1846,7 @@ export default function SongDetailPage() {
               {/* Master Revenue Share Section */}
               {song.songCollaborators.some((sc) => {
                 const role = sc.roleInSong as CollaboratorRole
-                const master = sc.masterOwnership ? parseFloat(sc.masterOwnership.toString()) : 0
-                const publishing = sc.publishingOwnership ? parseFloat(sc.publishingOwnership.toString()) : 0
-                const isMasterOnly = isMasterEligible(role) && !isPublishingEligible(role)
-                // Show if: has master share > 0, OR is master-only role (not eligible for publishing)
-                return isMasterEligible(role) && role !== "label" && (master > 0 || (isMasterOnly && publishing === 0))
+                return isMasterEligible(role) && role !== "label"
               }) && (
                 <div>
                   <div className="flex items-center justify-between mb-3 p-3">
@@ -1936,11 +1932,8 @@ export default function SongDetailPage() {
                       const masterCollaborators = song.songCollaborators
                         .filter((sc) => {
                           const role = sc.roleInSong as CollaboratorRole
-                          const master = sc.masterOwnership ? parseFloat(sc.masterOwnership.toString()) : 0
-                          const publishing = sc.publishingOwnership ? parseFloat(sc.publishingOwnership.toString()) : 0
-                          const isMasterOnly = isMasterEligible(role) && !isPublishingEligible(role)
-                          // Show if: has master share > 0, OR is master-only role (not eligible for publishing)
-                          return isMasterEligible(role) && role !== "label" && (master > 0 || (isMasterOnly && publishing === 0))
+                          // Show all master-eligible collaborators (excluding label)
+                          return isMasterEligible(role) && role !== "label"
                         })
                         .filter((sc) => {
                           // If user can't see all shares, only show their own
