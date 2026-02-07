@@ -1,17 +1,7 @@
-import nodemailer from 'nodemailer'
+import { Resend } from 'resend'
 
-// Create reusable transporter for Google Workspace
-// Using service: 'gmail' which handles all the SMTP configuration automatically
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.SMTP_USER, // Your Google Workspace email
-    pass: process.env.SMTP_PASSWORD, // App password from Google
-  },
-  tls: {
-    rejectUnauthorized: false
-  }
-})
+// Initialize Resend with API key
+const resend = new Resend(process.env.RESEND_API_KEY)
 
 interface SendEmailOptions {
   to: string
@@ -22,16 +12,27 @@ interface SendEmailOptions {
 
 export async function sendEmail({ to, subject, html, text }: SendEmailOptions) {
   try {
-    const info = await transporter.sendMail({
-      from: `"River & Ember" <${process.env.SMTP_USER}>`,
-      to,
+    // Determine the from email based on whether domain is verified
+    // If RESEND_FROM_EMAIL is set, use it (your verified domain)
+    // Otherwise, use Resend's sandbox domain for testing
+    const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev'
+    const fromName = 'River & Ember'
+    
+    const { data, error } = await resend.emails.send({
+      from: `${fromName} <${fromEmail}>`,
+      to: [to],
       subject,
-      text,
       html,
+      text,
     })
 
-    console.log('Email sent:', info.messageId)
-    return { success: true, messageId: info.messageId }
+    if (error) {
+      console.error('Resend error:', error)
+      throw new Error(error.message)
+    }
+
+    console.log('Email sent via Resend:', data?.id)
+    return { success: true, messageId: data?.id }
   } catch (error) {
     console.error('Error sending email:', error)
     throw error
