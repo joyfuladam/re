@@ -76,6 +76,11 @@ export default function SongDetailPage() {
   const [deletingCollaboratorId, setDeletingCollaboratorId] = useState<string | null>(null)
   const [editingRoleId, setEditingRoleId] = useState<string | null>(null)
   const [updatingRoleId, setUpdatingRoleId] = useState<string | null>(null)
+  const [editingPublishingShare, setEditingPublishingShare] = useState<string | null>(null)
+  const [editingMasterShare, setEditingMasterShare] = useState<string | null>(null)
+  const [publishingShareValue, setPublishingShareValue] = useState<string>("")
+  const [masterShareValue, setMasterShareValue] = useState<string>("")
+  const [updatingSplits, setUpdatingSplits] = useState(false)
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
   const [editFormData, setEditFormData] = useState({
@@ -110,12 +115,6 @@ export default function SongDetailPage() {
     esignatureStatus: string | null
     signedAt: string | null
   }>>([])
-  const [lockingPublishing, setLockingPublishing] = useState(false)
-  const [lockingMaster, setLockingMaster] = useState(false)
-  const [editingPublishingShare, setEditingPublishingShare] = useState<string | null>(null)
-  const [editingMasterShare, setEditingMasterShare] = useState<string | null>(null)
-  const [publishingShareValue, setPublishingShareValue] = useState<string>("")
-  const [masterShareValue, setMasterShareValue] = useState<string>("")
 
   const isAdmin = session?.user?.role === "admin"
   
@@ -403,6 +402,102 @@ export default function SongDetailPage() {
     }
   }
 
+  const handleUpdatePublishingShare = async (songCollaboratorId: string, newPercentage: number) => {
+    if (!song) return
+    if (song.publishingLocked) {
+      alert("Publishing splits are locked and cannot be modified")
+      return
+    }
+
+    setUpdatingSplits(true)
+    try {
+      // Get all publishing-eligible collaborators and their current splits
+      const eligibleCollaborators = song.songCollaborators.filter((sc) => 
+        isPublishingEligible(sc.roleInSong as CollaboratorRole)
+      )
+      
+      // Build splits array, updating the one being edited
+      const splits = eligibleCollaborators.map((sc) => ({
+        songCollaboratorId: sc.id,
+        percentage: sc.id === songCollaboratorId 
+          ? newPercentage 
+          : (sc.publishingOwnership ? parseFloat(sc.publishingOwnership.toString()) * 100 : 0),
+      }))
+      
+      const response = await fetch("/api/splits/publishing", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          songId: song.id,
+          splits,
+        }),
+      })
+      if (response.ok) {
+        await fetchSong()
+        setEditingPublishingShare(null)
+      } else {
+        const error = await response.json()
+        alert(error.error || error.details || "Failed to update publishing share")
+      }
+    } catch (error) {
+      console.error("Error updating publishing share:", error)
+      alert("Failed to update publishing share")
+    } finally {
+      setUpdatingSplits(false)
+    }
+  }
+
+  const handleUpdateMasterShare = async (songCollaboratorId: string, newPercentage: number) => {
+    if (!song) return
+    if (!song.publishingLocked) {
+      alert("Publishing splits must be locked before master splits can be set")
+      return
+    }
+    if (song.masterLocked) {
+      alert("Master splits are locked and cannot be modified")
+      return
+    }
+
+    setUpdatingSplits(true)
+    try {
+      // Get all master-eligible collaborators (excluding label)
+      const eligibleCollaborators = song.songCollaborators.filter((sc) => {
+        const role = sc.roleInSong as CollaboratorRole
+        return isMasterEligible(role) && role !== "label"
+      })
+      
+      // Build splits array, updating the one being edited
+      const splits = eligibleCollaborators.map((sc) => ({
+        songCollaboratorId: sc.id,
+        percentage: sc.id === songCollaboratorId 
+          ? newPercentage 
+          : (sc.masterOwnership ? parseFloat(sc.masterOwnership.toString()) * 100 : 0),
+      }))
+      
+      const response = await fetch("/api/splits/master", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          songId: song.id,
+          splits,
+          labelMasterShare: song.labelMasterShare ? parseFloat(song.labelMasterShare.toString()) * 100 : 0,
+        }),
+      })
+      if (response.ok) {
+        await fetchSong()
+        setEditingMasterShare(null)
+      } else {
+        const error = await response.json()
+        alert(error.error || error.details || "Failed to update master share")
+      }
+    } catch (error) {
+      console.error("Error updating master share:", error)
+      alert("Failed to update master share")
+    } finally {
+      setUpdatingSplits(false)
+    }
+  }
+
   const handleDeleteCollaborator = async (songCollaboratorId: string, collaboratorName: string) => {
     if (!song) return
     
@@ -435,174 +530,6 @@ export default function SongDetailPage() {
       alert("Failed to remove collaborator")
     } finally {
       setDeletingCollaboratorId(null)
-    }
-  }
-
-  const handleLockPublishing = async () => {
-    if (!song) return
-    setLockingPublishing(true)
-    try {
-      const response = await fetch("/api/splits/publishing", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ songId: song.id, action: "lock" }),
-      })
-      if (response.ok) {
-        await fetchSong()
-      } else {
-        const error = await response.json()
-        alert(error.error || "Failed to lock publishing splits")
-      }
-    } catch (error) {
-      console.error("Error locking publishing splits:", error)
-      alert("Failed to lock publishing splits")
-    } finally {
-      setLockingPublishing(false)
-    }
-  }
-
-  const handleUnlockPublishing = async () => {
-    if (!song) return
-    setLockingPublishing(true)
-    try {
-      const response = await fetch("/api/splits/publishing", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ songId: song.id, action: "unlock" }),
-      })
-      if (response.ok) {
-        await fetchSong()
-      } else {
-        const error = await response.json()
-        alert(error.error || "Failed to unlock publishing splits")
-      }
-    } catch (error) {
-      console.error("Error unlocking publishing splits:", error)
-      alert("Failed to unlock publishing splits")
-    } finally {
-      setLockingPublishing(false)
-    }
-  }
-
-  const handleLockMaster = async () => {
-    if (!song) return
-    setLockingMaster(true)
-    try {
-      const response = await fetch("/api/splits/master", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ songId: song.id, action: "lock" }),
-      })
-      if (response.ok) {
-        await fetchSong()
-      } else {
-        const error = await response.json()
-        alert(error.error || "Failed to lock master splits")
-      }
-    } catch (error) {
-      console.error("Error locking master splits:", error)
-      alert("Failed to lock master splits")
-    } finally {
-      setLockingMaster(false)
-    }
-  }
-
-  const handleUnlockMaster = async () => {
-    if (!song) return
-    setLockingMaster(true)
-    try {
-      const response = await fetch("/api/splits/master", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ songId: song.id, action: "unlock" }),
-      })
-      if (response.ok) {
-        await fetchSong()
-      } else {
-        const error = await response.json()
-        alert(error.error || "Failed to unlock master splits")
-      }
-    } catch (error) {
-      console.error("Error unlocking master splits:", error)
-      alert("Failed to unlock master splits")
-    } finally {
-      setLockingMaster(false)
-    }
-  }
-
-  const handleUpdatePublishingShare = async (songCollaboratorId: string, newPercentage: number) => {
-    if (!song) return
-    try {
-      // Get all publishing-eligible collaborators and their current splits
-      const eligibleCollaborators = song.songCollaborators.filter((sc) => 
-        isPublishingEligible(sc.roleInSong as CollaboratorRole)
-      )
-      
-      // Build splits array, updating the one being edited
-      const splits = eligibleCollaborators.map((sc) => ({
-        songCollaboratorId: sc.id,
-        percentage: sc.id === songCollaboratorId 
-          ? newPercentage 
-          : (sc.publishingOwnership ? parseFloat(sc.publishingOwnership.toString()) : 0),
-      }))
-      
-      const response = await fetch("/api/splits/publishing", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          songId: song.id,
-          splits,
-        }),
-      })
-      if (response.ok) {
-        await fetchSong()
-        setEditingPublishingShare(null)
-      } else {
-        const error = await response.json()
-        alert(error.error || error.details || "Failed to update publishing share")
-      }
-    } catch (error) {
-      console.error("Error updating publishing share:", error)
-      alert("Failed to update publishing share")
-    }
-  }
-
-  const handleUpdateMasterShare = async (songCollaboratorId: string, newPercentage: number) => {
-    if (!song) return
-    try {
-      // Get all master-eligible collaborators (excluding label)
-      const eligibleCollaborators = song.songCollaborators.filter((sc) => {
-        const role = sc.roleInSong as CollaboratorRole
-        return isMasterEligible(role) && role !== "label"
-      })
-      
-      // Build splits array, updating the one being edited
-      const splits = eligibleCollaborators.map((sc) => ({
-        songCollaboratorId: sc.id,
-        percentage: sc.id === songCollaboratorId 
-          ? newPercentage 
-          : (sc.masterOwnership ? parseFloat(sc.masterOwnership.toString()) : 0),
-      }))
-      
-      const response = await fetch("/api/splits/master", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          songId: song.id,
-          splits,
-          labelShare: song.labelMasterShare || 0,
-        }),
-      })
-      if (response.ok) {
-        await fetchSong()
-        setEditingMasterShare(null)
-      } else {
-        const error = await response.json()
-        alert(error.error || error.details || "Failed to update master share")
-      }
-    } catch (error) {
-      console.error("Error updating master share:", error)
-      alert("Failed to update master share")
     }
   }
 
@@ -1208,574 +1135,582 @@ export default function SongDetailPage() {
         </CardContent>
       </Card>
 
-      <div className="grid gap-4">
+      {isAdmin && (
+        <div className="grid gap-4 md:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Publishing Splits</CardTitle>
+              <CardDescription>
+                {song.publishingLocked
+                  ? "Publishing splits are locked"
+                  : "Set publishing ownership percentages (must total 100%)"}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <PublishingSplitEditor
+                songId={song.id}
+                songCollaborators={song.songCollaborators.map(sc => ({
+                  ...sc,
+                  roleInSong: sc.roleInSong as CollaboratorRole
+                })) as any}
+                songPublishingEntities={song.songPublishingEntities}
+                isLocked={song.publishingLocked}
+                onUpdate={fetchSong}
+              />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Master Revenue Shares</CardTitle>
+              <CardDescription>
+                {!song.publishingLocked
+                  ? "Publishing splits must be locked first"
+                  : song.masterLocked
+                  ? "Master revenue shares are locked"
+                  : "Set master ownership percentages (must total 100%)"}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <MasterSplitEditor
+                songId={song.id}
+                songCollaborators={song.songCollaborators.map(sc => ({
+                  ...sc,
+                  roleInSong: sc.roleInSong as CollaboratorRole
+                })) as any}
+                labelMasterShare={song.labelMasterShare}
+                isLocked={song.masterLocked}
+                publishingLocked={song.publishingLocked}
+                onUpdate={fetchSong}
+              />
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      <div className={`grid gap-4 ${canSeeAllShares ? 'md:grid-cols-2' : ''}`}>
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>Collaborators</CardTitle>
-                <CardDescription>Manage collaborators, splits, and contracts for this song</CardDescription>
-              </div>
-              {isAdmin && (
-                <div className="flex gap-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground">
-                      Publishing: {song.publishingLocked ? "Locked" : "Unlocked"}
-                    </span>
-                    {song.publishingLocked ? (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleUnlockPublishing}
-                        disabled={lockingPublishing}
-                      >
-                        Unlock
-                      </Button>
-                    ) : (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleLockPublishing}
-                        disabled={lockingPublishing}
-                      >
-                        Lock
-                      </Button>
-                    )}
+            <CardTitle>Collaborators</CardTitle>
+            <CardDescription>Manage collaborators for this song</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              {/* Publishing Share Section */}
+              {song.songCollaborators.some((sc) => {
+                const publishing = sc.publishingOwnership ? parseFloat(sc.publishingOwnership.toString()) : 0
+                return publishing > 0
+              }) && (
+                <div>
+                  <div className="flex items-center justify-between mb-3 p-3">
+                    <h3 className="text-lg font-semibold">Publishing Share</h3>
+                    <div className="flex gap-2 ml-4 justify-center" style={{ minWidth: '140px' }}>
+                      <h3 className="text-lg font-semibold">Contracts</h3>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground">
-                      Master: {song.masterLocked ? "Locked" : "Unlocked"}
-                    </span>
-                    {song.masterLocked ? (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleUnlockMaster}
-                        disabled={lockingMaster || !song.publishingLocked}
-                        title={!song.publishingLocked ? "Publishing must be locked first" : ""}
-                      >
-                        Unlock
-                      </Button>
-                    ) : (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleLockMaster}
-                        disabled={lockingMaster || !song.publishingLocked}
-                        title={!song.publishingLocked ? "Publishing must be locked first" : ""}
-                      >
-                        Lock
-                      </Button>
-                    )}
+                  <div className="space-y-2">
+                    {song.songCollaborators
+                      .filter((sc) => {
+                        const publishing = sc.publishingOwnership ? parseFloat(sc.publishingOwnership.toString()) : 0
+                        return publishing > 0
+                      })
+                      .filter((sc) => {
+                        // If user can't see all shares, only show their own
+                        if (!canSeeAllShares) {
+                          return sc.collaborator.id === session?.user?.id
+                        }
+                        return true
+                      })
+                      .map((sc) => {
+                        const publishing = sc.publishingOwnership ? parseFloat(sc.publishingOwnership.toString()) : 0
+                        const isCurrentUser = sc.collaborator.id === session?.user?.id
+                        const collaboratorName = [sc.collaborator.firstName, sc.collaborator.middleName, sc.collaborator.lastName].filter(Boolean).join(" ")
+                        const roleLabels: Record<CollaboratorRole, string> = {
+                          writer: "Writer",
+                          producer: "Producer",
+                          musician: "Musician",
+                          artist: "Artist",
+                          vocalist: "Vocalist",
+                          label: "Label",
+                        }
+                        const roleLabel = roleLabels[sc.roleInSong as CollaboratorRole] || sc.roleInSong
+                        const availableRoles = sc.collaborator.capableRoles || []
+                        const isEditingRole = editingRoleId === sc.id
+                        const isUpdatingRole = updatingRoleId === sc.id
+                        const contractType: ContractType = "songwriter_publishing"
+                        const isGenerating = generatingContractId === `${sc.id}-${contractType}`
+                        const contractStatus = getContractStatus(sc.id, contractType)
+                        const isSent = contractStatus.status === "sent" || contractStatus.status === "signed"
+                        const isSigned = contractStatus.status === "signed"
+                        const canResend = contractStatus.status === "sent" && !isSigned
+                        
+                        return (
+                          <div
+                            key={`publishing-${sc.id}`}
+                            className="flex items-center justify-between p-3 border rounded"
+                          >
+                            <div className="flex-1">
+                              <div className="font-medium flex items-center gap-2">
+                                <span>{collaboratorName}</span>
+                                {contractStatus.status && (
+                                  <span className={`px-2 py-0.5 rounded text-xs ${
+                                    isSigned 
+                                      ? "bg-green-100 text-green-800" 
+                                      : contractStatus.status === "sent"
+                                      ? "bg-blue-100 text-blue-800"
+                                      : contractStatus.status === "draft"
+                                      ? "bg-yellow-100 text-yellow-800"
+                                      : contractStatus.status === "declined"
+                                      ? "bg-red-100 text-red-800"
+                                      : "bg-gray-100 text-gray-800"
+                                  }`}>
+                                    {isSigned ? "Signed" : contractStatus.status === "sent" ? "Sent" : contractStatus.status === "draft" ? "Draft" : contractStatus.status === "declined" ? "Declined" : contractStatus.status}
+                                  </span>
+                                )}
+                                {isAdmin && (
+                                  <button
+                                    onClick={() => handleDeleteCollaborator(sc.id, collaboratorName)}
+                                    disabled={deletingCollaboratorId === sc.id}
+                                    className="text-xs text-red-600 hover:text-red-800 hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
+                                  >
+                                    {deletingCollaboratorId === sc.id ? "Removing..." : "Remove"}
+                                  </button>
+                                )}
+                              </div>
+                              <div className="text-sm text-muted-foreground flex items-center gap-2">
+                                {canSeeAllShares && (
+                                  <>
+                                    {isAdmin && !isEditingRole ? (
+                                      <div className="flex items-center gap-2">
+                                        <span>{roleLabel}</span>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="h-6 px-2 text-xs"
+                                          onClick={() => setEditingRoleId(sc.id)}
+                                          disabled={isUpdatingRole}
+                                        >
+                                          Edit
+                                        </Button>
+                                      </div>
+                                    ) : isAdmin && isEditingRole ? (
+                                      <div className="flex items-center gap-2">
+                                        <Select
+                                          value={sc.roleInSong}
+                                          onValueChange={(value) => handleUpdateRole(sc.id, value as CollaboratorRole)}
+                                          disabled={isUpdatingRole}
+                                        >
+                                          <SelectTrigger className="h-7 w-32 text-xs">
+                                            <SelectValue />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            {[...availableRoles, "label"].map((role) => (
+                                              <SelectItem key={role} value={role}>
+                                                {roleLabels[role as CollaboratorRole] || role}
+                                              </SelectItem>
+                                            ))}
+                                          </SelectContent>
+                                        </Select>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="h-6 px-2 text-xs"
+                                          onClick={() => setEditingRoleId(null)}
+                                          disabled={isUpdatingRole}
+                                        >
+                                          Cancel
+                                        </Button>
+                                      </div>
+                                    ) : (
+                                      <span>{roleLabel}</span>
+                                    )}
+                                    <span>•</span>
+                                  </>
+                                )}
+                                {isAdmin && !song.publishingLocked && !editingPublishingShare ? (
+                                  <div className="flex items-center gap-2">
+                                    <span>Publishing: {publishing.toFixed(2)}%</span>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-6 px-2 text-xs"
+                                      onClick={() => {
+                                        setEditingPublishingShare(sc.id)
+                                        setPublishingShareValue(publishing.toFixed(2))
+                                      }}
+                                      disabled={updatingSplits}
+                                    >
+                                      Edit
+                                    </Button>
+                                  </div>
+                                ) : isAdmin && !song.publishingLocked && editingPublishingShare === sc.id ? (
+                                  <div className="flex items-center gap-2">
+                                    <span>Publishing:</span>
+                                    <Input
+                                      type="number"
+                                      step="0.01"
+                                      min="0"
+                                      max="100"
+                                      value={publishingShareValue}
+                                      onChange={(e) => setPublishingShareValue(e.target.value)}
+                                      className="h-6 w-16 text-xs"
+                                      autoFocus
+                                    />
+                                    <span>%</span>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-6 px-1 text-xs"
+                                      onClick={() => {
+                                        const value = parseFloat(publishingShareValue)
+                                        if (!isNaN(value) && value >= 0 && value <= 100) {
+                                          handleUpdatePublishingShare(sc.id, value)
+                                        } else {
+                                          alert("Please enter a valid percentage between 0 and 100")
+                                        }
+                                      }}
+                                      disabled={updatingSplits}
+                                    >
+                                      Save
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-6 px-1 text-xs"
+                                      onClick={() => setEditingPublishingShare(null)}
+                                      disabled={updatingSplits}
+                                    >
+                                      Cancel
+                                    </Button>
+                                  </div>
+                                ) : (
+                                  <span>Publishing: {publishing.toFixed(2)}%</span>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex gap-2 ml-4 items-center">
+                              {isAdmin && contractStatus.contractId && contractStatus.status && contractStatus.status !== "pending" && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleRefreshStatus(contractStatus.contractId!)}
+                                  disabled={refreshingStatusId === contractStatus.contractId}
+                                  title="Refresh status from SignWell"
+                                  className="h-7 w-7 p-0"
+                                >
+                                  {refreshingStatusId === contractStatus.contractId ? "⟳" : "↻"}
+                                </Button>
+                              )}
+                              {(isCurrentUser || isAdmin) && (
+                                <>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handlePreviewContract(sc.id, contractType, collaboratorName)}
+                                    disabled={!song.masterLocked || isGenerating}
+                                    className="h-7 text-xs px-2"
+                                  >
+                                    Preview
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleDownloadContract(sc.id, contractType)}
+                                    disabled={!song.masterLocked || isGenerating}
+                                    title="Download contract as PDF"
+                                    className="h-7 text-xs px-2"
+                                  >
+                                    Download
+                                  </Button>
+                                </>
+                              )}
+                              {isAdmin && (
+                                <>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleSendContract(sc.id, contractType, collaboratorName, true)}
+                                    disabled={!song.masterLocked || isGenerating || isSigned}
+                                    title="Create draft in SignWell (no emails sent)"
+                                    className="h-7 text-xs px-2"
+                                  >
+                                    Draft
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleSendContract(sc.id, contractType, collaboratorName, false)}
+                                    disabled={!song.masterLocked || isGenerating || isSigned}
+                                    className="h-7 text-xs px-2"
+                                  >
+                                    {isSigned ? "Signed" : canResend ? "Re-Send" : "Send"}
+                                  </Button>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        )
+                      })}
                   </div>
                 </div>
               )}
-            </div>
-          </CardHeader>
-          <CardContent>
-            {isAdmin && (
-              <div className="space-y-4 mb-6">
+
+              {/* Master Revenue Share Section */}
+              {song.songCollaborators.some((sc) => {
+                const master = sc.masterOwnership ? parseFloat(sc.masterOwnership.toString()) : 0
+                return master > 0
+              }) && (
                 <div>
-                  <h4 className="text-sm font-medium mb-2">Publishing Splits</h4>
-                  <PublishingSplitEditor
-                    songId={song.id}
-                    songCollaborators={song.songCollaborators.map(sc => ({
-                      ...sc,
-                      roleInSong: sc.roleInSong as CollaboratorRole
-                    })) as any}
-                    songPublishingEntities={song.songPublishingEntities}
-                    isLocked={song.publishingLocked}
-                    onUpdate={fetchSong}
-                  />
-                </div>
-                {song.publishingLocked && (
-                  <div>
-                    <h4 className="text-sm font-medium mb-2">Master Revenue Shares</h4>
-                    <MasterSplitEditor
-                      songId={song.id}
-                      songCollaborators={song.songCollaborators.map(sc => ({
-                        ...sc,
-                        roleInSong: sc.roleInSong as CollaboratorRole
-                      })) as any}
-                      labelMasterShare={song.labelMasterShare}
-                      isLocked={song.masterLocked}
-                      publishingLocked={song.publishingLocked}
-                      onUpdate={fetchSong}
-                    />
+                  <div className="flex items-center justify-between mb-3 p-3">
+                    <h3 className="text-lg font-semibold">Master Revenue Share</h3>
+                    <div className="flex gap-2 ml-4 justify-center" style={{ minWidth: '140px' }}>
+                      <h3 className="text-lg font-semibold">Contracts</h3>
+                    </div>
                   </div>
-                )}
-              </div>
-            )}
-            <div className="space-y-4">
-              {/* Collaborators with separate Publishing and Master sections */}
-              {song.songCollaborators.length > 0 && (
-                <div className="space-y-4">
-                  {song.songCollaborators
-                    .filter((sc) => {
-                      // If user can't see all shares, only show their own
-                      if (!canSeeAllShares) {
-                        return sc.collaborator.id === session?.user?.id
-                      }
-                      return true
-                    })
-                    .map((sc) => {
-                      const publishing = sc.publishingOwnership ? parseFloat(sc.publishingOwnership.toString()) : 0
-                      const master = sc.masterOwnership ? parseFloat(sc.masterOwnership.toString()) : 0
-                      const isCurrentUser = sc.collaborator.id === session?.user?.id
-                      const collaboratorName = [sc.collaborator.firstName, sc.collaborator.middleName, sc.collaborator.lastName].filter(Boolean).join(" ")
-                      const roleLabels: Record<CollaboratorRole, string> = {
-                        writer: "Writer",
-                        producer: "Producer",
-                        musician: "Musician",
-                        artist: "Artist",
-                        vocalist: "Vocalist",
-                        label: "Label",
-                      }
-                      const roleLabel = roleLabels[sc.roleInSong as CollaboratorRole] || sc.roleInSong
-                      const availableRoles = sc.collaborator.capableRoles || []
-                      const isEditingRole = editingRoleId === sc.id
-                      const isUpdatingRole = updatingRoleId === sc.id
-                      const isEditingPublishing = editingPublishingShare === sc.id
-                      const isEditingMaster = editingMasterShare === sc.id
-                      
-                      return (
-                        <div key={`collaborator-${sc.id}`} className="space-y-2">
-                          {/* Publishing Section */}
-                          {publishing > 0 && (
-                            <div className="flex items-center justify-between p-3 border rounded">
-                              <div className="flex-1 flex items-center gap-4">
-                                <div className="font-medium flex items-center gap-2 min-w-[120px]">
-                                  <span>{collaboratorName}</span>
-                                  {isAdmin && (
-                                    <button
-                                      onClick={() => handleDeleteCollaborator(sc.id, collaboratorName)}
-                                      disabled={deletingCollaboratorId === sc.id}
-                                      className="text-xs text-red-600 hover:text-red-800 hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                      remove
-                                    </button>
-                                  )}
-                                </div>
-                                <div className="flex items-center gap-2 text-sm">
-                                  {canSeeAllShares && (
-                                    <>
-                                      {isAdmin && !isEditingRole ? (
-                                        <div className="flex items-center gap-1">
-                                          <span>{roleLabel}</span>
-                                          <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="h-5 px-1 text-xs"
-                                            onClick={() => setEditingRoleId(sc.id)}
-                                            disabled={isUpdatingRole}
-                                          >
-                                            edit
-                                          </Button>
-                                        </div>
-                                      ) : isAdmin && isEditingRole ? (
-                                        <div className="flex items-center gap-1">
-                                          <Select
-                                            value={sc.roleInSong}
-                                            onValueChange={(value) => handleUpdateRole(sc.id, value as CollaboratorRole)}
-                                            disabled={isUpdatingRole}
-                                          >
-                                            <SelectTrigger className="h-6 w-24 text-xs">
-                                              <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                              {[...availableRoles, "label"].map((role) => (
-                                                <SelectItem key={role} value={role}>
-                                                  {roleLabels[role as CollaboratorRole] || role}
-                                                </SelectItem>
-                                              ))}
-                                            </SelectContent>
-                                          </Select>
-                                          <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="h-5 px-1 text-xs"
-                                            onClick={() => setEditingRoleId(null)}
-                                            disabled={isUpdatingRole}
-                                          >
-                                            Cancel
-                                          </Button>
-                                        </div>
-                                      ) : (
-                                        <span>{roleLabel}</span>
-                                      )}
-                                      <span>•</span>
-                                    </>
-                                  )}
-                                  {isAdmin && !song.publishingLocked && !isEditingPublishing ? (
-                                    <div className="flex items-center gap-1">
-                                      <span>{publishing.toFixed(2)}%</span>
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="h-5 px-1 text-xs"
-                                        onClick={() => {
-                                          setEditingPublishingShare(sc.id)
-                                          setPublishingShareValue(publishing.toFixed(2))
-                                        }}
-                                      >
-                                        edit
-                                      </Button>
-                                    </div>
-                                  ) : isAdmin && !song.publishingLocked && isEditingPublishing ? (
-                                    <div className="flex items-center gap-1">
-                                      <Input
-                                        type="number"
-                                        step="0.01"
-                                        min="0"
-                                        max="100"
-                                        value={publishingShareValue}
-                                        onChange={(e) => setPublishingShareValue(e.target.value)}
-                                        className="h-6 w-16 text-xs"
-                                        autoFocus
-                                      />
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="h-5 px-1 text-xs"
-                                        onClick={() => {
-                                          const value = parseFloat(publishingShareValue)
-                                          if (!isNaN(value) && value >= 0 && value <= 100) {
-                                            handleUpdatePublishingShare(sc.id, value)
-                                          } else {
-                                            alert("Please enter a valid percentage between 0 and 100")
-                                          }
-                                        }}
-                                      >
-                                        Save
-                                      </Button>
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="h-5 px-1 text-xs"
-                                        onClick={() => setEditingPublishingShare(null)}
-                                      >
-                                        Cancel
-                                      </Button>
-                                    </div>
-                                  ) : (
-                                    <span>{publishing.toFixed(2)}%</span>
-                                  )}
-                                  <span>•</span>
-                                  <span className="text-xs text-muted-foreground">Publishing</span>
-                                  <span>•</span>
-                                  {(() => {
-                                    const contractType: ContractType = "songwriter_publishing"
-                                    const contractStatus = getContractStatus(sc.id, contractType)
-                                    return (
-                                      <span className={`px-2 py-0.5 rounded text-xs ${
-                                        contractStatus.status === "signed"
-                                          ? "bg-green-100 text-green-800"
-                                          : contractStatus.status === "sent"
-                                          ? "bg-blue-100 text-blue-800"
-                                          : contractStatus.status === "draft"
-                                          ? "bg-yellow-100 text-yellow-800"
-                                          : contractStatus.status === "declined"
-                                          ? "bg-red-100 text-red-800"
-                                          : "bg-gray-100 text-gray-800"
-                                      }`}>
-                                        {contractStatus.status || "pending"}
-                                      </span>
-                                    )
-                                  })()}
-                                </div>
+                  <div className="space-y-2">
+                    {song.songCollaborators
+                      .filter((sc) => {
+                        const master = sc.masterOwnership ? parseFloat(sc.masterOwnership.toString()) : 0
+                        return master > 0
+                      })
+                      .filter((sc) => {
+                        // If user can't see all shares, only show their own
+                        if (!canSeeAllShares) {
+                          return sc.collaborator.id === session?.user?.id
+                        }
+                        return true
+                      })
+                      .map((sc) => {
+                        const master = sc.masterOwnership ? parseFloat(sc.masterOwnership.toString()) : 0
+                        const isCurrentUser = sc.collaborator.id === session?.user?.id
+                        const collaboratorName = [sc.collaborator.firstName, sc.collaborator.middleName, sc.collaborator.lastName].filter(Boolean).join(" ")
+                        const roleLabels: Record<CollaboratorRole, string> = {
+                          writer: "Writer",
+                          producer: "Producer",
+                          musician: "Musician",
+                          artist: "Artist",
+                          vocalist: "Vocalist",
+                          label: "Label",
+                        }
+                        const roleLabel = roleLabels[sc.roleInSong as CollaboratorRole] || sc.roleInSong
+                        const availableRoles = sc.collaborator.capableRoles || []
+                        const isEditingRole = editingRoleId === sc.id
+                        const isUpdatingRole = updatingRoleId === sc.id
+                        const contractType: ContractType = "digital_master_only"
+                        const isGenerating = generatingContractId === `${sc.id}-${contractType}`
+                        const contractStatus = getContractStatus(sc.id, contractType)
+                        const isSent = contractStatus.status === "sent" || contractStatus.status === "signed"
+                        const isSigned = contractStatus.status === "signed"
+                        const canResend = contractStatus.status === "sent" && !isSigned
+                        
+                        return (
+                          <div
+                            key={`master-${sc.id}`}
+                            className="flex items-center justify-between p-3 border rounded"
+                          >
+                            <div className="flex-1">
+                              <div className="font-medium flex items-center gap-2">
+                                <span>{collaboratorName}</span>
+                                {contractStatus.status && (
+                                  <span className={`px-2 py-0.5 rounded text-xs ${
+                                    isSigned 
+                                      ? "bg-green-100 text-green-800" 
+                                      : contractStatus.status === "sent"
+                                      ? "bg-blue-100 text-blue-800"
+                                      : contractStatus.status === "draft"
+                                      ? "bg-yellow-100 text-yellow-800"
+                                      : contractStatus.status === "declined"
+                                      ? "bg-red-100 text-red-800"
+                                      : "bg-gray-100 text-gray-800"
+                                  }`}>
+                                    {isSigned ? "Signed" : contractStatus.status === "sent" ? "Sent" : contractStatus.status === "draft" ? "Draft" : contractStatus.status === "declined" ? "Declined" : contractStatus.status}
+                                  </span>
+                                )}
+                                {isAdmin && (
+                                  <button
+                                    onClick={() => handleDeleteCollaborator(sc.id, collaboratorName)}
+                                    disabled={deletingCollaboratorId === sc.id}
+                                    className="text-xs text-red-600 hover:text-red-800 hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
+                                  >
+                                    {deletingCollaboratorId === sc.id ? "Removing..." : "Remove"}
+                                  </button>
+                                )}
                               </div>
-                              <div className="flex gap-2 items-center">
-                                {(() => {
-                                  const contractType: ContractType = "songwriter_publishing"
-                                  const isGenerating = generatingContractId === `${sc.id}-${contractType}`
-                                  const contractStatus = getContractStatus(sc.id, contractType)
-                                  const isSigned = contractStatus.status === "signed"
-                                  const canResend = contractStatus.status === "sent" && !isSigned
-                                  
-                                  return (
-                                    <>
-                                      {isAdmin && contractStatus.contractId && contractStatus.status && contractStatus.status !== "pending" && (
+                              <div className="text-sm text-muted-foreground flex items-center gap-2">
+                                {canSeeAllShares && (
+                                  <>
+                                    {isAdmin && !isEditingRole ? (
+                                      <div className="flex items-center gap-2">
+                                        <span>{roleLabel}</span>
                                         <Button
                                           variant="ghost"
                                           size="sm"
-                                          onClick={() => handleRefreshStatus(contractStatus.contractId!)}
-                                          disabled={refreshingStatusId === contractStatus.contractId}
-                                          title="Refresh status"
-                                          className="h-7 w-7 p-0"
+                                          className="h-6 px-2 text-xs"
+                                          onClick={() => setEditingRoleId(sc.id)}
+                                          disabled={isUpdatingRole}
                                         >
-                                          {refreshingStatusId === contractStatus.contractId ? "⟳" : "↻"}
+                                          Edit
                                         </Button>
-                                      )}
-                                      {(isCurrentUser || isAdmin) && (
-                                        <>
-                                          <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => handlePreviewContract(sc.id, contractType, collaboratorName)}
-                                            disabled={!song.masterLocked || isGenerating}
-                                            className="h-7 text-xs px-2"
-                                          >
-                                            Preview
-                                          </Button>
-                                          <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => handleDownloadContract(sc.id, contractType)}
-                                            disabled={!song.masterLocked || isGenerating}
-                                            className="h-7 text-xs px-2"
-                                          >
-                                            Download
-                                          </Button>
-                                        </>
-                                      )}
-                                      {isAdmin && (
-                                        <>
-                                          <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => handleSendContract(sc.id, contractType, collaboratorName, true)}
-                                            disabled={!song.masterLocked || isGenerating || isSigned}
-                                            className="h-7 text-xs px-2"
-                                          >
-                                            Draft
-                                          </Button>
-                                          <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => handleSendContract(sc.id, contractType, collaboratorName, false)}
-                                            disabled={!song.masterLocked || isGenerating || isSigned}
-                                            className="h-7 text-xs px-2"
-                                          >
-                                            {isSigned ? "Signed" : canResend ? "Re-Send" : "Send"}
-                                          </Button>
-                                        </>
-                                      )}
-                                    </>
-                                  )
-                                })()}
-                              </div>
-                            </div>
-                          )}
-                          
-                          {/* Master Section */}
-                          {master > 0 && (
-                            <div className="flex items-center justify-between p-3 border rounded">
-                              <div className="flex-1 flex items-center gap-4">
-                                <div className="font-medium flex items-center gap-2 min-w-[120px]">
-                                  <span>{collaboratorName}</span>
-                                  {isAdmin && (
-                                    <button
-                                      onClick={() => handleDeleteCollaborator(sc.id, collaboratorName)}
-                                      disabled={deletingCollaboratorId === sc.id}
-                                      className="text-xs text-red-600 hover:text-red-800 hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                      remove
-                                    </button>
-                                  )}
-                                </div>
-                                <div className="flex items-center gap-2 text-sm">
-                                  {canSeeAllShares && (
-                                    <>
-                                      {isAdmin && !isEditingRole ? (
-                                        <div className="flex items-center gap-1">
-                                          <span>{roleLabel}</span>
-                                          <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="h-5 px-1 text-xs"
-                                            onClick={() => setEditingRoleId(sc.id)}
-                                            disabled={isUpdatingRole}
-                                          >
-                                            edit
-                                          </Button>
-                                        </div>
-                                      ) : isAdmin && isEditingRole ? (
-                                        <div className="flex items-center gap-1">
-                                          <Select
-                                            value={sc.roleInSong}
-                                            onValueChange={(value) => handleUpdateRole(sc.id, value as CollaboratorRole)}
-                                            disabled={isUpdatingRole}
-                                          >
-                                            <SelectTrigger className="h-6 w-24 text-xs">
-                                              <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                              {[...availableRoles, "label"].map((role) => (
-                                                <SelectItem key={role} value={role}>
-                                                  {roleLabels[role as CollaboratorRole] || role}
-                                                </SelectItem>
-                                              ))}
-                                            </SelectContent>
-                                          </Select>
-                                          <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="h-5 px-1 text-xs"
-                                            onClick={() => setEditingRoleId(null)}
-                                            disabled={isUpdatingRole}
-                                          >
-                                            Cancel
-                                          </Button>
-                                        </div>
-                                      ) : (
-                                        <span>{roleLabel}</span>
-                                      )}
-                                      <span>•</span>
-                                    </>
-                                  )}
-                                  {isAdmin && !song.masterLocked && !isEditingMaster ? (
-                                    <div className="flex items-center gap-1">
-                                      <span>{master.toFixed(2)}%</span>
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="h-5 px-1 text-xs"
-                                        onClick={() => {
-                                          setEditingMasterShare(sc.id)
-                                          setMasterShareValue(master.toFixed(2))
-                                        }}
-                                      >
-                                        edit
-                                      </Button>
-                                    </div>
-                                  ) : isAdmin && !song.masterLocked && isEditingMaster ? (
-                                    <div className="flex items-center gap-1">
-                                      <Input
-                                        type="number"
-                                        step="0.01"
-                                        min="0"
-                                        max="100"
-                                        value={masterShareValue}
-                                        onChange={(e) => setMasterShareValue(e.target.value)}
-                                        className="h-6 w-16 text-xs"
-                                        autoFocus
-                                      />
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="h-5 px-1 text-xs"
-                                        onClick={() => {
-                                          const value = parseFloat(masterShareValue)
-                                          if (!isNaN(value) && value >= 0 && value <= 100) {
-                                            handleUpdateMasterShare(sc.id, value)
-                                          } else {
-                                            alert("Please enter a valid percentage between 0 and 100")
-                                          }
-                                        }}
-                                      >
-                                        Save
-                                      </Button>
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="h-5 px-1 text-xs"
-                                        onClick={() => setEditingMasterShare(null)}
-                                      >
-                                        Cancel
-                                      </Button>
-                                    </div>
-                                  ) : (
-                                    <span>{master.toFixed(2)}%</span>
-                                  )}
-                                  <span>•</span>
-                                  <span className="text-xs text-muted-foreground">Master</span>
-                                  <span>•</span>
-                                  {(() => {
-                                    const contractType: ContractType = "digital_master_only"
-                                    const contractStatus = getContractStatus(sc.id, contractType)
-                                    return (
-                                      <span className={`px-2 py-0.5 rounded text-xs ${
-                                        contractStatus.status === "signed"
-                                          ? "bg-green-100 text-green-800"
-                                          : contractStatus.status === "sent"
-                                          ? "bg-blue-100 text-blue-800"
-                                          : contractStatus.status === "draft"
-                                          ? "bg-yellow-100 text-yellow-800"
-                                          : contractStatus.status === "declined"
-                                          ? "bg-red-100 text-red-800"
-                                          : "bg-gray-100 text-gray-800"
-                                      }`}>
-                                        {contractStatus.status || "pending"}
-                                      </span>
-                                    )
-                                  })()}
-                                </div>
-                              </div>
-                              <div className="flex gap-2 items-center">
-                                {(() => {
-                                  const contractType: ContractType = "digital_master_only"
-                                  const isGenerating = generatingContractId === `${sc.id}-${contractType}`
-                                  const contractStatus = getContractStatus(sc.id, contractType)
-                                  const isSigned = contractStatus.status === "signed"
-                                  const canResend = contractStatus.status === "sent" && !isSigned
-                                  
-                                  return (
-                                    <>
-                                      {isAdmin && contractStatus.contractId && contractStatus.status && contractStatus.status !== "pending" && (
+                                      </div>
+                                    ) : isAdmin && isEditingRole ? (
+                                      <div className="flex items-center gap-2">
+                                        <Select
+                                          value={sc.roleInSong}
+                                          onValueChange={(value) => handleUpdateRole(sc.id, value as CollaboratorRole)}
+                                          disabled={isUpdatingRole}
+                                        >
+                                          <SelectTrigger className="h-7 w-32 text-xs">
+                                            <SelectValue />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            {[...availableRoles, "label"].map((role) => (
+                                              <SelectItem key={role} value={role}>
+                                                {roleLabels[role as CollaboratorRole] || role}
+                                              </SelectItem>
+                                            ))}
+                                          </SelectContent>
+                                        </Select>
                                         <Button
                                           variant="ghost"
                                           size="sm"
-                                          onClick={() => handleRefreshStatus(contractStatus.contractId!)}
-                                          disabled={refreshingStatusId === contractStatus.contractId}
-                                          title="Refresh status"
-                                          className="h-7 w-7 p-0"
+                                          className="h-6 px-2 text-xs"
+                                          onClick={() => setEditingRoleId(null)}
+                                          disabled={isUpdatingRole}
                                         >
-                                          {refreshingStatusId === contractStatus.contractId ? "⟳" : "↻"}
+                                          Cancel
                                         </Button>
-                                      )}
-                                      {(isCurrentUser || isAdmin) && (
-                                        <>
-                                          <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => handlePreviewContract(sc.id, contractType, collaboratorName)}
-                                            disabled={!song.masterLocked || isGenerating}
-                                            className="h-7 text-xs px-2"
-                                          >
-                                            Preview
-                                          </Button>
-                                          <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => handleDownloadContract(sc.id, contractType)}
-                                            disabled={!song.masterLocked || isGenerating}
-                                            className="h-7 text-xs px-2"
-                                          >
-                                            Download
-                                          </Button>
-                                        </>
-                                      )}
-                                      {isAdmin && (
-                                        <>
-                                          <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => handleSendContract(sc.id, contractType, collaboratorName, true)}
-                                            disabled={!song.masterLocked || isGenerating || isSigned}
-                                            className="h-7 text-xs px-2"
-                                          >
-                                            Draft
-                                          </Button>
-                                          <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => handleSendContract(sc.id, contractType, collaboratorName, false)}
-                                            disabled={!song.masterLocked || isGenerating || isSigned}
-                                            className="h-7 text-xs px-2"
-                                          >
-                                            {isSigned ? "Signed" : canResend ? "Re-Send" : "Send"}
-                                          </Button>
-                                        </>
-                                      )}
-                                    </>
-                                  )
-                                })()}
+                                      </div>
+                                    ) : (
+                                      <span>{roleLabel}</span>
+                                    )}
+                                    <span>•</span>
+                                  </>
+                                )}
+                                {isAdmin && song.publishingLocked && !song.masterLocked && !editingMasterShare ? (
+                                  <div className="flex items-center gap-2">
+                                    <span>Master Revenue: {master.toFixed(2)}%</span>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-6 px-2 text-xs"
+                                      onClick={() => {
+                                        setEditingMasterShare(sc.id)
+                                        setMasterShareValue(master.toFixed(2))
+                                      }}
+                                      disabled={updatingSplits}
+                                    >
+                                      Edit
+                                    </Button>
+                                  </div>
+                                ) : isAdmin && song.publishingLocked && !song.masterLocked && editingMasterShare === sc.id ? (
+                                  <div className="flex items-center gap-2">
+                                    <span>Master Revenue:</span>
+                                    <Input
+                                      type="number"
+                                      step="0.01"
+                                      min="0"
+                                      max="100"
+                                      value={masterShareValue}
+                                      onChange={(e) => setMasterShareValue(e.target.value)}
+                                      className="h-6 w-16 text-xs"
+                                      autoFocus
+                                    />
+                                    <span>%</span>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-6 px-1 text-xs"
+                                      onClick={() => {
+                                        const value = parseFloat(masterShareValue)
+                                        if (!isNaN(value) && value >= 0 && value <= 100) {
+                                          handleUpdateMasterShare(sc.id, value)
+                                        } else {
+                                          alert("Please enter a valid percentage between 0 and 100")
+                                        }
+                                      }}
+                                      disabled={updatingSplits}
+                                    >
+                                      Save
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-6 px-1 text-xs"
+                                      onClick={() => setEditingMasterShare(null)}
+                                      disabled={updatingSplits}
+                                    >
+                                      Cancel
+                                    </Button>
+                                  </div>
+                                ) : (
+                                  <span>Master Revenue: {master.toFixed(2)}%</span>
+                                )}
                               </div>
                             </div>
-                          )}
-                        </div>
-                      )
-                    })}
+                            <div className="flex gap-2 ml-4 items-center">
+                              {isAdmin && contractStatus.contractId && contractStatus.status && contractStatus.status !== "pending" && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleRefreshStatus(contractStatus.contractId!)}
+                                  disabled={refreshingStatusId === contractStatus.contractId}
+                                  title="Refresh status from SignWell"
+                                  className="h-7 w-7 p-0"
+                                >
+                                  {refreshingStatusId === contractStatus.contractId ? "⟳" : "↻"}
+                                </Button>
+                              )}
+                              {(isCurrentUser || isAdmin) && (
+                                <>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handlePreviewContract(sc.id, contractType, collaboratorName)}
+                                    disabled={!song.masterLocked || isGenerating}
+                                    className="h-7 text-xs px-2"
+                                  >
+                                    Preview
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleDownloadContract(sc.id, contractType)}
+                                    disabled={!song.masterLocked || isGenerating}
+                                    title="Download contract as PDF"
+                                    className="h-7 text-xs px-2"
+                                  >
+                                    Download
+                                  </Button>
+                                </>
+                              )}
+                              {isAdmin && (
+                                <>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleSendContract(sc.id, contractType, collaboratorName, true)}
+                                    disabled={!song.masterLocked || isGenerating || isSigned}
+                                    title="Create draft in SignWell (no emails sent)"
+                                    className="h-7 text-xs px-2"
+                                  >
+                                    Draft
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleSendContract(sc.id, contractType, collaboratorName, false)}
+                                    disabled={!song.masterLocked || isGenerating || isSigned}
+                                    className="h-7 text-xs px-2"
+                                  >
+                                    {isSigned ? "Signed" : canResend ? "Re-Send" : "Send"}
+                                  </Button>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        )
+                      })}
+                  </div>
                 </div>
               )}
             </div>
