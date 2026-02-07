@@ -86,6 +86,9 @@ export async function buildPublishingAssignmentData(
     : null
 
   return {
+    // Logo
+    logo_url: `${process.env.NEXTAUTH_URL || 'https://riverandember.com'}/images/logo.png`,
+
     // Song-specific
     songTitle: song.title,
     isrcCode: song.isrcCode,
@@ -195,6 +198,9 @@ export async function buildMasterRevenueShareData(
   const artistRoleDescription = roleDescriptions[artistCollaborator.roleInSong] || artistCollaborator.roleInSong
 
   return {
+    // Logo
+    logo_url: `${process.env.NEXTAUTH_URL || 'https://riverandember.com'}/images/logo.png`,
+
     // Song-specific
     songTitle: song.title,
     isrcCode: song.isrcCode,
@@ -305,6 +311,9 @@ export async function buildContractData(
 
   // For other contract types, build basic data
   return {
+    // Logo
+    logo_url: `${process.env.NEXTAUTH_URL || 'https://riverandember.com'}/images/logo.png`,
+
     // Song-specific
     songTitle: song.title,
     isrcCode: song.isrcCode,

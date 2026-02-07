@@ -11,7 +11,11 @@ function tplVar(name: string): string {
  * Embedded contract templates
  * These are embedded directly in the code to ensure they're available in serverless environments like Vercel
  */
-const PUBLISHING_ASSIGNMENT_TEMPLATE = `# Project-Specific Full Publishing Assignment Agreement Template
+const PUBLISHING_ASSIGNMENT_TEMPLATE = `<div style="text-align: center; margin-bottom: 30px;">
+  <img src="{{logo_url}}" alt="River & Ember" style="width: 200px; height: auto;" />
+</div>
+
+# Project-Specific Full Publishing Assignment Agreement Template
 
 **PROJECT-SPECIFIC PUBLISHING ASSIGNMENT AGREEMENT**
 
@@ -76,7 +80,11 @@ Date: <span style="color: white;">{{date:2:y}}</span><br>
 
 `
 
-const MASTER_REVENUE_SHARE_TEMPLATE = `# Song-by-Song Master Revenue Share Agreement Template
+const MASTER_REVENUE_SHARE_TEMPLATE = `<div style="text-align: center; margin-bottom: 30px;">
+  <img src="{{logo_url}}" alt="River & Ember" style="width: 200px; height: auto;" />
+</div>
+
+# Song-by-Song Master Revenue Share Agreement Template
 
 **MASTER REVENUE SHARE AGREEMENT**
 

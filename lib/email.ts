@@ -51,6 +51,8 @@ export function getAccountApprovalEmail(
         <style>
           body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
           .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .logo { text-align: center; padding: 20px 0; }
+          .logo img { width: 150px; height: auto; }
           .header { background: #2563eb; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
           .content { background: #f9fafb; padding: 30px; border-radius: 0 0 8px 8px; }
           .button { display: inline-block; background: #2563eb; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
@@ -59,6 +61,9 @@ export function getAccountApprovalEmail(
       </head>
       <body>
         <div class="container">
+          <div class="logo">
+            <img src="${process.env.NEXTAUTH_URL || 'https://riverandember.com'}/images/logo.png" alt="River & Ember" />
+          </div>
           <div class="header">
             <h1>Welcome to River & Ember!</h1>
           </div>
@@ -120,6 +125,8 @@ export function getAccountRequestNotificationEmail(
         <style>
           body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
           .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .logo { text-align: center; padding: 20px 0; }
+          .logo img { width: 150px; height: auto; }
           .header { background: #dc2626; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
           .content { background: #f9fafb; padding: 30px; border-radius: 0 0 8px 8px; }
           .button { display: inline-block; background: #dc2626; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
@@ -128,6 +135,9 @@ export function getAccountRequestNotificationEmail(
       </head>
       <body>
         <div class="container">
+          <div class="logo">
+            <img src="${process.env.NEXTAUTH_URL || 'https://riverandember.com'}/images/logo.png" alt="River & Ember" />
+          </div>
           <div class="header">
             <h1>New Account Request</h1>
           </div>
