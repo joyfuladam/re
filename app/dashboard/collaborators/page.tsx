@@ -82,6 +82,7 @@ export default function CollaboratorsPage() {
     writer: "Writer",
     producer: "Producer",
     artist: "Artist",
+    vocalist: "Vocalist",
   }
 
   const filteredCollaborators = collaborators.filter((collaborator) => {
