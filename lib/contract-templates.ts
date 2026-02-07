@@ -20,6 +20,16 @@ const PUBLISHING_ASSIGNMENT_TEMPLATE = `<div style="display: flex; align-items: 
 
 This Agreement is made effective as of {{effective_date}} ("Effective Date"), between **River and Ember, LLC** ("Publisher"), a {{publisher_state}} limited liability company with principal place of business at {{publisher_address}}, and **{{writer_full_name}}**, an individual residing at {% if writer_address %}{{writer_address}}{% else %}<span style="color: red;">[Writer address not provided]</span>{% endif %} ("Writer").
 
+**PLAIN LANGUAGE SUMMARY**  
+*This summary is provided to help you understand this agreement. The legal terms below are what actually govern our relationship.*
+
+This agreement covers **publishing rights only** for the songs listed in Exhibit A. Here's what that means:
+- **You keep 100% of your writer's share** of publishing royalties (paid directly to you by ASCAP, BMI, or SESAC)
+- **River & Ember gets 100% of the publisher's share** of publishing royalties (performance, mechanical, sync, print, etc.)
+- **This does NOT cover master recording rights** - if you're also a performer, those are handled in a separate Master Revenue Share Agreement
+- **This only applies to the specific songs listed** - you keep full publishing rights to all your other songs
+- **You still own the songs** - you're just giving River & Ember the right to collect and administer the publisher's share of royalties
+
 **RECITALS**  
 Writer has created certain musical compositions for recording and release under Publisher's label projects. Publisher desires to administer publishing rights in those compositions to maximize congregational and global impact.
 
@@ -91,6 +101,17 @@ const MASTER_REVENUE_SHARE_TEMPLATE = `<div style="display: flex; align-items: c
 </div>
 
 This Agreement is made effective as of {{effective_date}} ("Effective Date"), between **River and Ember, LLC** ("Label"), a {{label_state}} limited liability company with principal place of business at {{label_address}}, and **{{collaborator_full_name}}**, an individual residing at {% if collaborator_address %}{{collaborator_address}}{% else %}<span style="color: red;">[Address not provided]</span>{% endif %} ("Collaborator").
+
+**PLAIN LANGUAGE SUMMARY**  
+*This summary is provided to help you understand this agreement. The legal terms below are what actually govern our relationship.*
+
+This agreement covers **master recording rights only** for the song listed in Exhibit A. Here's what that means:
+- **River & Ember owns the master recording** - you have no ownership rights to the recording itself
+- **You receive {{collaborator_share_percentage}}% of digital revenue** (streaming and downloads only) from the master recording
+- **You do NOT receive revenue from** sync licenses, physical sales, live performances, or any other uses - River & Ember keeps 100% of those
+- **This does NOT cover publishing rights** - if you're also a songwriter, those are handled in a separate Publishing Assignment Agreement
+- **This only applies to this specific song** - you're free to work on other projects
+- **Your contribution is work-made-for-hire** - River & Ember owns it from the moment you create it
 
 **RECITALS**  
 Label and Collaborator desire to collaborate on a per-song basis for the sound recording titled "{{song_title}}" (the "Recording"). Collaborator shall provide the services and contributions described in Exhibit A attached hereto. This Agreement is limited to this specific song and does not create an exclusive or long-term relationship, preserving Collaborator's freedom to pursue other opportunities.
