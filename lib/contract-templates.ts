@@ -15,7 +15,7 @@ const PUBLISHING_ASSIGNMENT_TEMPLATE = `<div style="text-align: center; margin-b
   <img src="{{logo_url}}" alt="River & Ember" style="width: 200px; height: auto;" />
 </div>
 
-# Project-Specific Full Publishing Assignment Agreement Template
+#Project-Specific Full Publishing Assignment Agreement Template
 
 **PROJECT-SPECIFIC PUBLISHING ASSIGNMENT AGREEMENT**
 
