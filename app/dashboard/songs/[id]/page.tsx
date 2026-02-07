@@ -1266,6 +1266,33 @@ export default function SongDetailPage() {
                           </Button>
                         )
                       )}
+                      {isAdmin && !song.publishingLocked && (() => {
+                        // Calculate publishing totals
+                        const eligibleCollaborators = song.songCollaborators.filter((sc) => 
+                          isPublishingEligible(sc.roleInSong as CollaboratorRole)
+                        )
+                        const collaboratorTotal = eligibleCollaborators.reduce((sum, sc) => {
+                          const publishing = sc.publishingOwnership ? parseFloat(sc.publishingOwnership.toString()) : 0
+                          return sum + publishing
+                        }, 0)
+                        const entityTotal = (song.songPublishingEntities || []).reduce((sum, spe) => {
+                          const percentage = spe.ownershipPercentage ? parseFloat(spe.ownershipPercentage.toString()) : 0
+                          return sum + percentage
+                        }, 0)
+                        const total = collaboratorTotal + entityTotal
+                        const isValid = Math.abs(collaboratorTotal - 50) < 0.01 && Math.abs(entityTotal - 50) < 0.01
+                        return (
+                          <div className="flex items-center gap-2 px-2 py-1 bg-muted rounded text-xs">
+                            <span className="text-muted-foreground">Total:</span>
+                            <span className={`font-bold ${isValid ? "text-green-600" : "text-red-600"}`}>
+                              {total.toFixed(2)}%
+                            </span>
+                            <span className="text-muted-foreground">
+                              (Writer: {collaboratorTotal.toFixed(2)}% • Publisher: {entityTotal.toFixed(2)}%)
+                            </span>
+                          </div>
+                        )
+                      })()}
                     </div>
                     <div className="flex gap-2 ml-4 justify-center" style={{ minWidth: '140px' }}>
                       <h3 className="text-lg font-semibold">Contracts</h3>
@@ -1550,6 +1577,31 @@ export default function SongDetailPage() {
                           </Button>
                         )
                       )}
+                      {isAdmin && song.publishingLocked && !song.masterLocked && (() => {
+                        // Calculate master totals
+                        const eligibleCollaborators = song.songCollaborators.filter((sc) => {
+                          const role = sc.roleInSong as CollaboratorRole
+                          return isMasterEligible(role) && role !== "label"
+                        })
+                        const collaboratorTotal = eligibleCollaborators.reduce((sum, sc) => {
+                          const master = sc.masterOwnership ? parseFloat(sc.masterOwnership.toString()) : 0
+                          return sum + master
+                        }, 0)
+                        const labelShare = song.labelMasterShare ? parseFloat(song.labelMasterShare.toString()) : 0
+                        const total = collaboratorTotal + labelShare
+                        const isValid = Math.abs(total - 100) < 0.01
+                        return (
+                          <div className="flex items-center gap-2 px-2 py-1 bg-muted rounded text-xs">
+                            <span className="text-muted-foreground">Total:</span>
+                            <span className={`font-bold ${isValid ? "text-green-600" : "text-red-600"}`}>
+                              {total.toFixed(2)}%
+                            </span>
+                            <span className="text-muted-foreground">
+                              (Collaborators: {collaboratorTotal.toFixed(2)}% • Label: {labelShare.toFixed(2)}%)
+                            </span>
+                          </div>
+                        )
+                      })()}
                     </div>
                     <div className="flex gap-2 ml-4 justify-center" style={{ minWidth: '140px' }}>
                       <h3 className="text-lg font-semibold">Contracts</h3>
