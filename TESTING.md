@@ -17,6 +17,25 @@ This will:
 
 **If this succeeds, your code is safe to push!**
 
+## Test in Browser
+
+To build AND test in the browser:
+
+```bash
+npm run test:serve
+```
+
+Or use the script:
+```bash
+./.github/workflows/pre-push-check.sh --serve
+```
+
+This will:
+1. Build the production version
+2. Start the production server
+3. Open `http://localhost:3000` in your browser to test
+4. Press `Ctrl+C` to stop when done
+
 ## Full Production Test
 
 To test the production build locally:

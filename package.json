@@ -9,6 +9,7 @@
     "lint": "next lint",
     "test:build": "npm run build",
     "prepush": "npm run build",
+    "test:serve": "npm run build && npm start",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
