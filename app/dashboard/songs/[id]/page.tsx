@@ -1840,20 +1840,53 @@ export default function SongDetailPage() {
                       <h3 className="text-lg font-semibold">Contracts</h3>
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    {song.songCollaborators
-                      .filter((sc) => {
-                        const master = sc.masterOwnership ? parseFloat(sc.masterOwnership.toString()) : 0
-                        return master > 0
-                      })
-                      .filter((sc) => {
-                        // If user can't see all shares, only show their own
-                        if (!canSeeAllShares) {
-                          return sc.collaborator.id === session?.user?.id
+                  <div className="space-y-4">
+                    {(() => {
+                      // Group collaborators by role type
+                      const masterCollaborators = song.songCollaborators
+                        .filter((sc) => {
+                          const master = sc.masterOwnership ? parseFloat(sc.masterOwnership.toString()) : 0
+                          return master > 0
+                        })
+                        .filter((sc) => {
+                          // If user can't see all shares, only show their own
+                          if (!canSeeAllShares) {
+                            return sc.collaborator.id === session?.user?.id
+                          }
+                          return true
+                        })
+
+                      // Group by role
+                      const groupedByRole: Record<string, typeof masterCollaborators> = {}
+                      masterCollaborators.forEach((sc) => {
+                        const role = sc.roleInSong as CollaboratorRole
+                        if (!groupedByRole[role]) {
+                          groupedByRole[role] = []
                         }
-                        return true
+                        groupedByRole[role].push(sc)
                       })
-                      .map((sc) => {
+
+                      // Define role order and labels
+                      const roleOrder: CollaboratorRole[] = ["producer", "artist", "musician", "vocalist"]
+                      const roleLabels: Record<CollaboratorRole, string> = {
+                        writer: "Writer",
+                        producer: "Producer",
+                        musician: "Musician",
+                        artist: "Artist",
+                        vocalist: "Vocalist",
+                        label: "Label",
+                      }
+
+                      return roleOrder.map((role) => {
+                        const collaborators = groupedByRole[role] || []
+                        if (collaborators.length === 0) return null
+
+                        return (
+                          <div key={role} className="space-y-2">
+                            <h4 className="text-sm font-semibold text-muted-foreground ml-2">
+                              {roleLabels[role]}
+                            </h4>
+                            {collaborators.map((sc) => {
                         const master = sc.masterOwnership ? parseFloat(sc.masterOwnership.toString()) : 0
                         const isCurrentUser = sc.collaborator.id === session?.user?.id
                         const collaboratorName = [sc.collaborator.firstName, sc.collaborator.middleName, sc.collaborator.lastName].filter(Boolean).join(" ")
@@ -2083,6 +2116,9 @@ export default function SongDetailPage() {
                           </div>
                         )
                       })}
+                          </div>
+                        )
+                      }).filter(Boolean)}
                   </div>
                   
                   {/* River & Ember Master Share */}

@@ -69,6 +69,23 @@ export async function POST(
       )
     }
 
+    // Check for existing collaborators with the same roles to avoid duplicates
+    const existingCollaborators = await db.songCollaborator.findMany({
+      where: {
+        songId: params.id,
+        collaboratorId: validated.collaboratorId,
+        roleInSong: { in: validated.rolesInSong },
+      },
+    })
+
+    if (existingCollaborators.length > 0) {
+      const existingRoles = existingCollaborators.map((ec) => ec.roleInSong)
+      return NextResponse.json(
+        { error: `This collaborator is already on this song with the following roles: ${existingRoles.join(", ")}. Please remove them first or select different roles.` },
+        { status: 400 }
+      )
+    }
+
     // Create multiple song collaborator relationships (one per role)
     const songCollaborators = await Promise.all(
       validated.rolesInSong.map((role) =>
@@ -96,6 +113,15 @@ export async function POST(
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.errors }, { status: 400 })
     }
+    
+    // Handle Prisma unique constraint errors
+    if (error && typeof error === 'object' && 'code' in error && error.code === 'P2002') {
+      return NextResponse.json(
+        { error: "This collaborator is already on this song with one or more of the selected roles. Please remove them first or select different roles." },
+        { status: 400 }
+      )
+    }
+    
     console.error("Error adding collaborator to song:", error)
     return NextResponse.json(
       { error: "Failed to add collaborator to song" },
