@@ -422,12 +422,17 @@ export default function SongDetailPage() {
       )
       
       // Build splits array, updating the one being edited
-      const splits = eligibleCollaborators.map((sc) => ({
-        songCollaboratorId: sc.id,
-        percentage: sc.id === songCollaboratorId 
+      const splits = eligibleCollaborators.map((sc) => {
+        let percentage = sc.id === songCollaboratorId 
           ? newPercentage 
-          : (sc.publishingOwnership ? parseFloat(sc.publishingOwnership.toString()) * 100 : 0),
-      }))
+          : (sc.publishingOwnership ? parseFloat(sc.publishingOwnership.toString()) * 100 : 0)
+        // Clamp percentage to valid range (0-100) to prevent validation errors
+        percentage = Math.max(0, Math.min(100, percentage))
+        return {
+          songCollaboratorId: sc.id,
+          percentage,
+        }
+      })
       
       const response = await fetch("/api/splits/publishing", {
         method: "POST",
@@ -477,12 +482,22 @@ export default function SongDetailPage() {
       })
       
       // Build splits array, updating the one being edited
-      const splits = eligibleCollaborators.map((sc) => ({
-        songCollaboratorId: sc.id,
-        percentage: sc.id === songCollaboratorId 
+      const splits = eligibleCollaborators.map((sc) => {
+        let percentage = sc.id === songCollaboratorId 
           ? newPercentage 
-          : (sc.masterOwnership ? parseFloat(sc.masterOwnership.toString()) * 100 : 0),
-      }))
+          : (sc.masterOwnership ? parseFloat(sc.masterOwnership.toString()) * 100 : 0)
+        // Clamp percentage to valid range (0-100) to prevent validation errors
+        percentage = Math.max(0, Math.min(100, percentage))
+        return {
+          songCollaboratorId: sc.id,
+          percentage,
+        }
+      })
+      
+      // Clamp labelMasterShare to valid range
+      const labelMasterShare = song.labelMasterShare 
+        ? Math.max(0, Math.min(100, parseFloat(song.labelMasterShare.toString()) * 100))
+        : 0
       
       const response = await fetch("/api/splits/master", {
         method: "POST",
@@ -490,7 +505,7 @@ export default function SongDetailPage() {
         body: JSON.stringify({
           songId: song.id,
           splits,
-          labelMasterShare: song.labelMasterShare ? parseFloat(song.labelMasterShare.toString()) * 100 : 0,
+          labelMasterShare,
         }),
       })
       if (response.ok) {
