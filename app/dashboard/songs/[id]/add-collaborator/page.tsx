@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useParams, useRouter } from "next/navigation"
+import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select"
 import { CollaboratorRole } from "@prisma/client"
 import { SongRoleSelector } from "@/components/songs/SongRoleSelector"
+import { isPublishingEligible, isMasterEligible } from "@/lib/roles"
 
 interface Collaborator {
   id: string
@@ -35,6 +36,8 @@ const roleLabels: Record<Exclude<CollaboratorRole, "label">, string> = {
 export default function AddCollaboratorPage() {
   const params = useParams()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const section = searchParams.get("section") // "publishing" or "master"
   const [collaborators, setCollaborators] = useState<Collaborator[]>([])
   const [selectedCollaboratorId, setSelectedCollaboratorId] = useState<string>("")
   const [selectedRoles, setSelectedRoles] = useState<CollaboratorRole[]>([])
@@ -88,7 +91,13 @@ export default function AddCollaboratorPage() {
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Add Collaborator</h1>
-        <p className="text-muted-foreground">Add a collaborator to this song</p>
+        <p className="text-muted-foreground">
+          {section === "publishing" 
+            ? "Add a collaborator to the Publishing Share section"
+            : section === "master"
+            ? "Add a collaborator to the Master Revenue Share section"
+            : "Add a collaborator to this song"}
+        </p>
       </div>
 
       <Card>
@@ -121,16 +130,46 @@ export default function AddCollaboratorPage() {
               </Select>
             </div>
 
-            {selectedCollaboratorId && (
-              <SongRoleSelector
-                value={selectedRoles}
-                onValueChange={setSelectedRoles}
-                disabled={!selectedCollaboratorId}
-                availableRoles={
-                  collaborators.find((c) => c.id === selectedCollaboratorId)?.capableRoles || []
-                }
-              />
-            )}
+            {selectedCollaboratorId && (() => {
+              const collaborator = collaborators.find((c) => c.id === selectedCollaboratorId)
+              const allCapableRoles = collaborator?.capableRoles || []
+              
+              // Filter roles based on section
+              let eligibleRoles: CollaboratorRole[] = []
+              if (section === "publishing") {
+                // Only show publishing-eligible roles
+                eligibleRoles = allCapableRoles.filter(role => isPublishingEligible(role))
+              } else if (section === "master") {
+                // Only show master-eligible roles (excluding label)
+                eligibleRoles = allCapableRoles.filter(role => isMasterEligible(role) && role !== "label")
+              } else {
+                // No section specified - show all roles (backward compatibility)
+                eligibleRoles = allCapableRoles
+              }
+              
+              if (eligibleRoles.length === 0) {
+                return (
+                  <div className="p-4 border rounded-md bg-muted">
+                    <p className="text-sm text-muted-foreground">
+                      {section === "publishing" 
+                        ? "This collaborator is not eligible for publishing shares. They must be a Writer, Artist, or Label."
+                        : section === "master"
+                        ? "This collaborator is not eligible for master revenue shares. They must be a Producer, Artist, Musician, or Vocalist."
+                        : "This collaborator has no eligible roles."}
+                    </p>
+                  </div>
+                )
+              }
+              
+              return (
+                <SongRoleSelector
+                  value={selectedRoles}
+                  onValueChange={setSelectedRoles}
+                  disabled={!selectedCollaboratorId}
+                  availableRoles={eligibleRoles}
+                />
+              )
+            })()}
 
             <div className="flex gap-4">
               <Button type="submit" disabled={loading || !selectedCollaboratorId || selectedRoles.length === 0}>

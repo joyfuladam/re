@@ -1476,6 +1476,15 @@ export default function SongDetailPage() {
                       <h3 className="text-lg font-semibold">Contracts</h3>
                     </div>
                   </div>
+                  {isAdmin && !song.publishingLocked && (
+                    <div className="mb-3 px-3">
+                      <Link href={`/dashboard/songs/${song.id}/add-collaborator?section=publishing`}>
+                        <Button variant="outline" size="sm" className="h-7 text-xs">
+                          Add Collaborator
+                        </Button>
+                      </Link>
+                    </div>
+                  )}
                   <div className="space-y-2">
                     {song.songCollaborators
                       .filter((sc) => 
@@ -1882,6 +1891,15 @@ export default function SongDetailPage() {
                       <h3 className="text-lg font-semibold">Contracts</h3>
                     </div>
                   </div>
+                  {isAdmin && song.publishingLocked && !song.masterLocked && (
+                    <div className="mb-3 px-3">
+                      <Link href={`/dashboard/songs/${song.id}/add-collaborator?section=master`}>
+                        <Button variant="outline" size="sm" className="h-7 text-xs">
+                          Add Collaborator
+                        </Button>
+                      </Link>
+                    </div>
+                  )}
                   <div className="space-y-4">
                     {(() => {
                       // Group collaborators by role type
@@ -2233,13 +2251,6 @@ export default function SongDetailPage() {
                 </div>
               )}
             </div>
-            {isAdmin && (
-              <div className="mt-4">
-                <Link href={`/dashboard/songs/${song.id}/add-collaborator`}>
-                  <Button variant="outline">Add Collaborator</Button>
-                </Link>
-              </div>
-            )}
             {!song.masterLocked && (
               <p className="text-sm text-muted-foreground mt-4">
                 Master revenue shares must be locked before contracts can be generated.
