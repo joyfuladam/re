@@ -131,6 +131,10 @@ export function SplitPieChart({
     }
   }
 
+  // Sort splits by value (largest to smallest) for both pie chart and legend
+  publishingSplits.sort((a, b) => b.value - a.value)
+  masterSplits.sort((a, b) => b.value - a.value)
+
   return (
     <div className="w-full">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
