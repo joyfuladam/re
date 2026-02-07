@@ -32,7 +32,7 @@ export const contractConfig: ContractConfig = {
     address: "134 Glade Run Rd. Mars PA 16046",
     managerName: "Adam Farrell",
     managerTitle: "Owner/CEO",
-    managerEmail: process.env.CEO_EMAIL || "admin@riverandember.com", // CEO email for signing
+    managerEmail: process.env.CEO_EMAIL || "adam@riverandember.com", // CEO email for signing
   },
   defaults: {
     governingState: "Pennsylvania",
