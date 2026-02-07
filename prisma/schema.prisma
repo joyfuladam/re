@@ -15,6 +15,7 @@ enum CollaboratorRole {
   writer
   producer
   artist
+  vocalist
   label
 }
 

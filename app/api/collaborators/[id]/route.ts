@@ -18,7 +18,7 @@ const collaboratorUpdateSchema = z.object({
   phone: z.string().optional().nullable(),
   address: z.string().optional().nullable(),
   role: z.enum(["admin", "collaborator"]).optional(),
-  capableRoles: z.array(z.enum(["musician", "writer", "producer", "artist"])).min(1).optional(),
+  capableRoles: z.array(z.enum(["musician", "writer", "producer", "artist", "vocalist"])).min(1).optional(),
   proAffiliation: z.string().optional().nullable(),
   ipiNumber: z.string().optional().nullable(),
   taxId: z.string().optional().nullable(),

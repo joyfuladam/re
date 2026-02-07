@@ -16,14 +16,16 @@ const roleLabels: Record<CollaboratorRole, string> = {
   writer: "Writer (Songwriter)",
   producer: "Producer",
   artist: "Artist",
+  vocalist: "Vocalist",
   label: "River & Ember (Label)",
 }
 
 const roleDescriptions: Record<CollaboratorRole, string> = {
-  musician: "Session musicians, instrumentalists, background vocalists",
+  musician: "Session musicians, instrumentalists",
   writer: "Songwriters, lyricists, composers",
   producer: "Music producers, arrangers, creative directors",
   artist: "Recording artist, performer, lead vocalist",
+  vocalist: "Background vocalist, harmony singer, session vocalist",
   label: "Record label - always available as a system role",
 }
 
@@ -36,7 +38,7 @@ export function SongRoleSelector({
   // If availableRoles provided, use those + label. Otherwise, show all.
   const rolesToShow: CollaboratorRole[] = availableRoles 
     ? [...availableRoles, "label"]
-    : ["musician", "writer", "producer", "artist", "label"]
+    : ["musician", "writer", "producer", "artist", "vocalist", "label"]
 
   const handleRoleToggle = (role: CollaboratorRole) => {
     if (disabled) return

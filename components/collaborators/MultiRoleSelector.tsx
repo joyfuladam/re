@@ -15,17 +15,19 @@ const roleLabels: Record<Exclude<CollaboratorRole, "label">, string> = {
   writer: "Writer (Songwriter)",
   producer: "Producer",
   artist: "Artist",
+  vocalist: "Vocalist",
 }
 
 const roleDescriptions: Record<Exclude<CollaboratorRole, "label">, string> = {
-  musician: "Session musicians, instrumentalists, background vocalists",
+  musician: "Session musicians, instrumentalists",
   writer: "Songwriters, lyricists, composers",
   producer: "Music producers, arrangers, creative directors",
   artist: "Recording artist, performer, lead vocalist",
+  vocalist: "Background vocalist, harmony singer, session vocalist",
 }
 
 export function MultiRoleSelector({ value, onValueChange, disabled }: MultiRoleSelectorProps) {
-  const availableRoles: Exclude<CollaboratorRole, "label">[] = ["musician", "writer", "producer", "artist"]
+  const availableRoles: Exclude<CollaboratorRole, "label">[] = ["musician", "writer", "producer", "artist", "vocalist"]
 
   const handleRoleToggle = (role: Exclude<CollaboratorRole, "label">) => {
     if (disabled) return

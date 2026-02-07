@@ -9,7 +9,7 @@ import { canAccessSong, isAdmin } from "@/lib/permissions"
 
 const addCollaboratorSchema = z.object({
   collaboratorId: z.string(),
-  rolesInSong: z.array(z.enum(["musician", "writer", "producer", "artist", "label"])).min(1), // Accept array of roles
+  rolesInSong: z.array(z.enum(["musician", "writer", "producer", "artist", "vocalist", "label"])).min(1), // Accept array of roles
   publishingOwnership: z.number().min(0).max(100).optional().nullable(),
   masterOwnership: z.number().min(0).max(100).optional().nullable(),
 })

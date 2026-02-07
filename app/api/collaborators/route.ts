@@ -20,7 +20,7 @@ const collaboratorSchema = z.object({
   ), // Optional - only needed if creating login account
   phone: z.string().optional().nullable(),
   address: z.string().optional().nullable(),
-      capableRoles: z.array(z.enum(["musician", "writer", "producer", "artist"])).min(1), // At least one role, but label is not assignable
+      capableRoles: z.array(z.enum(["musician", "writer", "producer", "artist", "vocalist"])).min(1), // At least one role, but label is not assignable
   proAffiliation: z.string().optional().nullable(),
   ipiNumber: z.string().optional().nullable(),
   taxId: z.string().optional().nullable(),
