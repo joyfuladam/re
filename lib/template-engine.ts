@@ -40,6 +40,9 @@ export function replacePlaceholders(template: string, data: Record<string, any>)
 
 /**
  * Process conditional blocks: {% if condition %}...{% else %}...{% endif %}
+ * Supports both simple truthiness checks and equality comparisons:
+ * - {% if variable %} - checks if variable is truthy
+ * - {% if variable == "value" %} - checks if variable equals "value"
  * Handles nested conditionals by processing iteratively until no more conditionals remain
  */
 export function processConditionals(template: string, data: Record<string, any>): string {
@@ -53,14 +56,23 @@ export function processConditionals(template: string, data: Record<string, any>)
     previousResult = result
     
     // Find the innermost conditional (one that doesn't contain another {% if %}
-    // This regex matches {% if %}...{% endif %} blocks
-    const ifRegex = /\{%\s*if\s+(\w+)\s*%\}((?:(?!\{%\s*if).)*?)(?:\{%\s*else\s*%\}((?:(?!\{%\s*if).)*?))?\{%\s*endif\s*%\}/gs
+    // This regex matches {% if %}...{% endif %} blocks with optional equality comparison
+    // Supports: {% if var %} or {% if var == "value" %}
+    const ifRegex = /\{%\s*if\s+(\w+)(?:\s*==\s*"([^"]+)")?\s*%\}((?:(?!\{%\s*if).)*?)(?:\{%\s*else\s*%\}((?:(?!\{%\s*if).)*?))?\{%\s*endif\s*%\}/gs
     
-    result = result.replace(ifRegex, (match, condition, ifBlock, elseBlock = "") => {
+    result = result.replace(ifRegex, (match, condition, compareValue, ifBlock, elseBlock = "") => {
       const conditionValue = data[condition]
-      const isTruthy = conditionValue !== null && conditionValue !== undefined && conditionValue !== false && conditionValue !== 0 && conditionValue !== ""
+      
+      let isTrue: boolean
+      if (compareValue !== undefined) {
+        // Equality comparison: {% if variable == "value" %}
+        isTrue = String(conditionValue) === compareValue
+      } else {
+        // Simple truthiness check: {% if variable %}
+        isTrue = conditionValue !== null && conditionValue !== undefined && conditionValue !== false && conditionValue !== 0 && conditionValue !== ""
+      }
 
-      if (isTruthy) {
+      if (isTrue) {
         return ifBlock.trim()
       } else {
         return (elseBlock || "").trim()
@@ -71,7 +83,7 @@ export function processConditionals(template: string, data: Record<string, any>)
   }
 
   // Clean up any remaining conditional tags as a safety measure
-  result = result.replace(/\{%\s*if\s+[\w]+\s*%\}/g, "")
+  result = result.replace(/\{%\s*if\s+[\w\s=:"']+\s*%\}/g, "")
   result = result.replace(/\{%\s*else\s*%\}/g, "")
   result = result.replace(/\{%\s*endif\s*%\}/g, "")
 
