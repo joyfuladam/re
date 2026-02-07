@@ -1227,12 +1227,11 @@ export default function SongDetailPage() {
         </CardContent>
       </Card>
 
-      <div className={`grid gap-4 ${canSeeAllShares ? 'md:grid-cols-2' : ''}`}>
-        <Card>
-          <CardHeader>
-            <CardTitle>Collaborators</CardTitle>
-            <CardDescription>Manage collaborators for this song</CardDescription>
-          </CardHeader>
+      <Card>
+        <CardHeader>
+          <CardTitle>Collaborators</CardTitle>
+          <CardDescription>Manage collaborators for this song</CardDescription>
+        </CardHeader>
           <CardContent>
             <div className="space-y-6">
               {/* Publishing Share Section */}
@@ -1818,22 +1817,21 @@ export default function SongDetailPage() {
           </CardContent>
         </Card>
 
-        {canSeeAllShares && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Split Visualization</CardTitle>
-              <CardDescription>Visual representation of ownership splits</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <SplitPieChart
-                songCollaborators={song.songCollaborators}
-                songPublishingEntities={song.songPublishingEntities}
-                labelMasterShare={song.labelMasterShare}
-              />
-            </CardContent>
-          </Card>
-        )}
-      </div>
+      {canSeeAllShares && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Split Visualization</CardTitle>
+            <CardDescription>Visual representation of ownership splits</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <SplitPieChart
+              songCollaborators={song.songCollaborators}
+              songPublishingEntities={song.songPublishingEntities}
+              labelMasterShare={song.labelMasterShare}
+            />
+          </CardContent>
+        </Card>
+      )}
 
       {isAdmin && (
         <div className="grid gap-4 md:grid-cols-2">
