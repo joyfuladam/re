@@ -145,6 +145,36 @@ export default function CollaboratorDetailPage() {
     }
   }
 
+  const handleSendWelcome = async () => {
+    if (!confirm(`Send welcome email to ${collaborator?.email}? This will allow them to set up their password.`)) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/collaborators/${params.id}/send-welcome`, {
+        method: "POST",
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        alert(`Welcome email sent to ${data.email}!`)
+      } else if (response.status === 207 && data.setupLink) {
+        // Partial success - email failed but we have the link
+        const copyLink = confirm(`${data.error}\n\nSetup link copied to clipboard. Would you like to manually send it?`)
+        if (copyLink) {
+          navigator.clipboard.writeText(data.setupLink)
+          alert("Setup link copied to clipboard!")
+        }
+      } else {
+        alert(`Error: ${data.error}`)
+      }
+    } catch (error) {
+      console.error("Error sending welcome email:", error)
+      alert("Failed to send welcome email")
+    }
+  }
+
   const handleSave = async () => {
     setSaving(true)
     try {
@@ -253,16 +283,38 @@ export default function CollaboratorDetailPage() {
           <Link href="/dashboard/collaborators">
             <Button variant="outline">Back</Button>
           </Link>
-          {isAdmin && (
+          {isAdmin && !editing && !collaborator.password && collaborator.email && (
+            <Button 
+              variant="secondary"
+              onClick={handleSendWelcome}
+            >
+              Send Welcome Email
+            </Button>
+          )}
+          {isAdmin && !editing && (
             <Button 
               variant="destructive" 
               onClick={handleDelete}
-              disabled={editing}
             >
               Delete
             </Button>
           )}
-          <Button onClick={() => setEditing(!editing)}>
+          {editing && (
+            <Button 
+              onClick={handleSave} 
+              disabled={saving || !formData.firstName || !formData.lastName || formData.capableRoles.length === 0}
+            >
+              {saving ? "Saving..." : "Save Changes"}
+            </Button>
+          )}
+          <Button onClick={() => { 
+            if (editing) {
+              setEditing(false)
+              fetchCollaborator()
+            } else {
+              setEditing(true)
+            }
+          }}>
             {editing ? "Cancel" : "Edit"}
           </Button>
         </div>
@@ -561,16 +613,6 @@ export default function CollaboratorDetailPage() {
         </CardContent>
       </Card>
 
-      {editing && (
-        <div className="flex gap-4">
-          <Button onClick={handleSave} disabled={saving || !formData.firstName || !formData.lastName || formData.capableRoles.length === 0}>
-            {saving ? "Saving..." : "Save Changes"}
-          </Button>
-          <Button variant="outline" onClick={() => { setEditing(false); fetchCollaborator(); }}>
-            Cancel
-          </Button>
-        </div>
-      )}
     </div>
   )
 }
