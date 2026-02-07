@@ -1375,25 +1375,32 @@ export default function SongDetailPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              <div className="w-full h-[500px] border rounded-lg overflow-hidden">
-                <iframe
-                  src={`https://drive.google.com/embeddedfolderview?id=${song.promoMaterialsFolderId}#grid`}
-                  width="100%"
-                  height="100%"
-                  style={{ border: 0 }}
-                  allow="autoplay"
-                  title="Promo Materials"
-                />
-              </div>
-              <div className="text-sm text-muted-foreground flex items-center gap-2">
+              <div className="p-6 border rounded-lg bg-muted/20">
+                <div className="flex items-center gap-3 mb-3">
+                  <svg className="w-8 h-8 text-blue-600" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19 2H5c-1.11 0-2 .9-2 2v16c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM9 18H7v-2h2v2zm0-3H7v-2h2v2zm0-3H7V7h2v5zm6 6h-4v-2h4v2zm0-3h-4v-2h4v2zm0-3h-4V7h4v5z"/>
+                  </svg>
+                  <div>
+                    <h3 className="font-semibold text-lg">Google Drive Folder</h3>
+                    <p className="text-sm text-muted-foreground">Click below to access promo materials</p>
+                  </div>
+                </div>
                 <a
                   href={`https://drive.google.com/drive/folders/${song.promoMaterialsFolderId}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-primary hover:underline"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
                 >
-                  Open in Google Drive ↗
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                    <polyline points="15 3 21 3 21 9"></polyline>
+                    <line x1="10" y1="14" x2="21" y2="3"></line>
+                  </svg>
+                  Open Folder in Google Drive
                 </a>
+                <p className="text-xs text-muted-foreground mt-3">
+                  Note: You may need to be signed in to Google to access this folder.
+                </p>
               </div>
             </div>
           </CardContent>

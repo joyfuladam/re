@@ -14,11 +14,9 @@ function tplVar(name: string): string {
 const PUBLISHING_ASSIGNMENT_TEMPLATE = `<div style="display: flex; align-items: center; margin-bottom: 30px; gap: 30px;">
   <img src="{{logo_url}}" alt="River & Ember" style="width: 150px; height: auto; flex-shrink: 0;" />
   <div style="flex: 1;">
-    <h1 style="margin: 0; font-size: 20px;">Project-Specific Full Publishing Assignment Agreement Template</h1>
+    <h1 style="margin: 0; font-size: 24px; font-weight: bold;">PROJECT-SPECIFIC PUBLISHING ASSIGNMENT AGREEMENT</h1>
   </div>
 </div>
-
-**PROJECT-SPECIFIC PUBLISHING ASSIGNMENT AGREEMENT**
 
 This Agreement is made effective as of {{effective_date}} ("Effective Date"), between **River and Ember, LLC** ("Publisher"), a {{publisher_state}} limited liability company with principal place of business at {{publisher_address}}, and **{{writer_full_name}}**, an individual residing at {% if writer_address %}{{writer_address}}{% else %}<span style="color: red;">[Writer address not provided]</span>{% endif %} ("Writer").
 
@@ -84,11 +82,9 @@ Date: <span style="color: white;">{{date:2:y}}</span><br>
 const MASTER_REVENUE_SHARE_TEMPLATE = `<div style="display: flex; align-items: center; margin-bottom: 30px; gap: 30px;">
   <img src="{{logo_url}}" alt="River & Ember" style="width: 150px; height: auto; flex-shrink: 0;" />
   <div style="flex: 1;">
-    <h1 style="margin: 0; font-size: 20px;">Song-by-Song Master Revenue Share Agreement Template</h1>
+    <h1 style="margin: 0; font-size: 24px; font-weight: bold;">MASTER REVENUE SHARE AGREEMENT</h1>
   </div>
 </div>
-
-**MASTER REVENUE SHARE AGREEMENT**
 
 This Agreement is made effective as of {{effective_date}} ("Effective Date"), between **River and Ember, LLC** ("Label"), a {{label_state}} limited liability company with principal place of business at {{label_address}}, and **{{artist_full_name}}**, an individual residing at {% if artist_address %}{{artist_address}}{% else %}<span style="color: red;">[Address not provided]</span>{% endif %} ({% if is_musician %}"Musician"{% else %}{% if is_producer %}"Producer"{% else %}"Artist"{% endif %}{% endif %}).
 
