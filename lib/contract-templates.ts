@@ -11,11 +11,12 @@ function tplVar(name: string): string {
  * Embedded contract templates
  * These are embedded directly in the code to ensure they're available in serverless environments like Vercel
  */
-const PUBLISHING_ASSIGNMENT_TEMPLATE = `<div style="text-align: center; margin-bottom: 30px;">
-  <img src="{{logo_url}}" alt="River & Ember" style="width: 200px; height: auto;" />
+const PUBLISHING_ASSIGNMENT_TEMPLATE = `<div style="display: flex; align-items: center; margin-bottom: 30px; gap: 30px;">
+  <img src="{{logo_url}}" alt="River & Ember" style="width: 150px; height: auto; flex-shrink: 0;" />
+  <div style="flex: 1;">
+    <h1 style="margin: 0; font-size: 20px;">Project-Specific Full Publishing Assignment Agreement Template</h1>
+  </div>
 </div>
-
-#Project-Specific Full Publishing Assignment Agreement Template
 
 **PROJECT-SPECIFIC PUBLISHING ASSIGNMENT AGREEMENT**
 
@@ -80,11 +81,12 @@ Date: <span style="color: white;">{{date:2:y}}</span><br>
 
 `
 
-const MASTER_REVENUE_SHARE_TEMPLATE = `<div style="text-align: center; margin-bottom: 30px;">
-  <img src="{{logo_url}}" alt="River & Ember" style="width: 200px; height: auto;" />
+const MASTER_REVENUE_SHARE_TEMPLATE = `<div style="display: flex; align-items: center; margin-bottom: 30px; gap: 30px;">
+  <img src="{{logo_url}}" alt="River & Ember" style="width: 150px; height: auto; flex-shrink: 0;" />
+  <div style="flex: 1;">
+    <h1 style="margin: 0; font-size: 20px;">Song-by-Song Master Revenue Share Agreement Template</h1>
+  </div>
 </div>
-
-# Song-by-Song Master Revenue Share Agreement Template
 
 **MASTER REVENUE SHARE AGREEMENT**
 
