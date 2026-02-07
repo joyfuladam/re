@@ -2207,13 +2207,13 @@ export default function SongDetailPage() {
             <CardContent>
               {song && (
                 <PublishingSplitEditor
-                  songId={song.id}
-                  songCollaborators={song.songCollaborators.map(sc => ({
+                  songId={song!.id}
+                  songCollaborators={song!.songCollaborators.map(sc => ({
                     ...sc,
                     roleInSong: sc.roleInSong as CollaboratorRole
                   })) as any}
-                  songPublishingEntities={song.songPublishingEntities}
-                  isLocked={song.publishingLocked}
+                  songPublishingEntities={song!.songPublishingEntities}
+                  isLocked={song!.publishingLocked}
                   onUpdate={fetchSong}
                 />
               )}
@@ -2234,14 +2234,14 @@ export default function SongDetailPage() {
             <CardContent>
               {song && (
                 <MasterSplitEditor
-                  songId={song.id}
-                  songCollaborators={song.songCollaborators.map(sc => ({
+                  songId={song!.id}
+                  songCollaborators={song!.songCollaborators.map(sc => ({
                     ...sc,
                     roleInSong: sc.roleInSong as CollaboratorRole
                   })) as any}
-                  labelMasterShare={song.labelMasterShare}
-                  isLocked={song.masterLocked}
-                  publishingLocked={song.publishingLocked}
+                  labelMasterShare={song!.labelMasterShare}
+                  isLocked={song!.masterLocked}
+                  publishingLocked={song!.publishingLocked}
                   onUpdate={fetchSong}
                 />
               )}
