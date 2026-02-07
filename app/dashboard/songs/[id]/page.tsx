@@ -744,11 +744,16 @@ export default function SongDetailPage() {
     }
   }
 
-  const handleDeleteCollaborator = async (songCollaboratorId: string, collaboratorName: string) => {
+  const handleDeleteCollaborator = async (songCollaboratorId: string, collaboratorName: string, roleInSong?: string) => {
     if (!song) return
     
+    // Find the specific collaborator record to get the role
+    const songCollaborator = song.songCollaborators.find(sc => sc.id === songCollaboratorId)
+    const role = songCollaborator?.roleInSong || roleInSong || "this role"
+    const roleLabel = role === "writer" ? "Writer" : role === "producer" ? "Producer" : role === "artist" ? "Artist" : role === "musician" ? "Musician" : role === "vocalist" ? "Vocalist" : role
+    
     const confirmed = window.confirm(
-      `Are you sure you want to remove ${collaboratorName} from this song? This will remove all their shares and splits.`
+      `Are you sure you want to remove ${collaboratorName} as a ${roleLabel} from this song? This will only remove their ${roleLabel} role and associated shares for this role.`
     )
     
     if (!confirmed) return
@@ -1560,7 +1565,7 @@ export default function SongDetailPage() {
                                 )}
                                 {isAdmin && (
                                   <button
-                                    onClick={() => handleDeleteCollaborator(sc.id, collaboratorName)}
+                                    onClick={() => handleDeleteCollaborator(sc.id, collaboratorName, sc.roleInSong as string)}
                                     disabled={deletingCollaboratorId === sc.id}
                                     className="text-xs text-red-600 hover:text-red-800 hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
                                   >
@@ -2002,7 +2007,7 @@ export default function SongDetailPage() {
                                       )}
                                       {isAdmin && (
                                         <button
-                                          onClick={() => handleDeleteCollaborator(sc.id, collaboratorName)}
+                                          onClick={() => handleDeleteCollaborator(sc.id, collaboratorName, sc.roleInSong as string)}
                                           disabled={deletingCollaboratorId === sc.id}
                                           className="text-xs text-red-600 hover:text-red-800 hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
