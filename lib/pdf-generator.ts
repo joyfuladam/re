@@ -81,6 +81,7 @@ export interface ContractData {
   is_artist?: boolean
   is_producer?: boolean
   is_writer?: boolean
+  is_vocalist?: boolean
   artist_address?: string | null
   label_state?: string
   label_address?: string
