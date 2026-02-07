@@ -2,6 +2,9 @@ import { CollaboratorRole, ContractType } from "@prisma/client"
 import { getContractType, getAllowedRevenueStreams, getDisallowedRevenueStreams } from "./roles"
 
 export interface ContractData {
+  // Logo
+  logo_url?: string
+
   // Song-specific (single song)
   songTitle: string
   isrcCode: string | null
