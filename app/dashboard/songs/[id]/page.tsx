@@ -1217,7 +1217,7 @@ export default function SongDetailPage() {
                                 )}
                               </div>
                             </div>
-                            <div className="flex gap-2 ml-4 items-center">
+                            <div className="flex gap-3 ml-4 items-start">
                               {isAdmin && contractStatus.contractId && contractStatus.status && contractStatus.status !== "pending" && (
                                 <Button
                                   variant="ghost"
@@ -1230,35 +1230,40 @@ export default function SongDetailPage() {
                                   {refreshingStatusId === contractStatus.contractId ? "⟳" : "↻"}
                                 </Button>
                               )}
-                              {(isCurrentUser || isAdmin) && (
-                                <>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => handlePreviewContract(sc.id, contractType, collaboratorName)}
-                                    disabled={!song.masterLocked || isGenerating}
-                                  >
-                                    Preview
-                                  </Button>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => handleDownloadContract(sc.id, contractType)}
-                                    disabled={!song.masterLocked || isGenerating}
-                                    title="Download contract as PDF"
-                                  >
-                                    Download
-                                  </Button>
-                                </>
-                              )}
+                              <div className="flex flex-col gap-2">
+                                {(isCurrentUser || isAdmin) && (
+                                  <>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => handlePreviewContract(sc.id, contractType, collaboratorName)}
+                                      disabled={!song.masterLocked || isGenerating}
+                                      className="w-full"
+                                    >
+                                      Preview
+                                    </Button>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => handleDownloadContract(sc.id, contractType)}
+                                      disabled={!song.masterLocked || isGenerating}
+                                      title="Download contract as PDF"
+                                      className="w-full"
+                                    >
+                                      Download
+                                    </Button>
+                                  </>
+                                )}
+                              </div>
                               {isAdmin && (
-                                <>
+                                <div className="flex flex-col gap-2">
                                   <Button
                                     variant="outline"
                                     size="sm"
                                     onClick={() => handleSendContract(sc.id, contractType, collaboratorName, true)}
                                     disabled={!song.masterLocked || isGenerating || isSigned}
                                     title="Create draft in SignWell (no emails sent)"
+                                    className="w-full"
                                   >
                                     Draft
                                   </Button>
@@ -1267,18 +1272,21 @@ export default function SongDetailPage() {
                                     size="sm"
                                     onClick={() => handleSendContract(sc.id, contractType, collaboratorName, false)}
                                     disabled={!song.masterLocked || isGenerating || isSigned}
+                                    className="w-full"
                                   >
                                     {isSigned ? "Signed" : canResend ? "Re-Send" : "Send"}
                                   </Button>
-                                  <Button
-                                    variant="destructive"
-                                    size="sm"
-                                    onClick={() => handleDeleteCollaborator(sc.id, collaboratorName)}
-                                    disabled={deletingCollaboratorId === sc.id}
-                                  >
-                                    {deletingCollaboratorId === sc.id ? "Removing..." : "Remove"}
-                                  </Button>
-                                </>
+                                </div>
+                              )}
+                              {isAdmin && (
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  onClick={() => handleDeleteCollaborator(sc.id, collaboratorName)}
+                                  disabled={deletingCollaboratorId === sc.id}
+                                >
+                                  {deletingCollaboratorId === sc.id ? "Removing..." : "Remove"}
+                                </Button>
                               )}
                             </div>
                           </div>
@@ -1411,7 +1419,7 @@ export default function SongDetailPage() {
                                 )}
                               </div>
                             </div>
-                            <div className="flex gap-2 ml-4 items-center">
+                            <div className="flex gap-3 ml-4 items-start">
                               {isAdmin && contractStatus.contractId && contractStatus.status && contractStatus.status !== "pending" && (
                                 <Button
                                   variant="ghost"
@@ -1424,35 +1432,40 @@ export default function SongDetailPage() {
                                   {refreshingStatusId === contractStatus.contractId ? "⟳" : "↻"}
                                 </Button>
                               )}
-                              {(isCurrentUser || isAdmin) && (
-                                <>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => handlePreviewContract(sc.id, contractType, collaboratorName)}
-                                    disabled={!song.masterLocked || isGenerating}
-                                  >
-                                    Preview
-                                  </Button>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => handleDownloadContract(sc.id, contractType)}
-                                    disabled={!song.masterLocked || isGenerating}
-                                    title="Download contract as PDF"
-                                  >
-                                    Download
-                                  </Button>
-                                </>
-                              )}
+                              <div className="flex flex-col gap-2">
+                                {(isCurrentUser || isAdmin) && (
+                                  <>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => handlePreviewContract(sc.id, contractType, collaboratorName)}
+                                      disabled={!song.masterLocked || isGenerating}
+                                      className="w-full"
+                                    >
+                                      Preview
+                                    </Button>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => handleDownloadContract(sc.id, contractType)}
+                                      disabled={!song.masterLocked || isGenerating}
+                                      title="Download contract as PDF"
+                                      className="w-full"
+                                    >
+                                      Download
+                                    </Button>
+                                  </>
+                                )}
+                              </div>
                               {isAdmin && (
-                                <>
+                                <div className="flex flex-col gap-2">
                                   <Button
                                     variant="outline"
                                     size="sm"
                                     onClick={() => handleSendContract(sc.id, contractType, collaboratorName, true)}
                                     disabled={!song.masterLocked || isGenerating || isSigned}
                                     title="Create draft in SignWell (no emails sent)"
+                                    className="w-full"
                                   >
                                     Draft
                                   </Button>
@@ -1461,18 +1474,21 @@ export default function SongDetailPage() {
                                     size="sm"
                                     onClick={() => handleSendContract(sc.id, contractType, collaboratorName, false)}
                                     disabled={!song.masterLocked || isGenerating || isSigned}
+                                    className="w-full"
                                   >
                                     {isSigned ? "Signed" : canResend ? "Re-Send" : "Send"}
                                   </Button>
-                                  <Button
-                                    variant="destructive"
-                                    size="sm"
-                                    onClick={() => handleDeleteCollaborator(sc.id, collaboratorName)}
-                                    disabled={deletingCollaboratorId === sc.id}
-                                  >
-                                    {deletingCollaboratorId === sc.id ? "Removing..." : "Remove"}
-                                  </Button>
-                                </>
+                                </div>
+                              )}
+                              {isAdmin && (
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  onClick={() => handleDeleteCollaborator(sc.id, collaboratorName)}
+                                  disabled={deletingCollaboratorId === sc.id}
+                                >
+                                  {deletingCollaboratorId === sc.id ? "Removing..." : "Remove"}
+                                </Button>
                               )}
                             </div>
                           </div>
@@ -1525,32 +1541,35 @@ export default function SongDetailPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              <div className="p-6 border rounded-lg bg-muted/20">
-                <div className="flex items-center gap-3 mb-3">
-                  <svg className="w-8 h-8 text-blue-600" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M19 2H5c-1.11 0-2 .9-2 2v16c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM9 18H7v-2h2v2zm0-3H7v-2h2v2zm0-3H7V7h2v5zm6 6h-4v-2h4v2zm0-3h-4v-2h4v2zm0-3h-4V7h4v5z"/>
-                  </svg>
-                  <div>
-                    <h3 className="font-semibold text-lg">Google Drive Folder</h3>
-                    <p className="text-sm text-muted-foreground">Click below to access promo materials</p>
-                  </div>
-                </div>
+              <div className="w-full h-[500px] border rounded-lg overflow-hidden bg-muted/20">
+                <iframe
+                  src={`https://drive.google.com/embeddedfolderview?id=${song.promoMaterialsFolderId}#grid`}
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0 }}
+                  allow="autoplay"
+                  title="Promo Materials"
+                  onError={(e) => {
+                    console.error("Google Drive iframe error:", e)
+                  }}
+                />
+              </div>
+              <div className="text-sm text-muted-foreground flex items-center gap-2">
                 <a
                   href={`https://drive.google.com/drive/folders/${song.promoMaterialsFolderId}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+                  className="text-primary hover:underline inline-flex items-center gap-1"
                 >
-                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  Open in Google Drive
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
                     <polyline points="15 3 21 3 21 9"></polyline>
                     <line x1="10" y1="14" x2="21" y2="3"></line>
                   </svg>
-                  Open Folder in Google Drive
                 </a>
-                <p className="text-xs text-muted-foreground mt-3">
-                  Note: You may need to be signed in to Google to access this folder.
-                </p>
+                <span className="text-xs">•</span>
+                <span className="text-xs">If the preview doesn&apos;t load, click the link above</span>
               </div>
             </div>
           </CardContent>
