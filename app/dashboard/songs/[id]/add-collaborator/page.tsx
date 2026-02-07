@@ -137,8 +137,8 @@ export default function AddCollaboratorPage() {
               // Filter roles based on section
               let eligibleRoles: CollaboratorRole[] = []
               if (section === "publishing") {
-                // Only show publishing-eligible roles
-                eligibleRoles = allCapableRoles.filter(role => isPublishingEligible(role))
+                // Only show Writers and Label for publishing section
+                eligibleRoles = allCapableRoles.filter(role => role === "writer" || role === "label")
               } else if (section === "master") {
                 // Only show master-eligible roles (excluding label)
                 eligibleRoles = allCapableRoles.filter(role => isMasterEligible(role) && role !== "label")
@@ -152,7 +152,7 @@ export default function AddCollaboratorPage() {
                   <div className="p-4 border rounded-md bg-muted">
                     <p className="text-sm text-muted-foreground">
                       {section === "publishing" 
-                        ? "This collaborator is not eligible for publishing shares. They must be a Writer, Artist, or Label."
+                        ? "This collaborator is not eligible for publishing shares. They must be a Writer or Label."
                         : section === "master"
                         ? "This collaborator is not eligible for master revenue shares. They must be a Producer, Artist, Musician, or Vocalist."
                         : "This collaborator has no eligible roles."}
