@@ -102,6 +102,36 @@ export default function AccountRequestsPage() {
     }
   }
 
+  const handleResendEmail = async (id: string, email: string) => {
+    if (!confirm(`Resend welcome email to ${email}? This will generate a new setup link.`)) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/admin/account-requests/${id}/resend-email`, {
+        method: "POST",
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        alert(`Welcome email resent to ${email}!`)
+      } else if (response.status === 207 && data.setupLink) {
+        // Partial success - email failed but we have the link
+        const copyLink = confirm(`${data.error}\n\nSetup link copied to clipboard. Would you like to manually send it?`)
+        if (copyLink) {
+          navigator.clipboard.writeText(data.setupLink)
+          alert("Setup link copied to clipboard!")
+        }
+      } else {
+        alert(`Error: ${data.error}`)
+      }
+    } catch (error) {
+      console.error("Error resending email:", error)
+      alert("Failed to resend welcome email")
+    }
+  }
+
   const handleDelete = async (id: string, email: string) => {
     if (!confirm(`Are you sure you want to delete the account request for ${email}? This cannot be undone.`)) {
       return
@@ -234,6 +264,15 @@ export default function AccountRequestsPage() {
                           Reject
                         </Button>
                       </>
+                    )}
+                    {request.status === "approved" && (
+                      <Button
+                        onClick={() => handleResendEmail(request.id, request.email)}
+                        variant="secondary"
+                        size="sm"
+                      >
+                        Resend Welcome Email
+                      </Button>
                     )}
                     <Button
                       onClick={() => handleDelete(request.id, request.email)}
