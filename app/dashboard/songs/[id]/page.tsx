@@ -498,6 +498,98 @@ export default function SongDetailPage() {
     }
   }
 
+  const handleLockPublishing = async () => {
+    if (!song) return
+    setUpdatingSplits(true)
+    try {
+      const response = await fetch("/api/splits/publishing", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ songId: song.id, action: "lock" }),
+      })
+      if (response.ok) {
+        await fetchSong()
+      } else {
+        const error = await response.json()
+        alert(error.error || "Failed to lock publishing splits")
+      }
+    } catch (error) {
+      console.error("Error locking publishing splits:", error)
+      alert("Failed to lock publishing splits")
+    } finally {
+      setUpdatingSplits(false)
+    }
+  }
+
+  const handleUnlockPublishing = async () => {
+    if (!song) return
+    setUpdatingSplits(true)
+    try {
+      const response = await fetch("/api/splits/publishing", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ songId: song.id, action: "unlock" }),
+      })
+      if (response.ok) {
+        await fetchSong()
+      } else {
+        const error = await response.json()
+        alert(error.error || "Failed to unlock publishing splits")
+      }
+    } catch (error) {
+      console.error("Error unlocking publishing splits:", error)
+      alert("Failed to unlock publishing splits")
+    } finally {
+      setUpdatingSplits(false)
+    }
+  }
+
+  const handleLockMaster = async () => {
+    if (!song) return
+    setUpdatingSplits(true)
+    try {
+      const response = await fetch("/api/splits/master", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ songId: song.id, action: "lock" }),
+      })
+      if (response.ok) {
+        await fetchSong()
+      } else {
+        const error = await response.json()
+        alert(error.error || "Failed to lock master splits")
+      }
+    } catch (error) {
+      console.error("Error locking master splits:", error)
+      alert("Failed to lock master splits")
+    } finally {
+      setUpdatingSplits(false)
+    }
+  }
+
+  const handleUnlockMaster = async () => {
+    if (!song) return
+    setUpdatingSplits(true)
+    try {
+      const response = await fetch("/api/splits/master", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ songId: song.id, action: "unlock" }),
+      })
+      if (response.ok) {
+        await fetchSong()
+      } else {
+        const error = await response.json()
+        alert(error.error || "Failed to unlock master splits")
+      }
+    } catch (error) {
+      console.error("Error unlocking master splits:", error)
+      alert("Failed to unlock master splits")
+    } finally {
+      setUpdatingSplits(false)
+    }
+  }
+
   const handleDeleteCollaborator = async (songCollaboratorId: string, collaboratorName: string) => {
     if (!song) return
     
@@ -1135,59 +1227,6 @@ export default function SongDetailPage() {
         </CardContent>
       </Card>
 
-      {isAdmin && (
-        <div className="grid gap-4 md:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Publishing Splits</CardTitle>
-              <CardDescription>
-                {song.publishingLocked
-                  ? "Publishing splits are locked"
-                  : "Set publishing ownership percentages (must total 100%)"}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <PublishingSplitEditor
-                songId={song.id}
-                songCollaborators={song.songCollaborators.map(sc => ({
-                  ...sc,
-                  roleInSong: sc.roleInSong as CollaboratorRole
-                })) as any}
-                songPublishingEntities={song.songPublishingEntities}
-                isLocked={song.publishingLocked}
-                onUpdate={fetchSong}
-              />
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Master Revenue Shares</CardTitle>
-              <CardDescription>
-                {!song.publishingLocked
-                  ? "Publishing splits must be locked first"
-                  : song.masterLocked
-                  ? "Master revenue shares are locked"
-                  : "Set master ownership percentages (must total 100%)"}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <MasterSplitEditor
-                songId={song.id}
-                songCollaborators={song.songCollaborators.map(sc => ({
-                  ...sc,
-                  roleInSong: sc.roleInSong as CollaboratorRole
-                })) as any}
-                labelMasterShare={song.labelMasterShare}
-                isLocked={song.masterLocked}
-                publishingLocked={song.publishingLocked}
-                onUpdate={fetchSong}
-              />
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
       <div className={`grid gap-4 ${canSeeAllShares ? 'md:grid-cols-2' : ''}`}>
         <Card>
           <CardHeader>
@@ -1203,7 +1242,32 @@ export default function SongDetailPage() {
               }) && (
                 <div>
                   <div className="flex items-center justify-between mb-3 p-3">
-                    <h3 className="text-lg font-semibold">Publishing Share</h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-lg font-semibold">Publishing Share</h3>
+                      {isAdmin && (
+                        song.publishingLocked ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleUnlockPublishing}
+                            disabled={updatingSplits}
+                            className="h-7 text-xs"
+                          >
+                            Unlock Splits
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleLockPublishing}
+                            disabled={updatingSplits}
+                            className="h-7 text-xs"
+                          >
+                            Lock Splits
+                          </Button>
+                        )
+                      )}
+                    </div>
                     <div className="flex gap-2 ml-4 justify-center" style={{ minWidth: '140px' }}>
                       <h3 className="text-lg font-semibold">Contracts</h3>
                     </div>
@@ -1462,7 +1526,32 @@ export default function SongDetailPage() {
               }) && (
                 <div>
                   <div className="flex items-center justify-between mb-3 p-3">
-                    <h3 className="text-lg font-semibold">Master Revenue Share</h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-lg font-semibold">Master Revenue Share</h3>
+                      {isAdmin && song.publishingLocked && (
+                        song.masterLocked ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleUnlockMaster}
+                            disabled={updatingSplits}
+                            className="h-7 text-xs"
+                          >
+                            Unlock Splits
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleLockMaster}
+                            disabled={updatingSplits}
+                            className="h-7 text-xs"
+                          >
+                            Lock Splits
+                          </Button>
+                        )
+                      )}
+                    </div>
                     <div className="flex gap-2 ml-4 justify-center" style={{ minWidth: '140px' }}>
                       <h3 className="text-lg font-semibold">Contracts</h3>
                     </div>
@@ -1745,6 +1834,59 @@ export default function SongDetailPage() {
           </Card>
         )}
       </div>
+
+      {isAdmin && (
+        <div className="grid gap-4 md:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Publishing Splits</CardTitle>
+              <CardDescription>
+                {song.publishingLocked
+                  ? "Publishing splits are locked"
+                  : "Set publishing ownership percentages (must total 100%)"}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <PublishingSplitEditor
+                songId={song.id}
+                songCollaborators={song.songCollaborators.map(sc => ({
+                  ...sc,
+                  roleInSong: sc.roleInSong as CollaboratorRole
+                })) as any}
+                songPublishingEntities={song.songPublishingEntities}
+                isLocked={song.publishingLocked}
+                onUpdate={fetchSong}
+              />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Master Revenue Shares</CardTitle>
+              <CardDescription>
+                {!song.publishingLocked
+                  ? "Publishing splits must be locked first"
+                  : song.masterLocked
+                  ? "Master revenue shares are locked"
+                  : "Set master ownership percentages (must total 100%)"}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <MasterSplitEditor
+                songId={song.id}
+                songCollaborators={song.songCollaborators.map(sc => ({
+                  ...sc,
+                  roleInSong: sc.roleInSong as CollaboratorRole
+                })) as any}
+                labelMasterShare={song.labelMasterShare}
+                isLocked={song.masterLocked}
+                publishingLocked={song.publishingLocked}
+                onUpdate={fetchSong}
+              />
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Promo Materials Section - Visible to all users - Always at bottom */}
       {song.promoMaterialsFolderId && (
