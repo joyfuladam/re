@@ -1,7 +1,18 @@
 import { Resend } from 'resend'
 
-// Initialize Resend with API key
-const resend = new Resend(process.env.RESEND_API_KEY)
+// Lazy initialization of Resend to avoid build-time errors
+let resendInstance: Resend | null = null
+
+function getResend(): Resend {
+  if (!resendInstance) {
+    const apiKey = process.env.RESEND_API_KEY
+    if (!apiKey) {
+      throw new Error('RESEND_API_KEY environment variable is not set')
+    }
+    resendInstance = new Resend(apiKey)
+  }
+  return resendInstance
+}
 
 interface SendEmailOptions {
   to: string
@@ -18,6 +29,7 @@ export async function sendEmail({ to, subject, html, text }: SendEmailOptions) {
     const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev'
     const fromName = 'River & Ember'
     
+    const resend = getResend()
     const { data, error } = await resend.emails.send({
       from: `${fromName} <${fromEmail}>`,
       to: [to],
