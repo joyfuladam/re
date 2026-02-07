@@ -62,7 +62,9 @@ export function SplitPieChart({
   // Add collaborator publishing splits
   songCollaborators.forEach((sc, index) => {
     const publishing = sc.publishingOwnership ?? 0
-    if (publishing > 0) {
+    // Convert from decimal (0-1) to percentage (0-100)
+    const publishingPercent = Number(publishing) * 100
+    if (publishingPercent > 0) {
       const fullName = [sc.collaborator.firstName, sc.collaborator.middleName, sc.collaborator.lastName]
         .filter(Boolean)
         .join(" ")
@@ -71,7 +73,7 @@ export function SplitPieChart({
                        sc.roleInSong === "label" ? "Label" : sc.roleInSong
       publishingSplits.push({
         name: `${fullName} (${roleLabel})`,
-        value: publishing,
+        value: publishingPercent,
         color: PUBLISHING_COLORS[publishingSplits.length % PUBLISHING_COLORS.length]
       })
     }
@@ -80,10 +82,12 @@ export function SplitPieChart({
   // Add publishing entity splits
   songPublishingEntities.forEach((spe) => {
     const percentage = spe.ownershipPercentage ?? 0
-    if (percentage > 0) {
+    // Convert from decimal (0-1) to percentage (0-100)
+    const percentagePercent = Number(percentage) * 100
+    if (percentagePercent > 0) {
       publishingSplits.push({
         name: spe.publishingEntity.name,
-        value: percentage,
+        value: percentagePercent,
         color: PUBLISHING_COLORS[publishingSplits.length % PUBLISHING_COLORS.length]
       })
     }
@@ -95,17 +99,20 @@ export function SplitPieChart({
   // Add collaborator master splits
   songCollaborators.forEach((sc) => {
     const master = sc.masterOwnership ?? 0
-    if (master > 0) {
+    // Convert from decimal (0-1) to percentage (0-100)
+    const masterPercent = Number(master) * 100
+    if (masterPercent > 0) {
       const fullName = [sc.collaborator.firstName, sc.collaborator.middleName, sc.collaborator.lastName]
         .filter(Boolean)
         .join(" ")
       const roleLabel = sc.roleInSong === "producer" ? "Producer" : 
                        sc.roleInSong === "musician" ? "Musician" :
                        sc.roleInSong === "artist" ? "Artist" :
+                       sc.roleInSong === "vocalist" ? "Vocalist" :
                        sc.roleInSong === "label" ? "Label" : sc.roleInSong
       masterSplits.push({
         name: `${fullName} (${roleLabel})`,
-        value: master,
+        value: masterPercent,
         color: MASTER_COLORS[masterSplits.length % MASTER_COLORS.length]
       })
     }
@@ -113,11 +120,15 @@ export function SplitPieChart({
 
   // Add label master share
   if (labelMasterShare && labelMasterShare > 0) {
-    masterSplits.push({
-      name: "River & Ember (Label)",
-      value: labelMasterShare,
-      color: MASTER_COLORS[masterSplits.length % MASTER_COLORS.length]
-    })
+    // Convert from decimal (0-1) to percentage (0-100)
+    const labelSharePercent = Number(labelMasterShare) * 100
+    if (labelSharePercent > 0) {
+      masterSplits.push({
+        name: "River & Ember (Label)",
+        value: labelSharePercent,
+        color: MASTER_COLORS[masterSplits.length % MASTER_COLORS.length]
+      })
+    }
   }
 
   return (
