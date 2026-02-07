@@ -22,6 +22,7 @@ const roleLabels: Record<CollaboratorRole, string> = {
   writer: "Writer (Songwriter)",
   producer: "Producer",
   artist: "Artist",
+  vocalist: "Vocalist",
   label: "River & Ember (Label)",
 }
 

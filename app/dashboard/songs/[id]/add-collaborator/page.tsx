@@ -28,6 +28,7 @@ const roleLabels: Record<Exclude<CollaboratorRole, "label">, string> = {
   writer: "Writer",
   producer: "Producer",
   artist: "Artist",
+  vocalist: "Vocalist",
 }
 
 
