@@ -498,11 +498,15 @@ export default function SongDetailPage() {
         setEditingMasterShare(null)
       } else {
         const errorData = await response.json()
-        const errorMessage = typeof errorData.error === 'string' 
-          ? errorData.error 
-          : typeof errorData.details === 'string'
-          ? errorData.details
-          : "Failed to update master share"
+        let errorMessage = "Failed to update master share"
+        if (typeof errorData.error === 'string') {
+          errorMessage = errorData.error
+          if (typeof errorData.details === 'string' && errorData.details) {
+            errorMessage += `: ${errorData.details}`
+          }
+        } else if (typeof errorData.details === 'string') {
+          errorMessage = errorData.details
+        }
         alert(errorMessage)
       }
     } catch (error) {
@@ -1928,6 +1932,7 @@ export default function SongDetailPage() {
                               const master = sc.masterOwnership ? parseFloat(sc.masterOwnership.toString()) : 0
                               const isCurrentUser = sc.collaborator.id === session?.user?.id
                               const collaboratorName = [sc.collaborator.firstName, sc.collaborator.middleName, sc.collaborator.lastName].filter(Boolean).join(" ")
+                              // Use unique key combining role and songCollaborator id to prevent duplicates
                               const roleLabel = roleLabels[sc.roleInSong as CollaboratorRole] || sc.roleInSong
                               const availableRoles = sc.collaborator.capableRoles || []
                               const isEditingRole = editingRoleId === sc.id
