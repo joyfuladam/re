@@ -109,6 +109,8 @@ export default function SongDetailPage() {
     esignatureStatus: string | null
     signedAt: string | null
   }>>([])
+  const [lockingPublishing, setLockingPublishing] = useState(false)
+  const [lockingMaster, setLockingMaster] = useState(false)
 
   const isAdmin = session?.user?.role === "admin"
   
@@ -430,9 +432,6 @@ export default function SongDetailPage() {
       setDeletingCollaboratorId(null)
     }
   }
-
-  const [lockingPublishing, setLockingPublishing] = useState(false)
-  const [lockingMaster, setLockingMaster] = useState(false)
 
   const handleLockPublishing = async () => {
     if (!song) return
