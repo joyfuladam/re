@@ -1148,7 +1148,33 @@ export default function SongDetailPage() {
                             className="flex items-center justify-between p-3 border rounded"
                           >
                             <div className="flex-1">
-                              <div className="font-medium">{collaboratorName}</div>
+                              <div className="font-medium flex items-center gap-2">
+                                <span>{collaboratorName}</span>
+                                {contractStatus.status && (
+                                  <span className={`px-2 py-0.5 rounded text-xs ${
+                                    isSigned 
+                                      ? "bg-green-100 text-green-800" 
+                                      : contractStatus.status === "sent"
+                                      ? "bg-blue-100 text-blue-800"
+                                      : contractStatus.status === "draft"
+                                      ? "bg-yellow-100 text-yellow-800"
+                                      : contractStatus.status === "declined"
+                                      ? "bg-red-100 text-red-800"
+                                      : "bg-gray-100 text-gray-800"
+                                  }`}>
+                                    {isSigned ? "Signed" : contractStatus.status === "sent" ? "Sent" : contractStatus.status === "draft" ? "Draft" : contractStatus.status === "declined" ? "Declined" : contractStatus.status}
+                                  </span>
+                                )}
+                                {isAdmin && (
+                                  <button
+                                    onClick={() => handleDeleteCollaborator(sc.id, collaboratorName)}
+                                    disabled={deletingCollaboratorId === sc.id}
+                                    className="text-xs text-red-600 hover:text-red-800 hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
+                                  >
+                                    {deletingCollaboratorId === sc.id ? "Removing..." : "Remove"}
+                                  </button>
+                                )}
+                              </div>
                               <div className="text-sm text-muted-foreground flex items-center gap-2">
                                 {canSeeAllShares && (
                                   <>
@@ -1200,24 +1226,9 @@ export default function SongDetailPage() {
                                   </>
                                 )}
                                 <span>Publishing: {publishing.toFixed(2)}%</span>
-                                {contractStatus.status && (
-                                  <span className={`ml-2 px-2 py-0.5 rounded text-xs ${
-                                    isSigned 
-                                      ? "bg-green-100 text-green-800" 
-                                      : contractStatus.status === "sent"
-                                      ? "bg-blue-100 text-blue-800"
-                                      : contractStatus.status === "draft"
-                                      ? "bg-yellow-100 text-yellow-800"
-                                      : contractStatus.status === "declined"
-                                      ? "bg-red-100 text-red-800"
-                                      : "bg-gray-100 text-gray-800"
-                                  }`}>
-                                    {isSigned ? "Signed" : contractStatus.status === "sent" ? "Sent" : contractStatus.status === "draft" ? "Draft" : contractStatus.status === "declined" ? "Declined" : contractStatus.status}
-                                  </span>
-                                )}
                               </div>
                             </div>
-                            <div className="flex gap-3 ml-4 items-start">
+                            <div className="flex gap-2 ml-4 items-center">
                               {isAdmin && contractStatus.contractId && contractStatus.status && contractStatus.status !== "pending" && (
                                 <Button
                                   variant="ghost"
@@ -1225,45 +1236,43 @@ export default function SongDetailPage() {
                                   onClick={() => handleRefreshStatus(contractStatus.contractId!)}
                                   disabled={refreshingStatusId === contractStatus.contractId}
                                   title="Refresh status from SignWell"
-                                  className="h-8 w-8 p-0"
+                                  className="h-7 w-7 p-0"
                                 >
                                   {refreshingStatusId === contractStatus.contractId ? "⟳" : "↻"}
                                 </Button>
                               )}
-                              <div className="flex flex-col gap-2">
-                                {(isCurrentUser || isAdmin) && (
-                                  <>
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() => handlePreviewContract(sc.id, contractType, collaboratorName)}
-                                      disabled={!song.masterLocked || isGenerating}
-                                      className="w-full"
-                                    >
-                                      Preview
-                                    </Button>
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() => handleDownloadContract(sc.id, contractType)}
-                                      disabled={!song.masterLocked || isGenerating}
-                                      title="Download contract as PDF"
-                                      className="w-full"
-                                    >
-                                      Download
-                                    </Button>
-                                  </>
-                                )}
-                              </div>
+                              {(isCurrentUser || isAdmin) && (
+                                <>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handlePreviewContract(sc.id, contractType, collaboratorName)}
+                                    disabled={!song.masterLocked || isGenerating}
+                                    className="h-7 text-xs px-2"
+                                  >
+                                    Preview
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleDownloadContract(sc.id, contractType)}
+                                    disabled={!song.masterLocked || isGenerating}
+                                    title="Download contract as PDF"
+                                    className="h-7 text-xs px-2"
+                                  >
+                                    Download
+                                  </Button>
+                                </>
+                              )}
                               {isAdmin && (
-                                <div className="flex flex-col gap-2">
+                                <>
                                   <Button
                                     variant="outline"
                                     size="sm"
                                     onClick={() => handleSendContract(sc.id, contractType, collaboratorName, true)}
                                     disabled={!song.masterLocked || isGenerating || isSigned}
                                     title="Create draft in SignWell (no emails sent)"
-                                    className="w-full"
+                                    className="h-7 text-xs px-2"
                                   >
                                     Draft
                                   </Button>
@@ -1272,21 +1281,11 @@ export default function SongDetailPage() {
                                     size="sm"
                                     onClick={() => handleSendContract(sc.id, contractType, collaboratorName, false)}
                                     disabled={!song.masterLocked || isGenerating || isSigned}
-                                    className="w-full"
+                                    className="h-7 text-xs px-2"
                                   >
                                     {isSigned ? "Signed" : canResend ? "Re-Send" : "Send"}
                                   </Button>
-                                </div>
-                              )}
-                              {isAdmin && (
-                                <Button
-                                  variant="destructive"
-                                  size="sm"
-                                  onClick={() => handleDeleteCollaborator(sc.id, collaboratorName)}
-                                  disabled={deletingCollaboratorId === sc.id}
-                                >
-                                  {deletingCollaboratorId === sc.id ? "Removing..." : "Remove"}
-                                </Button>
+                                </>
                               )}
                             </div>
                           </div>
@@ -1350,7 +1349,33 @@ export default function SongDetailPage() {
                             className="flex items-center justify-between p-3 border rounded"
                           >
                             <div className="flex-1">
-                              <div className="font-medium">{collaboratorName}</div>
+                              <div className="font-medium flex items-center gap-2">
+                                <span>{collaboratorName}</span>
+                                {contractStatus.status && (
+                                  <span className={`px-2 py-0.5 rounded text-xs ${
+                                    isSigned 
+                                      ? "bg-green-100 text-green-800" 
+                                      : contractStatus.status === "sent"
+                                      ? "bg-blue-100 text-blue-800"
+                                      : contractStatus.status === "draft"
+                                      ? "bg-yellow-100 text-yellow-800"
+                                      : contractStatus.status === "declined"
+                                      ? "bg-red-100 text-red-800"
+                                      : "bg-gray-100 text-gray-800"
+                                  }`}>
+                                    {isSigned ? "Signed" : contractStatus.status === "sent" ? "Sent" : contractStatus.status === "draft" ? "Draft" : contractStatus.status === "declined" ? "Declined" : contractStatus.status}
+                                  </span>
+                                )}
+                                {isAdmin && (
+                                  <button
+                                    onClick={() => handleDeleteCollaborator(sc.id, collaboratorName)}
+                                    disabled={deletingCollaboratorId === sc.id}
+                                    className="text-xs text-red-600 hover:text-red-800 hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
+                                  >
+                                    {deletingCollaboratorId === sc.id ? "Removing..." : "Remove"}
+                                  </button>
+                                )}
+                              </div>
                               <div className="text-sm text-muted-foreground flex items-center gap-2">
                                 {canSeeAllShares && (
                                   <>
@@ -1402,24 +1427,9 @@ export default function SongDetailPage() {
                                   </>
                                 )}
                                 <span>Master Revenue: {master.toFixed(2)}%</span>
-                                {contractStatus.status && (
-                                  <span className={`ml-2 px-2 py-0.5 rounded text-xs ${
-                                    isSigned 
-                                      ? "bg-green-100 text-green-800" 
-                                      : contractStatus.status === "sent"
-                                      ? "bg-blue-100 text-blue-800"
-                                      : contractStatus.status === "draft"
-                                      ? "bg-yellow-100 text-yellow-800"
-                                      : contractStatus.status === "declined"
-                                      ? "bg-red-100 text-red-800"
-                                      : "bg-gray-100 text-gray-800"
-                                  }`}>
-                                    {isSigned ? "Signed" : contractStatus.status === "sent" ? "Sent" : contractStatus.status === "draft" ? "Draft" : contractStatus.status === "declined" ? "Declined" : contractStatus.status}
-                                  </span>
-                                )}
                               </div>
                             </div>
-                            <div className="flex gap-3 ml-4 items-start">
+                            <div className="flex gap-2 ml-4 items-center">
                               {isAdmin && contractStatus.contractId && contractStatus.status && contractStatus.status !== "pending" && (
                                 <Button
                                   variant="ghost"
@@ -1427,45 +1437,43 @@ export default function SongDetailPage() {
                                   onClick={() => handleRefreshStatus(contractStatus.contractId!)}
                                   disabled={refreshingStatusId === contractStatus.contractId}
                                   title="Refresh status from SignWell"
-                                  className="h-8 w-8 p-0"
+                                  className="h-7 w-7 p-0"
                                 >
                                   {refreshingStatusId === contractStatus.contractId ? "⟳" : "↻"}
                                 </Button>
                               )}
-                              <div className="flex flex-col gap-2">
-                                {(isCurrentUser || isAdmin) && (
-                                  <>
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() => handlePreviewContract(sc.id, contractType, collaboratorName)}
-                                      disabled={!song.masterLocked || isGenerating}
-                                      className="w-full"
-                                    >
-                                      Preview
-                                    </Button>
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() => handleDownloadContract(sc.id, contractType)}
-                                      disabled={!song.masterLocked || isGenerating}
-                                      title="Download contract as PDF"
-                                      className="w-full"
-                                    >
-                                      Download
-                                    </Button>
-                                  </>
-                                )}
-                              </div>
+                              {(isCurrentUser || isAdmin) && (
+                                <>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handlePreviewContract(sc.id, contractType, collaboratorName)}
+                                    disabled={!song.masterLocked || isGenerating}
+                                    className="h-7 text-xs px-2"
+                                  >
+                                    Preview
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleDownloadContract(sc.id, contractType)}
+                                    disabled={!song.masterLocked || isGenerating}
+                                    title="Download contract as PDF"
+                                    className="h-7 text-xs px-2"
+                                  >
+                                    Download
+                                  </Button>
+                                </>
+                              )}
                               {isAdmin && (
-                                <div className="flex flex-col gap-2">
+                                <>
                                   <Button
                                     variant="outline"
                                     size="sm"
                                     onClick={() => handleSendContract(sc.id, contractType, collaboratorName, true)}
                                     disabled={!song.masterLocked || isGenerating || isSigned}
                                     title="Create draft in SignWell (no emails sent)"
-                                    className="w-full"
+                                    className="h-7 text-xs px-2"
                                   >
                                     Draft
                                   </Button>
@@ -1474,21 +1482,11 @@ export default function SongDetailPage() {
                                     size="sm"
                                     onClick={() => handleSendContract(sc.id, contractType, collaboratorName, false)}
                                     disabled={!song.masterLocked || isGenerating || isSigned}
-                                    className="w-full"
+                                    className="h-7 text-xs px-2"
                                   >
                                     {isSigned ? "Signed" : canResend ? "Re-Send" : "Send"}
                                   </Button>
-                                </div>
-                              )}
-                              {isAdmin && (
-                                <Button
-                                  variant="destructive"
-                                  size="sm"
-                                  onClick={() => handleDeleteCollaborator(sc.id, collaboratorName)}
-                                  disabled={deletingCollaboratorId === sc.id}
-                                >
-                                  {deletingCollaboratorId === sc.id ? "Removing..." : "Remove"}
-                                </Button>
+                                </>
                               )}
                             </div>
                           </div>
