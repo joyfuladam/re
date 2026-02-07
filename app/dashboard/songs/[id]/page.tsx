@@ -1348,10 +1348,9 @@ export default function SongDetailPage() {
           <CardContent>
             <div className="space-y-6">
               {/* Publishing Share Section */}
-              {song.songCollaborators.some((sc) => {
-                const publishing = sc.publishingOwnership ? parseFloat(sc.publishingOwnership.toString()) : 0
-                return publishing > 0
-              }) && (
+              {song.songCollaborators.some((sc) => 
+                isPublishingEligible(sc.roleInSong as CollaboratorRole)
+              ) && (
                 <div>
                   <div className="flex items-center justify-between mb-3 p-3">
                     <div className="flex items-center gap-2">
@@ -1435,10 +1434,9 @@ export default function SongDetailPage() {
                   </div>
                   <div className="space-y-2">
                     {song.songCollaborators
-                      .filter((sc) => {
-                        const publishing = sc.publishingOwnership ? parseFloat(sc.publishingOwnership.toString()) : 0
-                        return publishing > 0
-                      })
+                      .filter((sc) => 
+                        isPublishingEligible(sc.roleInSong as CollaboratorRole)
+                      )
                       .filter((sc) => {
                         // If user can't see all shares, only show their own
                         if (!canSeeAllShares) {
@@ -1768,8 +1766,8 @@ export default function SongDetailPage() {
 
               {/* Master Revenue Share Section */}
               {song.songCollaborators.some((sc) => {
-                const master = sc.masterOwnership ? parseFloat(sc.masterOwnership.toString()) : 0
-                return master > 0
+                const role = sc.roleInSong as CollaboratorRole
+                return isMasterEligible(role) && role !== "label"
               }) && (
                 <div>
                   <div className="flex items-center justify-between mb-3 p-3">
@@ -1845,8 +1843,8 @@ export default function SongDetailPage() {
                       // Group collaborators by role type
                       const masterCollaborators = song.songCollaborators
                         .filter((sc) => {
-                          const master = sc.masterOwnership ? parseFloat(sc.masterOwnership.toString()) : 0
-                          return master > 0
+                          const role = sc.roleInSong as CollaboratorRole
+                          return isMasterEligible(role) && role !== "label"
                         })
                         .filter((sc) => {
                           // If user can't see all shares, only show their own
