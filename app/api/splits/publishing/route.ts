@@ -37,14 +37,8 @@ export async function POST(request: NextRequest) {
     const validated = updatePublishingSplitsSchema.parse(body)
 
     // Validate that writer's share (collaborator splits) totals 50% (music industry standard)
-    // Publisher's share (entity splits) will be validated separately and must also total 50%
-    const totalPercentage = validated.splits.reduce((sum, split) => sum + split.percentage, 0)
-    if (Math.abs(totalPercentage - 50) > 0.01) {
-      return NextResponse.json(
-        { error: "Writer's share must total exactly 50%", details: `Current total: ${totalPercentage.toFixed(2)}%` },
-        { status: 400 }
-      )
-    }
+    // Note: We don't validate total = 50% here - that's only required when locking
+    // This allows users to save individual collaborator shares one at a time
 
     // Check if publishing is already locked
     const song = await db.song.findUnique({

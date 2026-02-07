@@ -99,23 +99,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Check combined total (collaborators + label share) must equal 100%
-    const collaboratorTotal = validated.splits.reduce((sum, split) => sum + split.percentage, 0)
-    // Use label share from request if provided, otherwise use from database
-    const labelShare = validated.labelMasterShare !== undefined
-      ? validated.labelMasterShare
-      : (song.labelMasterShare ? parseFloat(song.labelMasterShare.toString()) * 100 : 0)
-    const total = collaboratorTotal + labelShare
-    
-    if (Math.abs(total - 100) > 0.01) {
-      return NextResponse.json(
-        { 
-          error: "Master splits must total exactly 100%", 
-          details: `Current total: ${total.toFixed(2)}% (Collaborators: ${collaboratorTotal.toFixed(2)}%, Label: ${labelShare.toFixed(2)}%)` 
-        },
-        { status: 400 }
-      )
-    }
+    // Note: We don't validate total = 100% here - that's only required when locking
+    // This allows users to save individual collaborator shares one at a time
 
     // Update splits by songCollaboratorId (each record is unique per song+collaborator+role)
     for (const split of validated.splits) {

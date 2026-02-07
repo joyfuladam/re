@@ -425,7 +425,7 @@ export default function SongDetailPage() {
       const splits = eligibleCollaborators.map((sc) => {
         let percentage = sc.id === songCollaboratorId 
           ? newPercentage 
-          : (sc.publishingOwnership ? parseFloat(sc.publishingOwnership.toString()) * 100 : 0)
+          : (sc.publishingOwnership ? parseFloat(sc.publishingOwnership.toString()) : 0) // Already in percentage format from fetchSong
         // Clamp percentage to valid range (0-100) to prevent validation errors
         percentage = Math.max(0, Math.min(100, percentage))
         return {
@@ -488,10 +488,8 @@ export default function SongDetailPage() {
           // Use the new percentage directly (already in 0-100 range)
           percentage = newPercentage
         } else {
-          // Convert from decimal (0-1) to percentage (0-100)
-          // masterOwnership is stored as Decimal (0-1) in database
-          const masterDecimal = sc.masterOwnership ? parseFloat(sc.masterOwnership.toString()) : 0
-          percentage = masterDecimal * 100
+          // masterOwnership is already in percentage format (0-100) from fetchSong
+          percentage = sc.masterOwnership ? parseFloat(sc.masterOwnership.toString()) : 0
         }
         // Clamp percentage to valid range (0-100)
         percentage = Math.max(0, Math.min(100, percentage))
@@ -502,11 +500,10 @@ export default function SongDetailPage() {
       })
       
       // Clamp labelMasterShare to valid range
-      // labelMasterShare is stored as Decimal (0-1) in database
+      // labelMasterShare is already in percentage format (0-100) from fetchSong
       let labelMasterShare = 0
       if (song.labelMasterShare) {
-        const labelDecimal = parseFloat(song.labelMasterShare.toString())
-        labelMasterShare = labelDecimal * 100
+        labelMasterShare = parseFloat(song.labelMasterShare.toString())
         labelMasterShare = Math.max(0, Math.min(100, labelMasterShare))
       }
       
@@ -1898,9 +1895,8 @@ export default function SongDetailPage() {
                               const editingValue = parseFloat(masterShareValue) || 0
                               return sum + editingValue
                             }
-                            // Convert from decimal (0-1) to percentage (0-100)
-                            const masterDecimal = sc.masterOwnership ? parseFloat(sc.masterOwnership.toString()) : 0
-                            const master = masterDecimal * 100
+                            // masterOwnership is already in percentage format (0-100) from fetchSong
+                            const master = sc.masterOwnership ? parseFloat(sc.masterOwnership.toString()) : 0
                             return sum + master
                           }, 0)
                         const labelShare = (() => {
@@ -1908,9 +1904,8 @@ export default function SongDetailPage() {
                           if (editingRiverEmberMaster && riverEmberMasterValue !== "") {
                             return parseFloat(riverEmberMasterValue) || 0
                           }
-                          // Otherwise use saved value - convert from decimal (0-1) to percentage (0-100)
-                          const labelDecimal = song.labelMasterShare ? parseFloat(song.labelMasterShare.toString()) : 0
-                          return labelDecimal * 100
+                          // labelMasterShare is already in percentage format (0-100) from fetchSong
+                          return song.labelMasterShare ? parseFloat(song.labelMasterShare.toString()) : 0
                         })()
                         const total = collaboratorTotal + labelShare
                         const isValid = Math.abs(total - 100) < 0.01
@@ -1988,9 +1983,8 @@ export default function SongDetailPage() {
                               {roleLabels[role]}
                             </h4>
                             {collaborators.map((sc) => {
-                              // Convert from decimal (0-1) to percentage (0-100)
-                              const masterDecimal = sc.masterOwnership ? parseFloat(sc.masterOwnership.toString()) : 0
-                              const master = masterDecimal * 100
+                              // masterOwnership is already in percentage format (0-100) from fetchSong
+                              const master = sc.masterOwnership ? parseFloat(sc.masterOwnership.toString()) : 0
                               const isCurrentUser = sc.collaborator.id === session?.user?.id
                               const collaboratorName = [sc.collaborator.firstName, sc.collaborator.middleName, sc.collaborator.lastName].filter(Boolean).join(" ")
                               // Use unique key combining role and songCollaborator id to prevent duplicates
