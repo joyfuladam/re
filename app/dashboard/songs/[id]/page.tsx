@@ -2192,7 +2192,8 @@ export default function SongDetailPage() {
         </Card>
       )}
 
-      {isAdmin && (
+      {/* Publishing Splits and Master Revenue Shares cards - Hidden but kept for potential future use */}
+      {false && isAdmin && (
         <div className="grid gap-4 md:grid-cols-2">
           <Card>
             <CardHeader>
