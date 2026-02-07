@@ -2,7 +2,6 @@
 
 import { useState, useEffect, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { signIn } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -77,20 +76,9 @@ function SetupAccountContent() {
       })
 
       if (response.ok) {
-        // Auto-login after setup
-        const result = await signIn("credentials", {
-          email: userEmail,
-          password,
-          redirect: false,
-        })
-
-        if (result?.error) {
-          setError("Account created but login failed. Please try logging in manually.")
-          setTimeout(() => router.push("/login"), 3000)
-        } else {
-          router.push("/dashboard")
-          router.refresh()
-        }
+        // Redirect to login page after successful password setup
+        alert("Password set successfully! Please log in with your new credentials.")
+        router.push("/login")
       } else {
         const errorData = await response.json()
         setError(errorData.error || "Failed to set up account")
