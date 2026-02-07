@@ -33,26 +33,30 @@ Writer has created certain musical compositions for recording and release under 
 
 <div class="indent">This assignment applies **solely** to the Compositions listed in Exhibit A (and any approved revisions). Writer retains full publishing rights in all other compositions not created for or released under Publisher's projects.</div>
 
-3. **Term**
+3. **Master Rights & Revenue Share**
+
+<div class="indent">This Agreement covers **only publishing rights** and revenues for the underlying musical compositions. Master rights and revenue shares for sound recordings are governed by a separate Master Revenue Share Agreement (if applicable). Writer has **no right** to master revenue share or ownership based on their songwriting or composition contributions under this Agreement. If Writer is also a performer on the sound recording(s) of the Compositions, Writer's master rights and revenue share (if any) are governed exclusively by a separate Master Revenue Share Agreement with River and Ember, and any master revenue share or ownership shall be in accordance with the terms of that separate master agreement. Writer is **not** eligible for master revenue share based solely on songwriting or composition contributions; such contributions are handled separately through master revenue share agreements. This Agreement pertains solely to Publishing rights and revenues.</div>
+
+4. **Term**
 
 <div class="indent">Perpetual, subject to reversion to Writer upon {{reversion_condition}}.</div>
 
-4. **Administration**
+5. **Administration**
 
 <div class="indent">Publisher shall administer the assigned rights worldwide through its chosen publishing administrator (e.g., Sentric Music). Publisher shall account to Writer quarterly for Publisher's collected share (for transparency only—no payment due to Writer from publisher's share).</div>
 
-5. **Morals & Conduct Clause**
+6. **Morals & Conduct Clause**
 
 <div class="indent">Writer agrees to conduct themselves, both publicly and privately, in a manner consistent with biblical Christian principles. Material breach (as reasonably determined by Publisher, e.g., public conduct contrary to Scripture) shall allow Publisher immediate termination of this Agreement and reversion of rights to Writer.</div>
 
-6. **Warranties & Representations**
+7. **Warranties & Representations**
 
 <div class="indent">Writer warrants that the Compositions are original, do not infringe third-party rights, and Writer has full authority to grant these rights.</div>
 
-7. **Governing Law**<br>
+8. **Governing Law**<br>
    This Agreement shall be governed by the laws of the State of {{governing_state}}, without regard to conflict of laws principles.
 
-8. **Alternative Versions & Expanded Releases**
+9. **Alternative Versions & Expanded Releases**
 
 <div class="indent">Publisher, at its discretion and expense, may create, record, and release alternative versions of the Compositions (including but not limited to acoustic, instrumental, live, radio edit, or featured artist collaborations) to enhance visibility, congregational adoption, and revenue potential. Such versions shall be subject to the same publishing assignment terms herein. Publisher will consult with Writer on creative decisions where practicable and credit Writer appropriately. This provision is intended to maximize the Compositions' ministry impact through diverse formats suitable for church use, streaming, and sync opportunities.</div>
 
