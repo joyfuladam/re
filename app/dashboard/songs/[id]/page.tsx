@@ -1,4 +1,4 @@
-"use client"
+   "use client"
 
 import { useEffect, useState } from "react"
 import { useSession } from "next-auth/react"
@@ -483,10 +483,17 @@ export default function SongDetailPage() {
       
       // Build splits array, updating the one being edited
       const splits = eligibleCollaborators.map((sc) => {
-        let percentage = sc.id === songCollaboratorId 
-          ? newPercentage 
-          : (sc.masterOwnership ? parseFloat(sc.masterOwnership.toString()) * 100 : 0)
-        // Clamp percentage to valid range (0-100) to prevent validation errors
+        let percentage: number
+        if (sc.id === songCollaboratorId) {
+          // Use the new percentage directly (already in 0-100 range)
+          percentage = newPercentage
+        } else {
+          // Convert from decimal (0-1) to percentage (0-100)
+          // masterOwnership is stored as Decimal (0-1) in database
+          const masterDecimal = sc.masterOwnership ? parseFloat(sc.masterOwnership.toString()) : 0
+          percentage = masterDecimal * 100
+        }
+        // Clamp percentage to valid range (0-100)
         percentage = Math.max(0, Math.min(100, percentage))
         return {
           songCollaboratorId: sc.id,
@@ -495,9 +502,13 @@ export default function SongDetailPage() {
       })
       
       // Clamp labelMasterShare to valid range
-      const labelMasterShare = song.labelMasterShare 
-        ? Math.max(0, Math.min(100, parseFloat(song.labelMasterShare.toString()) * 100))
-        : 0
+      // labelMasterShare is stored as Decimal (0-1) in database
+      let labelMasterShare = 0
+      if (song.labelMasterShare) {
+        const labelDecimal = parseFloat(song.labelMasterShare.toString())
+        labelMasterShare = labelDecimal * 100
+        labelMasterShare = Math.max(0, Math.min(100, labelMasterShare))
+      }
       
       const response = await fetch("/api/splits/master", {
         method: "POST",
@@ -1881,22 +1892,25 @@ export default function SongDetailPage() {
                           const role = sc.roleInSong as CollaboratorRole
                           return isMasterEligible(role) && role !== "label"
                         })
-                        const collaboratorTotal = eligibleCollaborators.reduce((sum, sc) => {
-                          // If this collaborator is being edited, use the editing value
-                          if (editingMasterShare === sc.id && masterShareValue !== "") {
-                            const editingValue = parseFloat(masterShareValue) || 0
-                            return sum + editingValue
-                          }
-                          const master = sc.masterOwnership ? parseFloat(sc.masterOwnership.toString()) : 0
-                          return sum + master
-                        }, 0)
+                          const collaboratorTotal = eligibleCollaborators.reduce((sum, sc) => {
+                            // If this collaborator is being edited, use the editing value
+                            if (editingMasterShare === sc.id && masterShareValue !== "") {
+                              const editingValue = parseFloat(masterShareValue) || 0
+                              return sum + editingValue
+                            }
+                            // Convert from decimal (0-1) to percentage (0-100)
+                            const masterDecimal = sc.masterOwnership ? parseFloat(sc.masterOwnership.toString()) : 0
+                            const master = masterDecimal * 100
+                            return sum + master
+                          }, 0)
                         const labelShare = (() => {
                           // If editing River & Ember master share, use editing value
                           if (editingRiverEmberMaster && riverEmberMasterValue !== "") {
                             return parseFloat(riverEmberMasterValue) || 0
                           }
-                          // Otherwise use saved value
-                          return song.labelMasterShare ? parseFloat(song.labelMasterShare.toString()) : 0
+                          // Otherwise use saved value - convert from decimal (0-1) to percentage (0-100)
+                          const labelDecimal = song.labelMasterShare ? parseFloat(song.labelMasterShare.toString()) : 0
+                          return labelDecimal * 100
                         })()
                         const total = collaboratorTotal + labelShare
                         const isValid = Math.abs(total - 100) < 0.01
@@ -1974,7 +1988,9 @@ export default function SongDetailPage() {
                               {roleLabels[role]}
                             </h4>
                             {collaborators.map((sc) => {
-                              const master = sc.masterOwnership ? parseFloat(sc.masterOwnership.toString()) : 0
+                              // Convert from decimal (0-1) to percentage (0-100)
+                              const masterDecimal = sc.masterOwnership ? parseFloat(sc.masterOwnership.toString()) : 0
+                              const master = masterDecimal * 100
                               const isCurrentUser = sc.collaborator.id === session?.user?.id
                               const collaboratorName = [sc.collaborator.firstName, sc.collaborator.middleName, sc.collaborator.lastName].filter(Boolean).join(" ")
                               // Use unique key combining role and songCollaborator id to prevent duplicates
