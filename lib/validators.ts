@@ -118,6 +118,15 @@ export function validatePublishingSplits(
       })
     }
 
+    // Vocalist must have 0% publishing
+    if (split.role === 'vocalist' && split.percentage > 0) {
+      errors.push({
+        field: `splits[${index}].publishingOwnership`,
+        message: 'Vocalists cannot receive publishing ownership. Must be 0%.',
+        code: 'VOCALIST_PUBLISHING_FORBIDDEN',
+      })
+    }
+
     // Producer cannot have publishing unless also writer
     if (split.role === 'producer' && split.percentage > 0) {
       errors.push({

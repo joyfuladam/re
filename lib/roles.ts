@@ -38,6 +38,13 @@ export const ROLE_CONFIGURATIONS: Record<CollaboratorRole, RoleConfiguration> = 
     masterRevenueScope: 'full',
     contractType: 'digital_master_only', // Could be artist_agreement if we add it
   },
+  vocalist: {
+    role: 'vocalist',
+    publishingEligible: false, // Vocalists don't get publishing unless also credited as writer
+    masterEligible: true,
+    masterRevenueScope: 'digital_only', // Similar to musicians
+    contractType: 'digital_master_only',
+  },
   label: {
     role: 'label',
     publishingEligible: true,
@@ -103,6 +110,15 @@ export const REVENUE_ELIGIBILITY: Record<CollaboratorRole, RevenueEligibility> =
     publishing_income: true, // If they wrote
     catalog_sales: true,
     platform_ad_revenue: true,
+  },
+  vocalist: {
+    digital_streaming: true,
+    digital_downloads: true,
+    platform_ad_revenue: true,
+    physical_sales: false,
+    sync_licensing: false,
+    publishing_income: false,
+    catalog_sales: false,
   },
   label: {
     digital_streaming: true,

@@ -194,6 +194,7 @@ export async function buildMasterRevenueShareData(
     musician: "Musician/Instrumentalist",
     producer: "Producer",
     writer: "Writer/Composer",
+    vocalist: "Vocalist",
   }
   const artistRoleDescription = roleDescriptions[artistCollaborator.roleInSong] || artistCollaborator.roleInSong
 
@@ -266,6 +267,7 @@ export async function buildMasterRevenueShareData(
     is_artist: artistCollaborator.roleInSong === "artist",
     is_producer: artistCollaborator.roleInSong === "producer",
     is_writer: artistCollaborator.roleInSong === "writer",
+    is_vocalist: artistCollaborator.roleInSong === "vocalist",
   }
 }
 
