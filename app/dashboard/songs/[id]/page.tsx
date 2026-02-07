@@ -1525,6 +1525,37 @@ export default function SongDetailPage() {
                 </div>
               )}
             </div>
+            {isAdmin && (
+              <div className="mt-4">
+                <Link href={`/dashboard/songs/${song.id}/add-collaborator`}>
+                  <Button variant="outline">Add Collaborator</Button>
+                </Link>
+              </div>
+            )}
+            {!song.masterLocked && (
+              <p className="text-sm text-muted-foreground mt-4">
+                Master revenue shares must be locked before contracts can be generated.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
+        {canSeeAllShares && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Split Visualization</CardTitle>
+              <CardDescription>Visual representation of ownership splits</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <SplitPieChart
+                songCollaborators={song.songCollaborators}
+                songPublishingEntities={song.songPublishingEntities}
+                labelMasterShare={song.labelMasterShare}
+              />
+            </CardContent>
+          </Card>
+        )}
+      </div>
 
       {/* Promo Materials Section - Visible to all users - Always at bottom */}
       {song.promoMaterialsFolderId && (
