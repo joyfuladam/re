@@ -1267,11 +1267,16 @@ export default function SongDetailPage() {
                         )
                       )}
                       {isAdmin && !song.publishingLocked && (() => {
-                        // Calculate publishing totals
+                        // Calculate publishing totals - use editing value if currently editing
                         const eligibleCollaborators = song.songCollaborators.filter((sc) => 
                           isPublishingEligible(sc.roleInSong as CollaboratorRole)
                         )
                         const collaboratorTotal = eligibleCollaborators.reduce((sum, sc) => {
+                          // If this collaborator is being edited, use the editing value
+                          if (editingPublishingShare === sc.id && publishingShareValue !== "") {
+                            const editingValue = parseFloat(publishingShareValue) || 0
+                            return sum + editingValue
+                          }
                           const publishing = sc.publishingOwnership ? parseFloat(sc.publishingOwnership.toString()) : 0
                           return sum + publishing
                         }, 0)
@@ -1578,12 +1583,17 @@ export default function SongDetailPage() {
                         )
                       )}
                       {isAdmin && song.publishingLocked && !song.masterLocked && (() => {
-                        // Calculate master totals
+                        // Calculate master totals - use editing value if currently editing
                         const eligibleCollaborators = song.songCollaborators.filter((sc) => {
                           const role = sc.roleInSong as CollaboratorRole
                           return isMasterEligible(role) && role !== "label"
                         })
                         const collaboratorTotal = eligibleCollaborators.reduce((sum, sc) => {
+                          // If this collaborator is being edited, use the editing value
+                          if (editingMasterShare === sc.id && masterShareValue !== "") {
+                            const editingValue = parseFloat(masterShareValue) || 0
+                            return sum + editingValue
+                          }
                           const master = sc.masterOwnership ? parseFloat(sc.masterOwnership.toString()) : 0
                           return sum + master
                         }, 0)
