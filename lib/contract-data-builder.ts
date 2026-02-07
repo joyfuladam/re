@@ -188,6 +188,16 @@ export async function buildMasterRevenueShareData(
     ? parseFloat(artistCollaborator.masterOwnership.toString()) * 100
     : 0
 
+  // Map role to template-friendly values
+  const roleMapping: Record<string, string> = {
+    producer: "Producer",
+    musician: "Instrumentalist",
+    vocalist: "Vocalist",
+    artist: "Featured Artist",
+    writer: "Writer", // Shouldn't typically be here, but handle it
+  }
+  const collaboratorRole = roleMapping[artistCollaborator.roleInSong] || artistCollaborator.roleInSong
+
   // Get role description
   const roleDescriptions: Record<string, string> = {
     artist: "Lead Artist/Performer",
@@ -196,7 +206,30 @@ export async function buildMasterRevenueShareData(
     writer: "Writer/Composer",
     vocalist: "Vocalist",
   }
-  const artistRoleDescription = roleDescriptions[artistCollaborator.roleInSong] || artistCollaborator.roleInSong
+  const collaboratorRoleDescription = roleDescriptions[artistCollaborator.roleInSong] || artistCollaborator.roleInSong
+
+  // Generate services description based on role
+  const servicesDescriptions: Record<string, string> = {
+    producer: "Production, arrangement, and creative direction services for the Recording",
+    musician: "Instrumental performance services for the Recording",
+    vocalist: "Vocal performance services for the Recording",
+    artist: "Lead performance and creative input for the Recording",
+    writer: "Songwriting and composition services for the Recording",
+  }
+  const servicesDescription = servicesDescriptions[artistCollaborator.roleInSong] || "Services as described in this Agreement"
+
+  // Generate credit wording based on role
+  const creditWordings: Record<string, string> = {
+    producer: `Produced by ${artistFullName}`,
+    musician: `Instrumental performance by ${artistFullName}`,
+    vocalist: `Vocals by ${artistFullName}`,
+    artist: `Featuring ${artistFullName}`,
+    writer: `Written by ${artistFullName}`,
+  }
+  const creditWording = creditWordings[artistCollaborator.roleInSong] || artistFullName
+
+  // Special terms (can be customized per contract if needed)
+  const specialTerms = song.notes || "None"
 
   return {
     // Logo
@@ -240,7 +273,17 @@ export async function buildMasterRevenueShareData(
     // In-kind services
     inKindServices,
 
-    // Template compatibility fields (for master revenue share template)
+    // Template compatibility fields (for master revenue share template - NEW VARIABLES)
+    collaborator_full_name: artistFullName,
+    collaborator_address: artistCollaborator.collaborator.address || undefined,
+    collaborator_share_percentage: masterShare.toFixed(2),
+    collaborator_role: collaboratorRole,
+    collaborator_role_description: collaboratorRoleDescription,
+    services_description: servicesDescription,
+    credit_wording: creditWording,
+    special_terms: specialTerms,
+    
+    // Legacy fields (keep for backward compatibility)
     artist_full_name: artistFullName,
     artist_address: artistCollaborator.collaborator.address || undefined,
     effective_date: effectiveDate,
@@ -250,7 +293,7 @@ export async function buildMasterRevenueShareData(
     song_title: song.title,
     song_isrc: song.isrcCode || null,
     artist_share_percentage: masterShare.toFixed(2),
-    artist_role_description: artistRoleDescription,
+    artist_role_description: collaboratorRoleDescription,
     estimated_label_investment: inKindServices?.totalValue || 0,
     additional_notes: song.notes || null,
     studio_value: inKindServices?.studioValue || 0,
@@ -260,9 +303,7 @@ export async function buildMasterRevenueShareData(
     total_value: inKindServices?.totalValue || 0,
     publisher_manager_name: config.publisher.managerName,
     publisher_manager_title: config.publisher.managerTitle,
-    // Role for conditional template rendering
-    collaborator_role: artistCollaborator.roleInSong,
-    // Role flags for template conditionals
+    // Role flags for template conditionals (legacy)
     is_musician: artistCollaborator.roleInSong === "musician",
     is_artist: artistCollaborator.roleInSong === "artist",
     is_producer: artistCollaborator.roleInSong === "producer",

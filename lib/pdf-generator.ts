@@ -91,6 +91,14 @@ export interface ContractData {
   artist_role_description?: string
   estimated_label_investment?: number
   additional_notes?: string | null
+  // New fields for refactored master revenue share template
+  collaborator_full_name?: string
+  collaborator_address?: string | null
+  collaborator_share_percentage?: string
+  collaborator_role_description?: string
+  services_description?: string
+  credit_wording?: string
+  special_terms?: string
 }
 
 export function generateContractHTML(data: ContractData): string {
