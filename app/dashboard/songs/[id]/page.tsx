@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { PublishingSplitEditor } from "@/components/splits/PublishingSplitEditor"
 import { MasterSplitEditor } from "@/components/splits/MasterSplitEditor"
 import { SplitPieChart } from "@/components/charts/SplitPieChart"
@@ -47,6 +48,7 @@ interface Song {
       role?: string
       publishingEligible?: boolean
       masterEligible?: boolean
+      capableRoles?: CollaboratorRole[]
     }
     publishingOwnership: number | null
     masterOwnership: number | null
@@ -71,6 +73,8 @@ export default function SongDetailPage() {
   const [loading, setLoading] = useState(true)
   const [deleting, setDeleting] = useState(false)
   const [deletingCollaboratorId, setDeletingCollaboratorId] = useState<string | null>(null)
+  const [editingRoleId, setEditingRoleId] = useState<string | null>(null)
+  const [updatingRoleId, setUpdatingRoleId] = useState<string | null>(null)
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
   const [editFormData, setEditFormData] = useState({
@@ -355,6 +359,40 @@ export default function SongDetailPage() {
       alert(`An unexpected error occurred while ${draft ? 'creating the draft' : 'sending the contract'}.`)
     } finally {
       setGeneratingContractId(null)
+    }
+  }
+
+  const handleUpdateRole = async (songCollaboratorId: string, newRole: CollaboratorRole) => {
+    if (!song) return
+
+    setUpdatingRoleId(songCollaboratorId)
+    try {
+      const response = await fetch(
+        `/api/songs/${song.id}/collaborators?songCollaboratorId=${songCollaboratorId}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            roleInSong: newRole,
+          }),
+        }
+      )
+
+      if (response.ok) {
+        setEditingRoleId(null)
+        await fetchSong()
+        await fetchContracts(song.id)
+      } else {
+        const errorData = await response.json()
+        alert(`Error: ${errorData.error || "Failed to update role"}`)
+      }
+    } catch (error) {
+      console.error("Error updating role:", error)
+      alert("Failed to update role")
+    } finally {
+      setUpdatingRoleId(null)
     }
   }
 
@@ -1085,11 +1123,18 @@ export default function SongDetailPage() {
                         const publishing = sc.publishingOwnership ? parseFloat(sc.publishingOwnership.toString()) : 0
                         const isCurrentUser = sc.collaborator.id === session?.user?.id
                         const collaboratorName = [sc.collaborator.firstName, sc.collaborator.middleName, sc.collaborator.lastName].filter(Boolean).join(" ")
-                        const roleLabel = sc.roleInSong === "writer" ? "Writer" : 
-                                         sc.roleInSong === "producer" ? "Producer" :
-                                         sc.roleInSong === "musician" ? "Musician" :
-                                         sc.roleInSong === "artist" ? "Artist" :
-                                         sc.roleInSong === "label" ? "Label" : sc.roleInSong
+                        const roleLabels: Record<CollaboratorRole, string> = {
+                          writer: "Writer",
+                          producer: "Producer",
+                          musician: "Musician",
+                          artist: "Artist",
+                          vocalist: "Vocalist",
+                          label: "Label",
+                        }
+                        const roleLabel = roleLabels[sc.roleInSong as CollaboratorRole] || sc.roleInSong
+                        const availableRoles = sc.collaborator.capableRoles || []
+                        const isEditingRole = editingRoleId === sc.id
+                        const isUpdatingRole = updatingRoleId === sc.id
                         const contractType: ContractType = "songwriter_publishing"
                         const isGenerating = generatingContractId === `${sc.id}-${contractType}`
                         const contractStatus = getContractStatus(sc.id, contractType)
@@ -1104,8 +1149,57 @@ export default function SongDetailPage() {
                           >
                             <div className="flex-1">
                               <div className="font-medium">{collaboratorName}</div>
-                              <div className="text-sm text-muted-foreground">
-                                {canSeeAllShares && `${roleLabel} • `}Publishing: {publishing.toFixed(2)}%
+                              <div className="text-sm text-muted-foreground flex items-center gap-2">
+                                {canSeeAllShares && (
+                                  <>
+                                    {isAdmin && !isEditingRole ? (
+                                      <div className="flex items-center gap-2">
+                                        <span>{roleLabel}</span>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="h-6 px-2 text-xs"
+                                          onClick={() => setEditingRoleId(sc.id)}
+                                          disabled={isUpdatingRole}
+                                        >
+                                          Edit
+                                        </Button>
+                                      </div>
+                                    ) : isAdmin && isEditingRole ? (
+                                      <div className="flex items-center gap-2">
+                                        <Select
+                                          value={sc.roleInSong}
+                                          onValueChange={(value) => handleUpdateRole(sc.id, value as CollaboratorRole)}
+                                          disabled={isUpdatingRole}
+                                        >
+                                          <SelectTrigger className="h-7 w-32 text-xs">
+                                            <SelectValue />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            {[...availableRoles, "label"].map((role) => (
+                                              <SelectItem key={role} value={role}>
+                                                {roleLabels[role as CollaboratorRole] || role}
+                                              </SelectItem>
+                                            ))}
+                                          </SelectContent>
+                                        </Select>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="h-6 px-2 text-xs"
+                                          onClick={() => setEditingRoleId(null)}
+                                          disabled={isUpdatingRole}
+                                        >
+                                          Cancel
+                                        </Button>
+                                      </div>
+                                    ) : (
+                                      <span>{roleLabel}</span>
+                                    )}
+                                    <span>•</span>
+                                  </>
+                                )}
+                                <span>Publishing: {publishing.toFixed(2)}%</span>
                                 {contractStatus.status && (
                                   <span className={`ml-2 px-2 py-0.5 rounded text-xs ${
                                     isSigned 
@@ -1223,11 +1317,18 @@ export default function SongDetailPage() {
                         const master = sc.masterOwnership ? parseFloat(sc.masterOwnership.toString()) : 0
                         const isCurrentUser = sc.collaborator.id === session?.user?.id
                         const collaboratorName = [sc.collaborator.firstName, sc.collaborator.middleName, sc.collaborator.lastName].filter(Boolean).join(" ")
-                        const roleLabel = sc.roleInSong === "writer" ? "Writer" : 
-                                         sc.roleInSong === "producer" ? "Producer" :
-                                         sc.roleInSong === "musician" ? "Musician" :
-                                         sc.roleInSong === "artist" ? "Artist" :
-                                         sc.roleInSong === "label" ? "Label" : sc.roleInSong
+                        const roleLabels: Record<CollaboratorRole, string> = {
+                          writer: "Writer",
+                          producer: "Producer",
+                          musician: "Musician",
+                          artist: "Artist",
+                          vocalist: "Vocalist",
+                          label: "Label",
+                        }
+                        const roleLabel = roleLabels[sc.roleInSong as CollaboratorRole] || sc.roleInSong
+                        const availableRoles = sc.collaborator.capableRoles || []
+                        const isEditingRole = editingRoleId === sc.id
+                        const isUpdatingRole = updatingRoleId === sc.id
                         const contractType: ContractType = "digital_master_only"
                         const isGenerating = generatingContractId === `${sc.id}-${contractType}`
                         const contractStatus = getContractStatus(sc.id, contractType)
@@ -1242,8 +1343,57 @@ export default function SongDetailPage() {
                           >
                             <div className="flex-1">
                               <div className="font-medium">{collaboratorName}</div>
-                              <div className="text-sm text-muted-foreground">
-                                {canSeeAllShares && `${roleLabel} • `}Master Revenue: {master.toFixed(2)}%
+                              <div className="text-sm text-muted-foreground flex items-center gap-2">
+                                {canSeeAllShares && (
+                                  <>
+                                    {isAdmin && !isEditingRole ? (
+                                      <div className="flex items-center gap-2">
+                                        <span>{roleLabel}</span>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="h-6 px-2 text-xs"
+                                          onClick={() => setEditingRoleId(sc.id)}
+                                          disabled={isUpdatingRole}
+                                        >
+                                          Edit
+                                        </Button>
+                                      </div>
+                                    ) : isAdmin && isEditingRole ? (
+                                      <div className="flex items-center gap-2">
+                                        <Select
+                                          value={sc.roleInSong}
+                                          onValueChange={(value) => handleUpdateRole(sc.id, value as CollaboratorRole)}
+                                          disabled={isUpdatingRole}
+                                        >
+                                          <SelectTrigger className="h-7 w-32 text-xs">
+                                            <SelectValue />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            {[...availableRoles, "label"].map((role) => (
+                                              <SelectItem key={role} value={role}>
+                                                {roleLabels[role as CollaboratorRole] || role}
+                                              </SelectItem>
+                                            ))}
+                                          </SelectContent>
+                                        </Select>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="h-6 px-2 text-xs"
+                                          onClick={() => setEditingRoleId(null)}
+                                          disabled={isUpdatingRole}
+                                        >
+                                          Cancel
+                                        </Button>
+                                      </div>
+                                    ) : (
+                                      <span>{roleLabel}</span>
+                                    )}
+                                    <span>•</span>
+                                  </>
+                                )}
+                                <span>Master Revenue: {master.toFixed(2)}%</span>
                                 {contractStatus.status && (
                                   <span className={`ml-2 px-2 py-0.5 rounded text-xs ${
                                     isSigned 

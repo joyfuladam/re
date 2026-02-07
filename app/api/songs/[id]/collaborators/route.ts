@@ -201,3 +201,95 @@ export async function DELETE(
     )
   }
 }
+
+const updateCollaboratorRoleSchema = z.object({
+  roleInSong: z.enum(["musician", "writer", "producer", "artist", "vocalist", "label"]),
+})
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions)
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    // Only admins can update collaborator roles
+    const userIsAdmin = await isAdmin(session)
+    if (!userIsAdmin) {
+      return NextResponse.json(
+        { error: "Forbidden: Only admins can update collaborator roles" },
+        { status: 403 }
+      )
+    }
+
+    // Get songCollaboratorId from query params
+    const { searchParams } = new URL(request.url)
+    const songCollaboratorId = searchParams.get("songCollaboratorId")
+
+    if (!songCollaboratorId) {
+      return NextResponse.json(
+        { error: "songCollaboratorId is required" },
+        { status: 400 }
+      )
+    }
+
+    const body = await request.json()
+    const validated = updateCollaboratorRoleSchema.parse(body)
+
+    // Verify the song collaborator exists and belongs to this song
+    const songCollaborator = await db.songCollaborator.findUnique({
+      where: { id: songCollaboratorId },
+      include: {
+        collaborator: true,
+      },
+    })
+
+    if (!songCollaborator) {
+      return NextResponse.json(
+        { error: "Song collaborator not found" },
+        { status: 404 }
+      )
+    }
+
+    if (songCollaborator.songId !== params.id) {
+      return NextResponse.json(
+        { error: "Song collaborator does not belong to this song" },
+        { status: 400 }
+      )
+    }
+
+    // Verify that the collaborator is capable of the requested role
+    // Label is always allowed (system role), but other roles must be in capableRoles
+    if (validated.roleInSong !== "label" && !songCollaborator.collaborator.capableRoles.includes(validated.roleInSong)) {
+      return NextResponse.json(
+        { error: `This collaborator is not capable of the role "${validated.roleInSong}". Their capable roles are: ${songCollaborator.collaborator.capableRoles.join(", ")}` },
+        { status: 400 }
+      )
+    }
+
+    // Update the role
+    const updated = await db.songCollaborator.update({
+      where: { id: songCollaboratorId },
+      data: {
+        roleInSong: validated.roleInSong,
+      },
+      include: {
+        collaborator: true,
+      },
+    })
+
+    return NextResponse.json(updated)
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: error.errors }, { status: 400 })
+    }
+    console.error("Error updating song collaborator role:", error)
+    return NextResponse.json(
+      { error: "Failed to update song collaborator role" },
+      { status: 500 }
+    )
+  }
+}
