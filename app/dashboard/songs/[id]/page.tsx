@@ -2199,22 +2199,24 @@ export default function SongDetailPage() {
             <CardHeader>
               <CardTitle>Publishing Splits</CardTitle>
               <CardDescription>
-                {song.publishingLocked
+                {song?.publishingLocked
                   ? "Publishing splits are locked"
                   : "Set publishing ownership percentages (must total 100%)"}
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <PublishingSplitEditor
-                songId={song.id}
-                songCollaborators={song.songCollaborators.map(sc => ({
-                  ...sc,
-                  roleInSong: sc.roleInSong as CollaboratorRole
-                })) as any}
-                songPublishingEntities={song.songPublishingEntities}
-                isLocked={song.publishingLocked}
-                onUpdate={fetchSong}
-              />
+              {song && (
+                <PublishingSplitEditor
+                  songId={song.id}
+                  songCollaborators={song.songCollaborators.map(sc => ({
+                    ...sc,
+                    roleInSong: sc.roleInSong as CollaboratorRole
+                  })) as any}
+                  songPublishingEntities={song.songPublishingEntities}
+                  isLocked={song.publishingLocked}
+                  onUpdate={fetchSong}
+                />
+              )}
             </CardContent>
           </Card>
 
@@ -2222,25 +2224,27 @@ export default function SongDetailPage() {
             <CardHeader>
               <CardTitle>Master Revenue Shares</CardTitle>
               <CardDescription>
-                {!song.publishingLocked
+                {!song?.publishingLocked
                   ? "Publishing splits must be locked first"
-                  : song.masterLocked
+                  : song?.masterLocked
                   ? "Master revenue shares are locked"
                   : "Set master ownership percentages (must total 100%)"}
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <MasterSplitEditor
-                songId={song.id}
-                songCollaborators={song.songCollaborators.map(sc => ({
-                  ...sc,
-                  roleInSong: sc.roleInSong as CollaboratorRole
-                })) as any}
-                labelMasterShare={song.labelMasterShare}
-                isLocked={song.masterLocked}
-                publishingLocked={song.publishingLocked}
-                onUpdate={fetchSong}
-              />
+              {song && (
+                <MasterSplitEditor
+                  songId={song.id}
+                  songCollaborators={song.songCollaborators.map(sc => ({
+                    ...sc,
+                    roleInSong: sc.roleInSong as CollaboratorRole
+                  })) as any}
+                  labelMasterShare={song.labelMasterShare}
+                  isLocked={song.masterLocked}
+                  publishingLocked={song.publishingLocked}
+                  onUpdate={fetchSong}
+                />
+              )}
             </CardContent>
           </Card>
         </div>
