@@ -1,8 +1,5 @@
 import { Resend } from 'resend'
 
-// Initialize Resend with API key
-const resend = new Resend(process.env.RESEND_API_KEY)
-
 interface SendEmailOptions {
   to: string
   subject: string
@@ -12,6 +9,14 @@ interface SendEmailOptions {
 
 export async function sendEmail({ to, subject, html, text }: SendEmailOptions) {
   try {
+    // Initialize Resend lazily to avoid build-time errors
+    const apiKey = process.env.RESEND_API_KEY
+    if (!apiKey) {
+      throw new Error('RESEND_API_KEY environment variable is not set')
+    }
+    
+    const resend = new Resend(apiKey)
+    
     // Determine the from email based on whether domain is verified
     // If RESEND_FROM_EMAIL is set, use it (your verified domain)
     // Otherwise, use Resend's sandbox domain for testing
