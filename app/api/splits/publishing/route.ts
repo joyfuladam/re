@@ -75,7 +75,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true })
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.errors }, { status: 400 })
+      return NextResponse.json({ 
+        error: "Validation failed",
+        details: error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join("; ")
+      }, { status: 400 })
     }
     console.error("Error updating publishing splits:", error)
     return NextResponse.json(
@@ -194,7 +197,10 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ success: true })
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.errors }, { status: 400 })
+      return NextResponse.json({ 
+        error: "Validation failed",
+        details: error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join("; ")
+      }, { status: 400 })
     }
     console.error("Error locking publishing splits:", error)
     return NextResponse.json(

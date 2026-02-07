@@ -441,8 +441,13 @@ export default function SongDetailPage() {
         await fetchSong()
         setEditingPublishingShare(null)
       } else {
-        const error = await response.json()
-        alert(error.error || error.details || "Failed to update publishing share")
+        const errorData = await response.json()
+        const errorMessage = typeof errorData.error === 'string' 
+          ? errorData.error 
+          : typeof errorData.details === 'string'
+          ? errorData.details
+          : "Failed to update publishing share"
+        alert(errorMessage)
       }
     } catch (error) {
       console.error("Error updating publishing share:", error)
@@ -492,8 +497,13 @@ export default function SongDetailPage() {
         await fetchSong()
         setEditingMasterShare(null)
       } else {
-        const error = await response.json()
-        alert(error.error || error.details || "Failed to update master share")
+        const errorData = await response.json()
+        const errorMessage = typeof errorData.error === 'string' 
+          ? errorData.error 
+          : typeof errorData.details === 'string'
+          ? errorData.details
+          : "Failed to update master share"
+        alert(errorMessage)
       }
     } catch (error) {
       console.error("Error updating master share:", error)
@@ -515,8 +525,13 @@ export default function SongDetailPage() {
       if (response.ok) {
         await fetchSong()
       } else {
-        const error = await response.json()
-        alert(error.error || "Failed to lock publishing splits")
+        const errorData = await response.json()
+        const errorMessage = typeof errorData.error === 'string' 
+          ? errorData.error 
+          : typeof errorData.details === 'string'
+          ? errorData.details
+          : "Failed to lock publishing splits"
+        alert(errorMessage)
       }
     } catch (error) {
       console.error("Error locking publishing splits:", error)
@@ -538,8 +553,13 @@ export default function SongDetailPage() {
       if (response.ok) {
         await fetchSong()
       } else {
-        const error = await response.json()
-        alert(error.error || "Failed to unlock publishing splits")
+        const errorData = await response.json()
+        const errorMessage = typeof errorData.error === 'string' 
+          ? errorData.error 
+          : typeof errorData.details === 'string'
+          ? errorData.details
+          : "Failed to unlock publishing splits"
+        alert(errorMessage)
       }
     } catch (error) {
       console.error("Error unlocking publishing splits:", error)
@@ -561,8 +581,13 @@ export default function SongDetailPage() {
       if (response.ok) {
         await fetchSong()
       } else {
-        const error = await response.json()
-        alert(error.error || "Failed to lock master splits")
+        const errorData = await response.json()
+        const errorMessage = typeof errorData.error === 'string' 
+          ? errorData.error 
+          : typeof errorData.details === 'string'
+          ? errorData.details
+          : "Failed to lock master splits"
+        alert(errorMessage)
       }
     } catch (error) {
       console.error("Error locking master splits:", error)
@@ -584,8 +609,13 @@ export default function SongDetailPage() {
       if (response.ok) {
         await fetchSong()
       } else {
-        const error = await response.json()
-        alert(error.error || "Failed to unlock master splits")
+        const errorData = await response.json()
+        const errorMessage = typeof errorData.error === 'string' 
+          ? errorData.error 
+          : typeof errorData.details === 'string'
+          ? errorData.details
+          : "Failed to unlock master splits"
+        alert(errorMessage)
       }
     } catch (error) {
       console.error("Error unlocking master splits:", error)
@@ -639,8 +669,13 @@ export default function SongDetailPage() {
         await fetchSong()
         setEditingRiverEmberPublishing(false)
       } else {
-        const error = await response.json()
-        alert(error.error || error.details || "Failed to update River & Ember publishing share")
+        const errorData = await response.json()
+        const errorMessage = typeof errorData.error === 'string' 
+          ? errorData.error 
+          : typeof errorData.details === 'string'
+          ? errorData.details
+          : "Failed to update River & Ember publishing share"
+        alert(errorMessage)
       }
     } catch (error) {
       console.error("Error updating River & Ember publishing share:", error)
@@ -674,8 +709,13 @@ export default function SongDetailPage() {
         await fetchSong()
         setEditingRiverEmberMaster(false)
       } else {
-        const error = await response.json()
-        alert(error.error || "Failed to update River & Ember master share")
+        const errorData = await response.json()
+        const errorMessage = typeof errorData.error === 'string' 
+          ? errorData.error 
+          : typeof errorData.details === 'string'
+          ? errorData.details
+          : "Failed to update River & Ember master share"
+        alert(errorMessage)
       }
     } catch (error) {
       console.error("Error updating River & Ember master share:", error)

@@ -130,12 +130,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true })
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.errors }, { status: 400 })
+      return NextResponse.json({ 
+        error: "Validation failed",
+        details: error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join("; ")
+      }, { status: 400 })
     }
     console.error("Error updating master splits:", error)
     const errorMessage = error instanceof Error ? error.message : "Unknown error"
-    const errorStack = error instanceof Error ? error.stack : undefined
-    console.error("Error details:", { errorMessage, errorStack })
     return NextResponse.json(
       { 
         error: "Failed to update master splits",
@@ -247,7 +248,10 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ success: true })
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.errors }, { status: 400 })
+      return NextResponse.json({ 
+        error: "Validation failed",
+        details: error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join("; ")
+      }, { status: 400 })
     }
     console.error("Error locking master splits:", error)
     return NextResponse.json(
