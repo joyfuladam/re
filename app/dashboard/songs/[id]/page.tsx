@@ -80,6 +80,11 @@ export default function SongDetailPage() {
   const [editingMasterShare, setEditingMasterShare] = useState<string | null>(null)
   const [publishingShareValue, setPublishingShareValue] = useState<string>("")
   const [masterShareValue, setMasterShareValue] = useState<string>("")
+  const [editingRiverEmberPublishing, setEditingRiverEmberPublishing] = useState(false)
+  const [editingRiverEmberMaster, setEditingRiverEmberMaster] = useState(false)
+  const [riverEmberPublishingValue, setRiverEmberPublishingValue] = useState<string>("")
+  const [riverEmberMasterValue, setRiverEmberMasterValue] = useState<string>("")
+  const [availablePublishingEntities, setAvailablePublishingEntities] = useState<Array<{id: string, name: string}>>([])
   const [updatingSplits, setUpdatingSplits] = useState(false)
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -590,6 +595,96 @@ export default function SongDetailPage() {
     }
   }
 
+  const handleUpdateRiverEmberPublishing = async (newPercentage: number) => {
+    if (!song) return
+    if (song.publishingLocked) {
+      alert("Publishing splits are locked and cannot be modified")
+      return
+    }
+
+    setUpdatingSplits(true)
+    try {
+      // Get the River & Ember publishing entity (should be internal)
+      const riverEmberEntity = availablePublishingEntities.find(e => e.name === "River & Ember Publishing" || e.name.includes("River") && e.name.includes("Ember"))
+      if (!riverEmberEntity) {
+        alert("River & Ember Publishing entity not found. Please create it first.")
+        setUpdatingSplits(false)
+        return
+      }
+
+      // Get all publishing entities for this song
+      const currentEntities = song.songPublishingEntities || []
+      const riverEmberEntityExists = currentEntities.find(spe => spe.publishingEntity.id === riverEmberEntity.id)
+
+      // Build entities array - if River & Ember exists, update it; otherwise add it
+      const entities = currentEntities
+        .filter(spe => spe.publishingEntity.id !== riverEmberEntity.id)
+        .map(spe => ({
+          publishingEntityId: spe.publishingEntity.id,
+          ownershipPercentage: spe.ownershipPercentage ? parseFloat(spe.ownershipPercentage.toString()) : 0,
+        }))
+
+      // Add or update River & Ember
+      entities.push({
+        publishingEntityId: riverEmberEntity.id,
+        ownershipPercentage: newPercentage,
+      })
+
+      const response = await fetch(`/api/songs/${song.id}/publishing-entities`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ entities }),
+      })
+      if (response.ok) {
+        await fetchSong()
+        setEditingRiverEmberPublishing(false)
+      } else {
+        const error = await response.json()
+        alert(error.error || error.details || "Failed to update River & Ember publishing share")
+      }
+    } catch (error) {
+      console.error("Error updating River & Ember publishing share:", error)
+      alert("Failed to update River & Ember publishing share")
+    } finally {
+      setUpdatingSplits(false)
+    }
+  }
+
+  const handleUpdateRiverEmberMaster = async (newPercentage: number) => {
+    if (!song) return
+    if (!song.publishingLocked) {
+      alert("Publishing splits must be locked before master splits can be set")
+      return
+    }
+    if (song.masterLocked) {
+      alert("Master splits are locked and cannot be modified")
+      return
+    }
+
+    setUpdatingSplits(true)
+    try {
+      const response = await fetch(`/api/songs/${song.id}/label-share`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          labelMasterShare: newPercentage,
+        }),
+      })
+      if (response.ok) {
+        await fetchSong()
+        setEditingRiverEmberMaster(false)
+      } else {
+        const error = await response.json()
+        alert(error.error || "Failed to update River & Ember master share")
+      }
+    } catch (error) {
+      console.error("Error updating River & Ember master share:", error)
+      alert("Failed to update River & Ember master share")
+    } finally {
+      setUpdatingSplits(false)
+    }
+  }
+
   const handleDeleteCollaborator = async (songCollaboratorId: string, collaboratorName: string) => {
     if (!song) return
     
@@ -634,6 +729,24 @@ export default function SongDetailPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params?.id])
+
+  // Fetch available publishing entities
+  useEffect(() => {
+    const fetchEntities = async () => {
+      try {
+        const response = await fetch("/api/publishing-entities")
+        if (response.ok) {
+          const data = await response.json()
+          setAvailablePublishingEntities(data)
+        }
+      } catch (error) {
+        console.error("Error fetching publishing entities:", error)
+      }
+    }
+    if (isAdmin) {
+      fetchEntities()
+    }
+  }, [isAdmin])
 
   const fetchSong = async () => {
     // #region agent log
@@ -1280,10 +1393,27 @@ export default function SongDetailPage() {
                           const publishing = sc.publishingOwnership ? parseFloat(sc.publishingOwnership.toString()) : 0
                           return sum + publishing
                         }, 0)
-                        const entityTotal = (song.songPublishingEntities || []).reduce((sum, spe) => {
-                          const percentage = spe.ownershipPercentage ? parseFloat(spe.ownershipPercentage.toString()) : 0
-                          return sum + percentage
-                        }, 0)
+                        const entityTotal = (() => {
+                          // If editing River & Ember publishing share, use editing value
+                          if (editingRiverEmberPublishing && riverEmberPublishingValue !== "") {
+                            const editingValue = parseFloat(riverEmberPublishingValue) || 0
+                            // Get other entities (non-River & Ember)
+                            const otherEntities = (song.songPublishingEntities || []).filter(spe => 
+                              spe.publishingEntity.name !== "River & Ember Publishing" && 
+                              !(spe.publishingEntity.name.includes("River") && spe.publishingEntity.name.includes("Ember"))
+                            )
+                            const otherTotal = otherEntities.reduce((sum, spe) => {
+                              const percentage = spe.ownershipPercentage ? parseFloat(spe.ownershipPercentage.toString()) : 0
+                              return sum + percentage
+                            }, 0)
+                            return otherTotal + editingValue
+                          }
+                          // Otherwise use saved values
+                          return (song.songPublishingEntities || []).reduce((sum, spe) => {
+                            const percentage = spe.ownershipPercentage ? parseFloat(spe.ownershipPercentage.toString()) : 0
+                            return sum + percentage
+                          }, 0)
+                        })()
                         const total = collaboratorTotal + entityTotal
                         const isValid = Math.abs(collaboratorTotal - 50) < 0.01 && Math.abs(entityTotal - 50) < 0.01
                         return (
@@ -1293,7 +1423,7 @@ export default function SongDetailPage() {
                               {total.toFixed(2)}%
                             </span>
                             <span className="text-muted-foreground">
-                              (Writer: {collaboratorTotal.toFixed(2)}% • Publisher: {entityTotal.toFixed(2)}%)
+                              (Writer: {collaboratorTotal.toFixed(2)}% • River & Ember: {entityTotal.toFixed(2)}%)
                             </span>
                           </div>
                         )
@@ -1547,6 +1677,92 @@ export default function SongDetailPage() {
                         )
                       })}
                   </div>
+                  
+                  {/* River & Ember Publishing Share */}
+                  {isAdmin && !song.publishingLocked && (
+                    <div className="mt-4 pt-4 border-t">
+                      <div className="flex items-center justify-between p-3 border rounded">
+                        <div className="flex-1">
+                          <div className="font-medium">River & Ember Share</div>
+                          <div className="text-sm text-muted-foreground flex items-center gap-2">
+                            {!editingRiverEmberPublishing ? (
+                              <>
+                                <span>Publishing: {(() => {
+                                  const riverEmberEntity = song.songPublishingEntities?.find(spe => 
+                                    spe.publishingEntity.name === "River & Ember Publishing" || 
+                                    spe.publishingEntity.name.includes("River") && spe.publishingEntity.name.includes("Ember")
+                                  )
+                                  return riverEmberEntity?.ownershipPercentage 
+                                    ? parseFloat(riverEmberEntity.ownershipPercentage.toString()).toFixed(2)
+                                    : "0.00"
+                                })()}%</span>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 px-2 text-xs"
+                                  onClick={() => {
+                                    setEditingRiverEmberPublishing(true)
+                                    const riverEmberEntity = song.songPublishingEntities?.find(spe => 
+                                      spe.publishingEntity.name === "River & Ember Publishing" || 
+                                      spe.publishingEntity.name.includes("River") && spe.publishingEntity.name.includes("Ember")
+                                    )
+                                    setRiverEmberPublishingValue(
+                                      riverEmberEntity?.ownershipPercentage 
+                                        ? parseFloat(riverEmberEntity.ownershipPercentage.toString()).toFixed(2)
+                                        : "50.00"
+                                    )
+                                  }}
+                                  disabled={updatingSplits}
+                                >
+                                  Edit
+                                </Button>
+                              </>
+                            ) : (
+                              <div className="flex items-center gap-2">
+                                <span>Publishing:</span>
+                                <Input
+                                  type="number"
+                                  step="0.01"
+                                  min="0"
+                                  max="100"
+                                  value={riverEmberPublishingValue}
+                                  onChange={(e) => setRiverEmberPublishingValue(e.target.value)}
+                                  className="h-6 w-16 text-xs"
+                                  autoFocus
+                                />
+                                <span>%</span>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 px-1 text-xs"
+                                  onClick={() => {
+                                    const value = parseFloat(riverEmberPublishingValue)
+                                    if (!isNaN(value) && value >= 0 && value <= 100) {
+                                      handleUpdateRiverEmberPublishing(value)
+                                    } else {
+                                      alert("Please enter a valid percentage between 0 and 100")
+                                    }
+                                  }}
+                                  disabled={updatingSplits}
+                                >
+                                  Save
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 px-1 text-xs"
+                                  onClick={() => setEditingRiverEmberPublishing(false)}
+                                  disabled={updatingSplits}
+                                >
+                                  Cancel
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -1597,7 +1813,14 @@ export default function SongDetailPage() {
                           const master = sc.masterOwnership ? parseFloat(sc.masterOwnership.toString()) : 0
                           return sum + master
                         }, 0)
-                        const labelShare = song.labelMasterShare ? parseFloat(song.labelMasterShare.toString()) : 0
+                        const labelShare = (() => {
+                          // If editing River & Ember master share, use editing value
+                          if (editingRiverEmberMaster && riverEmberMasterValue !== "") {
+                            return parseFloat(riverEmberMasterValue) || 0
+                          }
+                          // Otherwise use saved value
+                          return song.labelMasterShare ? parseFloat(song.labelMasterShare.toString()) : 0
+                        })()
                         const total = collaboratorTotal + labelShare
                         const isValid = Math.abs(total - 100) < 0.01
                         return (
@@ -1607,7 +1830,7 @@ export default function SongDetailPage() {
                               {total.toFixed(2)}%
                             </span>
                             <span className="text-muted-foreground">
-                              (Collaborators: {collaboratorTotal.toFixed(2)}% • Label: {labelShare.toFixed(2)}%)
+                              (Collaborators: {collaboratorTotal.toFixed(2)}% • River & Ember: {labelShare.toFixed(2)}%)
                             </span>
                           </div>
                         )
@@ -1861,6 +2084,80 @@ export default function SongDetailPage() {
                         )
                       })}
                   </div>
+                  
+                  {/* River & Ember Master Share */}
+                  {isAdmin && song.publishingLocked && !song.masterLocked && (
+                    <div className="mt-4 pt-4 border-t">
+                      <div className="flex items-center justify-between p-3 border rounded">
+                        <div className="flex-1">
+                          <div className="font-medium">River & Ember Share</div>
+                          <div className="text-sm text-muted-foreground flex items-center gap-2">
+                            {!editingRiverEmberMaster ? (
+                              <>
+                                <span>Master Revenue: {song.labelMasterShare ? parseFloat(song.labelMasterShare.toString()).toFixed(2) : "0.00"}%</span>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 px-2 text-xs"
+                                  onClick={() => {
+                                    setEditingRiverEmberMaster(true)
+                                    setRiverEmberMasterValue(
+                                      song.labelMasterShare 
+                                        ? parseFloat(song.labelMasterShare.toString()).toFixed(2)
+                                        : "0.00"
+                                    )
+                                  }}
+                                  disabled={updatingSplits}
+                                >
+                                  Edit
+                                </Button>
+                              </>
+                            ) : (
+                              <div className="flex items-center gap-2">
+                                <span>Master Revenue:</span>
+                                <Input
+                                  type="number"
+                                  step="0.01"
+                                  min="0"
+                                  max="100"
+                                  value={riverEmberMasterValue}
+                                  onChange={(e) => setRiverEmberMasterValue(e.target.value)}
+                                  className="h-6 w-16 text-xs"
+                                  autoFocus
+                                />
+                                <span>%</span>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 px-1 text-xs"
+                                  onClick={() => {
+                                    const value = parseFloat(riverEmberMasterValue)
+                                    if (!isNaN(value) && value >= 0 && value <= 100) {
+                                      handleUpdateRiverEmberMaster(value)
+                                    } else {
+                                      alert("Please enter a valid percentage between 0 and 100")
+                                    }
+                                  }}
+                                  disabled={updatingSplits}
+                                >
+                                  Save
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 px-1 text-xs"
+                                  onClick={() => setEditingRiverEmberMaster(false)}
+                                  disabled={updatingSplits}
+                                >
+                                  Cancel
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
