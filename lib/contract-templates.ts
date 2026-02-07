@@ -109,7 +109,7 @@ Collaborator shall **not** be entitled to any revenue from the Master outside of
 
 4. **Publishing**
 
-<div class="indent">This Agreement covers **only master rights** and revenues. Publishing rights for the underlying musical composition(s) are governed by a separate Song-by-Song Publishing Assignment Agreement (if applicable). Collaborator is **not** eligible for master revenue share based on songwriting or composition contributions; such contributions are handled separately through publishing agreements and split sheets. Collaborator retains full control of publishing rights in non-Label songs. This Agreement pertains solely to Master rights and revenues.</div>
+<div class="indent">This Agreement covers **only master rights** and revenues. Publishing rights for the underlying musical composition(s) are governed by a separate Song-by-Song Publishing Assignment Agreement (if applicable). Collaborator has **no right** to publishing revenue or ownership based on their performance or contribution to the Master under this Agreement. If Collaborator is also a songwriter on the underlying composition, Collaborator's publishing rights and shares (if any) are governed exclusively by a separate Publishing Assignment Agreement with River and Ember, and any publishing revenue or ownership shall be in accordance with the terms of that separate publishing agreement. Collaborator is **not** eligible for master revenue share based on songwriting or composition contributions; such contributions are handled separately through publishing agreements and split sheets. Collaborator retains full control of publishing rights in non-Label songs. This Agreement pertains solely to Master rights and revenues.</div>
 
 5. **Conduct Standards**
 
