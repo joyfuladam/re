@@ -79,7 +79,7 @@ export async function GET(
         status: true,
         createdAt: true,
         updatedAt: true,
-        // Explicitly exclude password field
+        password: true, // Include to check if it's set
       },
     })
 
@@ -92,8 +92,8 @@ export async function GET(
 
     // Remove role from response if user is not admin
     const response = isAdmin
-      ? collaborator
-      : { ...collaborator, role: undefined }
+      ? { ...collaborator, hasPassword: !!collaborator.password, password: undefined }
+      : { ...collaborator, role: undefined, hasPassword: !!collaborator.password, password: undefined }
 
     return NextResponse.json(response)
   } catch (error) {

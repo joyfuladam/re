@@ -35,6 +35,7 @@ interface Collaborator {
   spotifyArtistUrl: string | null
   notes: string | null
   status: string
+  hasPassword?: boolean
 }
 
 export default function CollaboratorDetailPage() {
@@ -283,7 +284,7 @@ export default function CollaboratorDetailPage() {
           <Link href="/dashboard/collaborators">
             <Button variant="outline">Back</Button>
           </Link>
-          {isAdmin && !editing && !collaborator.password && collaborator.email && (
+          {isAdmin && !editing && !collaborator.hasPassword && collaborator.email && (
             <Button 
               variant="secondary"
               onClick={handleSendWelcome}
