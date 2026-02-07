@@ -1947,7 +1947,7 @@ export default function SongDetailPage() {
                       })
 
                       // Define role order and labels
-                      const roleOrder: CollaboratorRole[] = ["producer", "artist", "musician", "vocalist"]
+                      const roleOrder: CollaboratorRole[] = ["producer", "artist", "musician", "vocalist"] as CollaboratorRole[]
                       const roleLabels: Record<CollaboratorRole, string> = {
                         writer: "Writer",
                         producer: "Producer",
