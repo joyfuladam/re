@@ -1704,8 +1704,8 @@ export default function SongDetailPage() {
                               )}
                             </div>
 
-                                  {/* Column 4: Contract Status and Buttons */}
-                                  <div className="flex gap-2 items-center justify-end flex-wrap p-3 border rounded min-w-0">
+                            {/* Column 4: Contract Status and Buttons */}
+                            <div className="flex gap-2 items-center justify-evenly flex-wrap p-3 border rounded min-w-0">
                                     {contractStatus.status && (
                                 <span className={`px-2 py-0.5 rounded text-xs whitespace-nowrap ${
                                   isSigned 
@@ -2191,8 +2191,8 @@ export default function SongDetailPage() {
                                     )}
                                   </div>
 
-                                  {/* Column 4: Contract Status and Buttons */}
-                                  <div className="flex gap-2 items-center justify-end flex-wrap p-3 border rounded min-w-0">
+                            {/* Column 4: Contract Status and Buttons */}
+                            <div className="flex gap-2 items-center justify-evenly flex-wrap p-3 border rounded min-w-0">
                                     {contractStatus.status && (
                                       <span className={`px-2 py-0.5 rounded text-xs whitespace-nowrap ${
                                         isSigned 
