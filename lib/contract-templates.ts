@@ -82,9 +82,9 @@ Date: <span style="color: white;">{{date:2:y}}</span><br>
 
 **Exhibit A: Compositions**
 
-| Title                  | Writers & Shares                              |
-|------------------------|-----------------------------------------------|
-{% for song in compositions %}| {{song.title}}         | {{song.writers}}                              |
+| Title                  | ISWC Code              | Writers & Shares                              |
+|------------------------|------------------------|-----------------------------------------------|
+{% for song in compositions %}| {{song.title}}         | {% if song.iswc %}{{song.iswc}}{% else %}ISWC CODE{% endif %} | {{song.writers}}                              |
 {% endfor %}
 
 `
@@ -166,6 +166,7 @@ Date: <span style="color: white;">{{date:2:y}}</span>
 | Detail                  | Information                              |
 |-------------------------|------------------------------------------|
 | Song Title             | {{song_title}}                           |
+| ISRC Code              | {% if song_isrc %}{{song_isrc}}{% else %}ISRC CODE{% endif %} |
 | Role                   | {{collaborator_role}} ({{collaborator_role_description}}) |
 | Specific Services / Contribution | {{services_description}} |
 | Revenue Share          | {{collaborator_share_percentage}}% of Net Receipts (digital streaming & downloads only) |

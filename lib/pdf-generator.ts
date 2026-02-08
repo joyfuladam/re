@@ -35,12 +35,14 @@ export interface ContractData {
     title: string
     writers: string // Formatted writer list with shares for THIS song
     isrc: string | null
+    iswc: string | null
     notes: string | null
   }
   compositions?: Array<{
     title: string
     writers: string
     isrc: string | null
+    iswc: string | null
     notes: string | null
   }>
 

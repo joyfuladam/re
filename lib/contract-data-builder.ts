@@ -60,6 +60,7 @@ export async function buildPublishingAssignmentData(
     title: song.title,
     writers: writersList,
     isrc: song.isrcCode || null,
+    iswc: song.iswcCode || null,
     notes: song.notes || null,
   }
 
