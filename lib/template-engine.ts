@@ -57,11 +57,14 @@ export function processConditionals(template: string, data: Record<string, any>)
     
     // Find the innermost conditional (one that doesn't contain another {% if %}
     // This regex matches {% if %}...{% endif %} blocks with optional equality comparison
-    // Supports: {% if var %} or {% if var == "value" %}
-    const ifRegex = /\{%\s*if\s+(\w+)(?:\s*==\s*"([^"]+)")?\s*%\}((?:(?!\{%\s*if).)*?)(?:\{%\s*else\s*%\}((?:(?!\{%\s*if).)*?))?\{%\s*endif\s*%\}/gs
+    // Supports: {% if var %} or {% if var == "value" %} or {% if object.property %}
+    const ifRegex = /\{%\s*if\s+([\w.]+)(?:\s*==\s*"([^"]+)")?\s*%\}((?:(?!\{%\s*if).)*?)(?:\{%\s*else\s*%\}((?:(?!\{%\s*if).)*?))?\{%\s*endif\s*%\}/gs
     
     result = result.replace(ifRegex, (match, condition, compareValue, ifBlock, elseBlock = "") => {
-      const conditionValue = data[condition]
+      // Handle dot notation (e.g., "song.iswc")
+      const conditionValue = condition.includes('.') 
+        ? condition.split('.').reduce((obj: any, prop: string) => (obj ? obj[prop] : undefined), data)
+        : data[condition]
       
       let isTrue: boolean
       if (compareValue !== undefined) {

@@ -1517,15 +1517,15 @@ export default function SongDetailPage() {
                         </div>
                       )}
                       <div className="space-y-2">
-                        {/* Header row - using grid to match column widths */}
-                        <div className="grid grid-cols-[auto_auto_auto_1fr] gap-3 items-center pb-2 border-b">
-                          <div className="font-medium text-sm">Name</div>
-                          <div className="font-medium text-sm">Role</div>
-                          <div className="font-medium text-sm">Share</div>
-                          <div className="font-medium text-sm text-right">Contracts</div>
-                        </div>
                         {/* Wrapper div to ensure all rows share same grid template */}
                         <div className="grid grid-cols-[auto_auto_auto_1fr] gap-3">
+                        {/* Header row - using same grid as data rows */}
+                        <div className="contents">
+                          <div className="font-medium text-sm pb-2 border-b">Name</div>
+                          <div className="font-medium text-sm pb-2 border-b">Role</div>
+                          <div className="font-medium text-sm pb-2 border-b">Share</div>
+                          <div className="font-medium text-sm text-right pb-2 border-b">Contracts</div>
+                        </div>
                     {song.songCollaborators
                       .filter((sc) => {
                         const role = sc.roleInSong as CollaboratorRole
@@ -1707,9 +1707,9 @@ export default function SongDetailPage() {
                               )}
                             </div>
 
-                            {/* Column 4: Contract Status and Buttons */}
-                            <div className="flex gap-2 items-center justify-end flex-wrap p-3 border rounded">
-                              {contractStatus.status && (
+                                  {/* Column 4: Contract Status and Buttons */}
+                                  <div className="flex gap-2 items-center justify-end flex-wrap p-3 border rounded min-w-0">
+                                    {contractStatus.status && (
                                 <span className={`px-2 py-0.5 rounded text-xs whitespace-nowrap ${
                                   isSigned 
                                     ? "bg-green-100 text-green-800" 
@@ -1980,15 +1980,15 @@ export default function SongDetailPage() {
                         </div>
                       )}
                       <div className="space-y-4">
-                        {/* Header row - using grid to match column widths */}
-                        <div className="grid grid-cols-[auto_auto_auto_1fr] gap-3 items-center pb-2 border-b">
-                          <div className="font-medium text-sm">Name</div>
-                          <div className="font-medium text-sm">Role</div>
-                          <div className="font-medium text-sm">Share</div>
-                          <div className="font-medium text-sm text-right">Contracts</div>
-                        </div>
                         {/* Wrapper div to ensure all rows share same grid template */}
                         <div className="grid grid-cols-[auto_auto_auto_1fr] gap-3">
+                        {/* Header row - using same grid as data rows */}
+                        <div className="contents">
+                          <div className="font-medium text-sm pb-2 border-b">Name</div>
+                          <div className="font-medium text-sm pb-2 border-b">Role</div>
+                          <div className="font-medium text-sm pb-2 border-b">Share</div>
+                          <div className="font-medium text-sm text-right pb-2 border-b">Contracts</div>
+                        </div>
                     {(() => {
                       // Group collaborators by role type
                       const masterCollaborators = song.songCollaborators
@@ -2074,7 +2074,7 @@ export default function SongDetailPage() {
                                   </div>
 
                                   {/* Column 2: Role with Edit button below */}
-                                  <div className="flex flex-col">
+                                  <div className="flex flex-col p-3 border rounded">
                                     {canSeeAllShares && (
                                       <>
                                         {isAdmin && isEditingRole ? (
@@ -2199,7 +2199,7 @@ export default function SongDetailPage() {
                                   </div>
 
                                   {/* Column 4: Contract Status and Buttons */}
-                                  <div className="flex gap-2 items-center justify-end flex-wrap p-3 border rounded">
+                                  <div className="flex gap-2 items-center justify-end flex-wrap p-3 border rounded min-w-0">
                                     {contractStatus.status && (
                                       <span className={`px-2 py-0.5 rounded text-xs whitespace-nowrap ${
                                         isSigned 

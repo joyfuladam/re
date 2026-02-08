@@ -53,7 +53,18 @@ export async function buildPublishingAssignmentData(
     .filter(Boolean)
     .join(" ")
 
-  const writersList = formatWritersList(allSongCollaborators)
+  // Format only THIS writer's share, not all writers
+  const writerName = [
+    writerCollaborator.collaborator.firstName,
+    writerCollaborator.collaborator.middleName,
+    writerCollaborator.collaborator.lastName,
+  ]
+    .filter(Boolean)
+    .join(" ")
+  const writerShare = writerCollaborator.publishingOwnership
+    ? (parseFloat(writerCollaborator.publishingOwnership.toString()) * 100).toFixed(2)
+    : "0"
+  const writersList = `${writerName} (${writerShare}%)`
 
   // Build composition object for single song
   const composition = {
