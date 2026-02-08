@@ -1,6 +1,7 @@
    "use client"
 
 import { useEffect, useState } from "react"
+import React from "react"
 import { useSession } from "next-auth/react"
 import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
@@ -1516,13 +1517,15 @@ export default function SongDetailPage() {
                         </div>
                       )}
                       <div className="space-y-2">
-                        {/* Header row */}
+                        {/* Header row - using grid to match column widths */}
                         <div className="grid grid-cols-[auto_auto_auto_1fr] gap-3 items-center pb-2 border-b">
                           <div className="font-medium text-sm">Name</div>
                           <div className="font-medium text-sm">Role</div>
                           <div className="font-medium text-sm">Share</div>
                           <div className="font-medium text-sm text-right">Contracts</div>
                         </div>
+                        {/* Wrapper div to ensure all rows share same grid template */}
+                        <div className="grid grid-cols-[auto_auto_auto_1fr] gap-3">
                     {song.songCollaborators
                       .filter((sc) => {
                         const role = sc.roleInSong as CollaboratorRole
@@ -1563,24 +1566,24 @@ export default function SongDetailPage() {
                         return (
                           <div
                             key={`publishing-${sc.id}`}
-                            className="grid grid-cols-[auto_auto_auto_1fr] gap-3 items-start p-3 border rounded"
+                            className="contents"
                           >
                             {/* Column 1: Name and Remove */}
-                            <div className="flex flex-col">
-                              <span className="font-medium whitespace-nowrap">{collaboratorName}</span>
-                              {isAdmin && (
-                                <button
-                                  onClick={() => handleDeleteCollaborator(sc.id, collaboratorName, sc.roleInSong as string)}
-                                  disabled={deletingCollaboratorId === sc.id}
-                                  className="text-xs text-red-600 hover:text-red-800 hover:underline disabled:opacity-50 disabled:cursor-not-allowed text-left mt-1"
-                                >
-                                  {deletingCollaboratorId === sc.id ? "Removing..." : "Remove"}
-                                </button>
-                              )}
-                            </div>
+                            <div className="flex flex-col p-3 border rounded">
+                                <span className="font-medium whitespace-nowrap">{collaboratorName}</span>
+                                {isAdmin && (
+                                  <button
+                                    onClick={() => handleDeleteCollaborator(sc.id, collaboratorName, sc.roleInSong as string)}
+                                    disabled={deletingCollaboratorId === sc.id}
+                                    className="text-xs text-red-600 hover:text-red-800 hover:underline disabled:opacity-50 disabled:cursor-not-allowed text-left mt-1"
+                                  >
+                                    {deletingCollaboratorId === sc.id ? "Removing..." : "Remove"}
+                                  </button>
+                                )}
+                              </div>
 
                             {/* Column 2: Role with Edit button below */}
-                            <div className="flex flex-col">
+                            <div className="flex flex-col p-3 border rounded">
                               {canSeeAllShares && (
                                 <>
                                   {isAdmin && isEditingRole ? (
@@ -1632,7 +1635,7 @@ export default function SongDetailPage() {
                             </div>
 
                             {/* Column 3: Share Percentage with Edit button below */}
-                            <div className="flex flex-col">
+                            <div className="flex flex-col p-3 border rounded">
                               {isAdmin && !song.publishingLocked && !editingPublishingShare ? (
                                 <>
                                   <div className="text-sm text-muted-foreground">
@@ -1705,7 +1708,7 @@ export default function SongDetailPage() {
                             </div>
 
                             {/* Column 4: Contract Status and Buttons */}
-                            <div className="flex gap-2 items-center justify-end flex-wrap">
+                            <div className="flex gap-2 items-center justify-end flex-wrap p-3 border rounded">
                               {contractStatus.status && (
                                 <span className={`px-2 py-0.5 rounded text-xs whitespace-nowrap ${
                                   isSigned 
@@ -1783,7 +1786,8 @@ export default function SongDetailPage() {
                           </div>
                         )
                       })}
-                  </div>
+                        </div>
+                      </div>
                   
                   {/* River & Ember Publishing Share */}
                   {isAdmin && !song.publishingLocked && (
@@ -1976,13 +1980,15 @@ export default function SongDetailPage() {
                         </div>
                       )}
                       <div className="space-y-4">
-                        {/* Header row */}
+                        {/* Header row - using grid to match column widths */}
                         <div className="grid grid-cols-[auto_auto_auto_1fr] gap-3 items-center pb-2 border-b">
                           <div className="font-medium text-sm">Name</div>
                           <div className="font-medium text-sm">Role</div>
                           <div className="font-medium text-sm">Share</div>
                           <div className="font-medium text-sm text-right">Contracts</div>
                         </div>
+                        {/* Wrapper div to ensure all rows share same grid template */}
+                        <div className="grid grid-cols-[auto_auto_auto_1fr] gap-3">
                     {(() => {
                       // Group collaborators by role type
                       const masterCollaborators = song.songCollaborators
@@ -2025,10 +2031,12 @@ export default function SongDetailPage() {
                         if (collaborators.length === 0) return null
 
                         return (
-                          <div key={role} className="space-y-2">
-                            <h4 className="text-sm font-semibold text-muted-foreground ml-2">
-                              {roleLabels[role]}
-                            </h4>
+                          <div key={role} className="contents">
+                            <div className="col-span-4 mb-2">
+                              <h4 className="text-sm font-semibold text-muted-foreground ml-2">
+                                {roleLabels[role]}
+                              </h4>
+                            </div>
                             {collaborators.map((sc) => {
                               // masterOwnership is already in percentage format (0-100) from fetchSong
                               const master = sc.masterOwnership ? parseFloat(sc.masterOwnership.toString()) : 0
@@ -2049,10 +2057,10 @@ export default function SongDetailPage() {
                               return (
                                 <div
                                   key={`master-${sc.id}`}
-                                  className="grid grid-cols-[auto_auto_auto_1fr] gap-3 items-start p-3 border rounded"
+                                  className="contents"
                                 >
                                   {/* Column 1: Name and Remove */}
-                                  <div className="flex flex-col">
+                                  <div className="flex flex-col p-3 border rounded">
                                     <span className="font-medium whitespace-nowrap">{collaboratorName}</span>
                                     {isAdmin && (
                                       <button
@@ -2118,7 +2126,7 @@ export default function SongDetailPage() {
                                   </div>
 
                                   {/* Column 3: Share Percentage with Edit button below */}
-                                  <div className="flex flex-col">
+                                  <div className="flex flex-col p-3 border rounded">
                                     {isAdmin && song.publishingLocked && !song.masterLocked && !editingMasterShare ? (
                                       <>
                                         <div className="text-sm text-muted-foreground">
@@ -2191,7 +2199,7 @@ export default function SongDetailPage() {
                                   </div>
 
                                   {/* Column 4: Contract Status and Buttons */}
-                                  <div className="flex gap-2 items-center justify-end flex-wrap">
+                                  <div className="flex gap-2 items-center justify-end flex-wrap p-3 border rounded">
                                     {contractStatus.status && (
                                       <span className={`px-2 py-0.5 rounded text-xs whitespace-nowrap ${
                                         isSigned 
@@ -2263,17 +2271,18 @@ export default function SongDetailPage() {
                                         >
                                           {isSigned ? "Signed" : canResend ? "Re-Send" : "Send"}
                                         </Button>
-                                      </>
-                                    )}
-                                  </div>
-                                </div>
-                              )
-                            })}
+                                    </>
+                              )}
+                            </div>
+                          </div>
+                        )
+                      })}
                           </div>
                         )
                       }).filter(Boolean)}
                     )()}
-                  </div>
+                        </div>
+                      </div>
                   
                   {/* River & Ember Master Share */}
                   {isAdmin && song.publishingLocked && !song.masterLocked && (
