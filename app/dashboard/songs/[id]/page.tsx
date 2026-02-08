@@ -1427,10 +1427,10 @@ export default function SongDetailPage() {
                 return (role === "writer" || role === "label") && publishing > 0
               }) && (
                 <div className="grid grid-cols-[2fr_1fr] gap-4">
-                  <div>
-                  <div className="grid grid-cols-[1.5fr_0.8fr_0.8fr_2fr_1fr] gap-3 items-center mb-3 p-3">
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-lg font-semibold">Publishing Share</h3>
+                  <Card>
+                    <CardHeader className="p-4">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-lg">Publishing Share</CardTitle>
                       {isAdmin && (
                         song.publishingLocked ? (
                           <Button
@@ -1503,24 +1503,26 @@ export default function SongDetailPage() {
                           </div>
                         )
                       })()}
-                    </div>
-                    <div></div>
-                    <div></div>
-                    <div className="flex gap-2 justify-end">
-                      <h3 className="text-lg font-semibold">Contracts</h3>
-                    </div>
-                    <div></div>
-                  </div>
-                  {isAdmin && !song.publishingLocked && (
-                    <div className="mb-3 px-3">
-                      <Link href={`/dashboard/songs/${song.id}/add-collaborator?section=publishing`}>
-                        <Button variant="outline" size="sm" className="h-7 text-xs">
-                          Add Collaborator
-                        </Button>
-                      </Link>
-                    </div>
-                  )}
-                  <div className="space-y-2">
+                      </div>
+                    </CardHeader>
+                    <CardContent className="p-4">
+                      {isAdmin && !song.publishingLocked && (
+                        <div className="mb-3">
+                          <Link href={`/dashboard/songs/${song.id}/add-collaborator?section=publishing`}>
+                            <Button variant="outline" size="sm" className="h-7 text-xs">
+                              Add Collaborator
+                            </Button>
+                          </Link>
+                        </div>
+                      )}
+                      <div className="space-y-2">
+                        {/* Header row */}
+                        <div className="grid grid-cols-[auto_auto_auto_1fr] gap-3 items-center pb-2 border-b">
+                          <div className="font-medium text-sm">Name</div>
+                          <div className="font-medium text-sm">Role</div>
+                          <div className="font-medium text-sm">Share</div>
+                          <div className="font-medium text-sm text-right">Contracts</div>
+                        </div>
                     {song.songCollaborators
                       .filter((sc) => {
                         const role = sc.roleInSong as CollaboratorRole
@@ -1561,7 +1563,7 @@ export default function SongDetailPage() {
                         return (
                           <div
                             key={`publishing-${sc.id}`}
-                            className="grid grid-cols-[1.5fr_0.8fr_0.8fr_2fr_1fr] gap-3 items-start p-3 border rounded"
+                            className="grid grid-cols-[auto_auto_auto_1fr] gap-3 items-start p-3 border rounded"
                           >
                             {/* Column 1: Name and Remove */}
                             <div className="flex flex-col">
@@ -1629,10 +1631,7 @@ export default function SongDetailPage() {
                               )}
                             </div>
 
-                            {/* Column 3: Empty - removed edit column */}
-                            <div></div>
-
-                            {/* Column 4: Share Percentage with Edit button below */}
+                            {/* Column 3: Share Percentage with Edit button below */}
                             <div className="flex flex-col">
                               {isAdmin && !song.publishingLocked && !editingPublishingShare ? (
                                 <>
@@ -1705,7 +1704,7 @@ export default function SongDetailPage() {
                               )}
                             </div>
 
-                            {/* Column 5: Contract Status and Buttons */}
+                            {/* Column 4: Contract Status and Buttons */}
                             <div className="flex gap-2 items-center justify-end flex-wrap">
                               {contractStatus.status && (
                                 <span className={`px-2 py-0.5 rounded text-xs whitespace-nowrap ${
@@ -1871,17 +1870,24 @@ export default function SongDetailPage() {
                       </div>
                     </div>
                   )}
-                  </div>
+                    </CardContent>
+                  </Card>
+                  
                   {/* Publishing Split Visualization */}
                   {canSeeAllShares && (
-                    <div className="border rounded p-4">
-                      <SplitPieChart
-                        songCollaborators={song.songCollaborators}
-                        songPublishingEntities={song.songPublishingEntities}
-                        labelMasterShare={null}
-                        showPublishingOnly={true}
-                      />
-                    </div>
+                    <Card>
+                      <CardHeader className="p-4">
+                        <CardTitle className="text-lg">Publishing Splits</CardTitle>
+                      </CardHeader>
+                      <CardContent className="p-4">
+                        <SplitPieChart
+                          songCollaborators={song.songCollaborators}
+                          songPublishingEntities={song.songPublishingEntities}
+                          labelMasterShare={null}
+                          showPublishingOnly={true}
+                        />
+                      </CardContent>
+                    </Card>
                   )}
                 </div>
               )}
@@ -1892,10 +1898,10 @@ export default function SongDetailPage() {
                 return isMasterEligible(role) && role !== "label"
               }) && (
                 <div className="grid grid-cols-[2fr_1fr] gap-4">
-                  <div>
-                  <div className="grid grid-cols-[1.5fr_0.8fr_0.8fr_2fr_1fr] gap-3 items-center mb-3 p-3">
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-lg font-semibold">Master Revenue Share</h3>
+                  <Card>
+                    <CardHeader className="p-4">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-lg">Master Revenue Share</CardTitle>
                       {isAdmin && song.publishingLocked && (
                         song.masterLocked ? (
                           <Button
@@ -1957,24 +1963,26 @@ export default function SongDetailPage() {
                           </div>
                         )
                       })()}
-                    </div>
-                    <div></div>
-                    <div></div>
-                    <div></div>
-                    <div className="flex gap-2 justify-end">
-                      <h3 className="text-lg font-semibold">Contracts</h3>
-                    </div>
-                  </div>
-                  {isAdmin && song.publishingLocked && !song.masterLocked && (
-                    <div className="mb-3 px-3">
-                      <Link href={`/dashboard/songs/${song.id}/add-collaborator?section=master`}>
-                        <Button variant="outline" size="sm" className="h-7 text-xs">
-                          Add Collaborator
-                        </Button>
-                      </Link>
-                    </div>
-                  )}
-                  <div className="space-y-4">
+                      </div>
+                    </CardHeader>
+                    <CardContent className="p-4">
+                      {isAdmin && song.publishingLocked && !song.masterLocked && (
+                        <div className="mb-3">
+                          <Link href={`/dashboard/songs/${song.id}/add-collaborator?section=master`}>
+                            <Button variant="outline" size="sm" className="h-7 text-xs">
+                              Add Collaborator
+                            </Button>
+                          </Link>
+                        </div>
+                      )}
+                      <div className="space-y-4">
+                        {/* Header row */}
+                        <div className="grid grid-cols-[auto_auto_auto_1fr] gap-3 items-center pb-2 border-b">
+                          <div className="font-medium text-sm">Name</div>
+                          <div className="font-medium text-sm">Role</div>
+                          <div className="font-medium text-sm">Share</div>
+                          <div className="font-medium text-sm text-right">Contracts</div>
+                        </div>
                     {(() => {
                       // Group collaborators by role type
                       const masterCollaborators = song.songCollaborators
@@ -2041,7 +2049,7 @@ export default function SongDetailPage() {
                               return (
                                 <div
                                   key={`master-${sc.id}`}
-                                  className="grid grid-cols-[1.5fr_0.8fr_0.8fr_2fr_1fr] gap-3 items-start p-3 border rounded"
+                                  className="grid grid-cols-[auto_auto_auto_1fr] gap-3 items-start p-3 border rounded"
                                 >
                                   {/* Column 1: Name and Remove */}
                                   <div className="flex flex-col">
@@ -2109,10 +2117,7 @@ export default function SongDetailPage() {
                                     )}
                                   </div>
 
-                                  {/* Column 3: Empty - removed edit column */}
-                                  <div></div>
-
-                                  {/* Column 4: Share Percentage with Edit button below */}
+                                  {/* Column 3: Share Percentage with Edit button below */}
                                   <div className="flex flex-col">
                                     {isAdmin && song.publishingLocked && !song.masterLocked && !editingMasterShare ? (
                                       <>
@@ -2185,7 +2190,7 @@ export default function SongDetailPage() {
                                     )}
                                   </div>
 
-                                  {/* Column 5: Contract Status and Buttons */}
+                                  {/* Column 4: Contract Status and Buttons */}
                                   <div className="flex gap-2 items-center justify-end flex-wrap">
                                     {contractStatus.status && (
                                       <span className={`px-2 py-0.5 rounded text-xs whitespace-nowrap ${
@@ -2343,17 +2348,24 @@ export default function SongDetailPage() {
                       </div>
                     </div>
                   )}
-                  </div>
+                    </CardContent>
+                  </Card>
+                  
                   {/* Master Revenue Share Split Visualization */}
                   {canSeeAllShares && (
-                    <div className="border rounded p-4">
-                      <SplitPieChart
-                        songCollaborators={song.songCollaborators}
-                        songPublishingEntities={song.songPublishingEntities}
-                        labelMasterShare={song.labelMasterShare}
-                        showMasterOnly={true}
-                      />
-                    </div>
+                    <Card>
+                      <CardHeader className="p-4">
+                        <CardTitle className="text-lg">Master Splits</CardTitle>
+                      </CardHeader>
+                      <CardContent className="p-4">
+                        <SplitPieChart
+                          songCollaborators={song.songCollaborators}
+                          songPublishingEntities={song.songPublishingEntities}
+                          labelMasterShare={song.labelMasterShare}
+                          showMasterOnly={true}
+                        />
+                      </CardContent>
+                    </Card>
                   )}
                 </div>
               )}
