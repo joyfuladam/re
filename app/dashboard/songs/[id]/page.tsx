@@ -1639,7 +1639,6 @@ export default function SongDetailPage() {
                               {isAdmin && !song.publishingLocked && !editingPublishingShare ? (
                                 <>
                                   <div className="text-sm text-muted-foreground">
-                                    <span>Publishing: </span>
                                     <span className="whitespace-nowrap">{publishing.toFixed(2)}%</span>
                                   </div>
                                   <Button
@@ -1658,7 +1657,6 @@ export default function SongDetailPage() {
                               ) : isAdmin && !song.publishingLocked && editingPublishingShare === sc.id ? (
                                 <>
                                   <div className="flex items-center gap-1">
-                                    <span className="text-sm text-muted-foreground">Publishing:</span>
                                     <Input
                                       type="number"
                                       step="0.01"
@@ -1701,7 +1699,6 @@ export default function SongDetailPage() {
                                 </>
                               ) : (
                                 <div className="text-sm text-muted-foreground">
-                                  <span>Publishing: </span>
                                   <span className="whitespace-nowrap">{publishing.toFixed(2)}%</span>
                                 </div>
                               )}
@@ -1798,7 +1795,7 @@ export default function SongDetailPage() {
                           <div className="text-sm text-muted-foreground flex items-center gap-2">
                             {!editingRiverEmberPublishing ? (
                               <>
-                                <span>Publishing: {(() => {
+                                <span>{(() => {
                                   const riverEmberEntity = song.songPublishingEntities?.find(spe => 
                                     spe.publishingEntity.name === "River & Ember Publishing" || 
                                     spe.publishingEntity.name.includes("River") && spe.publishingEntity.name.includes("Ember")
@@ -1830,7 +1827,6 @@ export default function SongDetailPage() {
                               </>
                             ) : (
                               <div className="flex items-center gap-2">
-                                <span>Publishing:</span>
                                 <Input
                                   type="number"
                                   step="0.01"
@@ -2130,7 +2126,6 @@ export default function SongDetailPage() {
                                     {isAdmin && song.publishingLocked && !song.masterLocked && !editingMasterShare ? (
                                       <>
                                         <div className="text-sm text-muted-foreground">
-                                          <span>Master Revenue: </span>
                                           <span className="whitespace-nowrap">{master.toFixed(2)}%</span>
                                         </div>
                                         <Button
@@ -2149,7 +2144,6 @@ export default function SongDetailPage() {
                                     ) : isAdmin && song.publishingLocked && !song.masterLocked && editingMasterShare === sc.id ? (
                                       <>
                                         <div className="flex items-center gap-1">
-                                          <span className="text-sm text-muted-foreground">Master Revenue:</span>
                                           <Input
                                             type="number"
                                             step="0.01"
@@ -2192,7 +2186,6 @@ export default function SongDetailPage() {
                                       </>
                                     ) : (
                                       <div className="text-sm text-muted-foreground">
-                                        <span>Master Revenue: </span>
                                         <span className="whitespace-nowrap">{master.toFixed(2)}%</span>
                                       </div>
                                     )}
@@ -2293,7 +2286,7 @@ export default function SongDetailPage() {
                           <div className="text-sm text-muted-foreground flex items-center gap-2">
                             {!editingRiverEmberMaster ? (
                               <>
-                                <span>Master Revenue: {song.labelMasterShare ? parseFloat(song.labelMasterShare.toString()).toFixed(2) : "0.00"}%</span>
+                                <span>{song.labelMasterShare ? parseFloat(song.labelMasterShare.toString()).toFixed(2) : "0.00"}%</span>
                                 <Button
                                   variant="ghost"
                                   size="sm"
@@ -2313,7 +2306,6 @@ export default function SongDetailPage() {
                               </>
                             ) : (
                               <div className="flex items-center gap-2">
-                                <span>Master Revenue:</span>
                                 <Input
                                   type="number"
                                   step="0.01"
