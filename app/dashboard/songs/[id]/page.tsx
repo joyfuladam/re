@@ -1426,8 +1426,9 @@ export default function SongDetailPage() {
                 // Only show Writers and Label in Publishing section
                 return (role === "writer" || role === "label") && publishing > 0
               }) && (
-                <div>
-                  <div className="grid grid-cols-[1.5fr_0.8fr_0.5fr_0.8fr_2fr] gap-3 items-center mb-3 p-3">
+                <div className="grid grid-cols-[2fr_1fr] gap-4">
+                  <div>
+                  <div className="grid grid-cols-[1.5fr_0.8fr_0.8fr_2fr_1fr] gap-3 items-center mb-3 p-3">
                     <div className="flex items-center gap-2">
                       <h3 className="text-lg font-semibold">Publishing Share</h3>
                       {isAdmin && (
@@ -1505,10 +1506,10 @@ export default function SongDetailPage() {
                     </div>
                     <div></div>
                     <div></div>
-                    <div></div>
                     <div className="flex gap-2 justify-end">
                       <h3 className="text-lg font-semibold">Contracts</h3>
                     </div>
+                    <div></div>
                   </div>
                   {isAdmin && !song.publishingLocked && (
                     <div className="mb-3 px-3">
@@ -1560,7 +1561,7 @@ export default function SongDetailPage() {
                         return (
                           <div
                             key={`publishing-${sc.id}`}
-                            className="grid grid-cols-[1.5fr_0.8fr_0.5fr_0.8fr_2fr] gap-3 items-center p-3 border rounded"
+                            className="grid grid-cols-[1.5fr_0.8fr_0.8fr_2fr_1fr] gap-3 items-start p-3 border rounded"
                           >
                             {/* Column 1: Name and Remove */}
                             <div className="flex flex-col">
@@ -1576,72 +1577,73 @@ export default function SongDetailPage() {
                               )}
                             </div>
 
-                            {/* Column 2: Role */}
-                            <div className="flex items-center">
+                            {/* Column 2: Role with Edit button below */}
+                            <div className="flex flex-col">
                               {canSeeAllShares && (
                                 <>
                                   {isAdmin && isEditingRole ? (
-                                    <Select
-                                      value={sc.roleInSong}
-                                      onValueChange={(value) => handleUpdateRole(sc.id, value as CollaboratorRole)}
-                                      disabled={isUpdatingRole}
-                                    >
-                                      <SelectTrigger className="h-7 w-full text-xs">
-                                        <SelectValue />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        {[...availableRoles, "label"].map((role) => (
-                                          <SelectItem key={role} value={role}>
-                                            {roleLabels[role as CollaboratorRole] || role}
-                                          </SelectItem>
-                                        ))}
-                                      </SelectContent>
-                                    </Select>
+                                    <>
+                                      <Select
+                                        value={sc.roleInSong}
+                                        onValueChange={(value) => handleUpdateRole(sc.id, value as CollaboratorRole)}
+                                        disabled={isUpdatingRole}
+                                      >
+                                        <SelectTrigger className="h-7 w-full text-xs">
+                                          <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          {[...availableRoles, "label"].map((role) => (
+                                            <SelectItem key={role} value={role}>
+                                              {roleLabels[role as CollaboratorRole] || role}
+                                            </SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-6 px-2 text-xs mt-1 self-start"
+                                        onClick={() => setEditingRoleId(null)}
+                                        disabled={isUpdatingRole}
+                                      >
+                                        Cancel
+                                      </Button>
+                                    </>
                                   ) : (
-                                    <span className="text-sm text-muted-foreground whitespace-nowrap">{roleLabel}</span>
+                                    <>
+                                      <span className="text-sm text-muted-foreground whitespace-nowrap">{roleLabel}</span>
+                                      {isAdmin && (
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="h-6 px-2 text-xs mt-1 self-start"
+                                          onClick={() => setEditingRoleId(sc.id)}
+                                          disabled={isUpdatingRole}
+                                        >
+                                          Edit
+                                        </Button>
+                                      )}
+                                    </>
                                   )}
                                 </>
                               )}
                             </div>
 
-                            {/* Column 3: Edit button for role */}
-                            <div className="flex items-center">
-                              {canSeeAllShares && isAdmin && (
-                                <>
-                                  {!isEditingRole ? (
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className="h-6 px-2 text-xs"
-                                      onClick={() => setEditingRoleId(sc.id)}
-                                      disabled={isUpdatingRole}
-                                    >
-                                      Edit
-                                    </Button>
-                                  ) : (
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className="h-6 px-2 text-xs"
-                                      onClick={() => setEditingRoleId(null)}
-                                      disabled={isUpdatingRole}
-                                    >
-                                      Cancel
-                                    </Button>
-                                  )}
-                                </>
-                              )}
-                            </div>
+                            {/* Column 3: Empty - removed edit column */}
+                            <div></div>
 
-                            {/* Column 4: Share Percentage */}
-                            <div className="flex items-center gap-1">
+                            {/* Column 4: Share Percentage with Edit button below */}
+                            <div className="flex flex-col">
                               {isAdmin && !song.publishingLocked && !editingPublishingShare ? (
                                 <>
-                                  <span className="text-sm text-muted-foreground whitespace-nowrap">{publishing.toFixed(2)}%</span>
+                                  <div className="text-sm text-muted-foreground">
+                                    <span>Publishing: </span>
+                                    <span className="whitespace-nowrap">{publishing.toFixed(2)}%</span>
+                                  </div>
                                   <Button
                                     variant="ghost"
                                     size="sm"
-                                    className="h-6 px-1 text-xs"
+                                    className="h-6 px-1 text-xs mt-1 self-start"
                                     onClick={() => {
                                       setEditingPublishingShare(sc.id)
                                       setPublishingShareValue(publishing.toFixed(2))
@@ -1653,45 +1655,53 @@ export default function SongDetailPage() {
                                 </>
                               ) : isAdmin && !song.publishingLocked && editingPublishingShare === sc.id ? (
                                 <>
-                                  <Input
-                                    type="number"
-                                    step="0.01"
-                                    min="0"
-                                    max="100"
-                                    value={publishingShareValue}
-                                    onChange={(e) => setPublishingShareValue(e.target.value)}
-                                    className="h-6 w-14 text-xs"
-                                    autoFocus
-                                  />
-                                  <span className="text-sm text-muted-foreground">%</span>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-6 px-1 text-xs"
-                                    onClick={() => {
-                                      const value = parseFloat(publishingShareValue)
-                                      if (!isNaN(value) && value >= 0 && value <= 100) {
-                                        handleUpdatePublishingShare(sc.id, value)
-                                      } else {
-                                        alert("Please enter a valid percentage between 0 and 100")
-                                      }
-                                    }}
-                                    disabled={updatingSplits}
-                                  >
-                                    Save
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-6 px-1 text-xs"
-                                    onClick={() => setEditingPublishingShare(null)}
-                                    disabled={updatingSplits}
-                                  >
-                                    Cancel
-                                  </Button>
+                                  <div className="flex items-center gap-1">
+                                    <span className="text-sm text-muted-foreground">Publishing:</span>
+                                    <Input
+                                      type="number"
+                                      step="0.01"
+                                      min="0"
+                                      max="100"
+                                      value={publishingShareValue}
+                                      onChange={(e) => setPublishingShareValue(e.target.value)}
+                                      className="h-6 w-14 text-xs"
+                                      autoFocus
+                                    />
+                                    <span className="text-sm text-muted-foreground">%</span>
+                                  </div>
+                                  <div className="flex gap-1 mt-1">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-6 px-1 text-xs"
+                                      onClick={() => {
+                                        const value = parseFloat(publishingShareValue)
+                                        if (!isNaN(value) && value >= 0 && value <= 100) {
+                                          handleUpdatePublishingShare(sc.id, value)
+                                        } else {
+                                          alert("Please enter a valid percentage between 0 and 100")
+                                        }
+                                      }}
+                                      disabled={updatingSplits}
+                                    >
+                                      Save
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-6 px-1 text-xs"
+                                      onClick={() => setEditingPublishingShare(null)}
+                                      disabled={updatingSplits}
+                                    >
+                                      Cancel
+                                    </Button>
+                                  </div>
                                 </>
                               ) : (
-                                <span className="text-sm text-muted-foreground whitespace-nowrap">{publishing.toFixed(2)}%</span>
+                                <div className="text-sm text-muted-foreground">
+                                  <span>Publishing: </span>
+                                  <span className="whitespace-nowrap">{publishing.toFixed(2)}%</span>
+                                </div>
                               )}
                             </div>
 
@@ -1861,6 +1871,18 @@ export default function SongDetailPage() {
                       </div>
                     </div>
                   )}
+                  </div>
+                  {/* Publishing Split Visualization */}
+                  {canSeeAllShares && (
+                    <div className="border rounded p-4">
+                      <SplitPieChart
+                        songCollaborators={song.songCollaborators}
+                        songPublishingEntities={song.songPublishingEntities}
+                        labelMasterShare={null}
+                        showPublishingOnly={true}
+                      />
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -1869,8 +1891,9 @@ export default function SongDetailPage() {
                 const role = sc.roleInSong as CollaboratorRole
                 return isMasterEligible(role) && role !== "label"
               }) && (
-                <div>
-                  <div className="grid grid-cols-[1.5fr_0.8fr_0.5fr_0.8fr_2fr] gap-3 items-center mb-3 p-3">
+                <div className="grid grid-cols-[2fr_1fr] gap-4">
+                  <div>
+                  <div className="grid grid-cols-[1.5fr_0.8fr_0.8fr_2fr_1fr] gap-3 items-center mb-3 p-3">
                     <div className="flex items-center gap-2">
                       <h3 className="text-lg font-semibold">Master Revenue Share</h3>
                       {isAdmin && song.publishingLocked && (
@@ -2018,7 +2041,7 @@ export default function SongDetailPage() {
                               return (
                                 <div
                                   key={`master-${sc.id}`}
-                                  className="grid grid-cols-[1.5fr_0.8fr_0.5fr_0.8fr_2fr] gap-3 items-center p-3 border rounded"
+                                  className="grid grid-cols-[1.5fr_0.8fr_0.8fr_2fr_1fr] gap-3 items-start p-3 border rounded"
                                 >
                                   {/* Column 1: Name and Remove */}
                                   <div className="flex flex-col">
@@ -2034,72 +2057,73 @@ export default function SongDetailPage() {
                                     )}
                                   </div>
 
-                                  {/* Column 2: Role */}
-                                  <div className="flex items-center">
+                                  {/* Column 2: Role with Edit button below */}
+                                  <div className="flex flex-col">
                                     {canSeeAllShares && (
                                       <>
                                         {isAdmin && isEditingRole ? (
-                                          <Select
-                                            value={sc.roleInSong}
-                                            onValueChange={(value) => handleUpdateRole(sc.id, value as CollaboratorRole)}
-                                            disabled={isUpdatingRole}
-                                          >
-                                            <SelectTrigger className="h-7 w-full text-xs">
-                                              <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                              {[...availableRoles, "label"].map((role) => (
-                                                <SelectItem key={role} value={role}>
-                                                  {roleLabels[role as CollaboratorRole] || role}
-                                                </SelectItem>
-                                              ))}
-                                            </SelectContent>
-                                          </Select>
+                                          <>
+                                            <Select
+                                              value={sc.roleInSong}
+                                              onValueChange={(value) => handleUpdateRole(sc.id, value as CollaboratorRole)}
+                                              disabled={isUpdatingRole}
+                                            >
+                                              <SelectTrigger className="h-7 w-full text-xs">
+                                                <SelectValue />
+                                              </SelectTrigger>
+                                              <SelectContent>
+                                                {[...availableRoles, "label"].map((role) => (
+                                                  <SelectItem key={role} value={role}>
+                                                    {roleLabels[role as CollaboratorRole] || role}
+                                                  </SelectItem>
+                                                ))}
+                                              </SelectContent>
+                                            </Select>
+                                            <Button
+                                              variant="ghost"
+                                              size="sm"
+                                              className="h-6 px-2 text-xs mt-1 self-start"
+                                              onClick={() => setEditingRoleId(null)}
+                                              disabled={isUpdatingRole}
+                                            >
+                                              Cancel
+                                            </Button>
+                                          </>
                                         ) : (
-                                          <span className="text-sm text-muted-foreground whitespace-nowrap">{roleLabel}</span>
+                                          <>
+                                            <span className="text-sm text-muted-foreground whitespace-nowrap">{roleLabel}</span>
+                                            {isAdmin && (
+                                              <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-6 px-2 text-xs mt-1 self-start"
+                                                onClick={() => setEditingRoleId(sc.id)}
+                                                disabled={isUpdatingRole}
+                                              >
+                                                Edit
+                                              </Button>
+                                            )}
+                                          </>
                                         )}
                                       </>
                                     )}
                                   </div>
 
-                                  {/* Column 3: Edit button for role */}
-                                  <div className="flex items-center">
-                                    {canSeeAllShares && isAdmin && (
-                                      <>
-                                        {!isEditingRole ? (
-                                          <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="h-6 px-2 text-xs"
-                                            onClick={() => setEditingRoleId(sc.id)}
-                                            disabled={isUpdatingRole}
-                                          >
-                                            Edit
-                                          </Button>
-                                        ) : (
-                                          <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="h-6 px-2 text-xs"
-                                            onClick={() => setEditingRoleId(null)}
-                                            disabled={isUpdatingRole}
-                                          >
-                                            Cancel
-                                          </Button>
-                                        )}
-                                      </>
-                                    )}
-                                  </div>
+                                  {/* Column 3: Empty - removed edit column */}
+                                  <div></div>
 
-                                  {/* Column 4: Share Percentage */}
-                                  <div className="flex items-center gap-1">
+                                  {/* Column 4: Share Percentage with Edit button below */}
+                                  <div className="flex flex-col">
                                     {isAdmin && song.publishingLocked && !song.masterLocked && !editingMasterShare ? (
                                       <>
-                                        <span className="text-sm text-muted-foreground whitespace-nowrap">{master.toFixed(2)}%</span>
+                                        <div className="text-sm text-muted-foreground">
+                                          <span>Master Revenue: </span>
+                                          <span className="whitespace-nowrap">{master.toFixed(2)}%</span>
+                                        </div>
                                         <Button
                                           variant="ghost"
                                           size="sm"
-                                          className="h-6 px-1 text-xs"
+                                          className="h-6 px-1 text-xs mt-1 self-start"
                                           onClick={() => {
                                             setEditingMasterShare(sc.id)
                                             setMasterShareValue(master.toFixed(2))
@@ -2111,45 +2135,53 @@ export default function SongDetailPage() {
                                       </>
                                     ) : isAdmin && song.publishingLocked && !song.masterLocked && editingMasterShare === sc.id ? (
                                       <>
-                                        <Input
-                                          type="number"
-                                          step="0.01"
-                                          min="0"
-                                          max="100"
-                                          value={masterShareValue}
-                                          onChange={(e) => setMasterShareValue(e.target.value)}
-                                          className="h-6 w-14 text-xs"
-                                          autoFocus
-                                        />
-                                        <span className="text-sm text-muted-foreground">%</span>
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          className="h-6 px-1 text-xs"
-                                          onClick={() => {
-                                            const value = parseFloat(masterShareValue)
-                                            if (!isNaN(value) && value >= 0 && value <= 100) {
-                                              handleUpdateMasterShare(sc.id, value)
-                                            } else {
-                                              alert("Please enter a valid percentage between 0 and 100")
-                                            }
-                                          }}
-                                          disabled={updatingSplits}
-                                        >
-                                          Save
-                                        </Button>
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          className="h-6 px-1 text-xs"
-                                          onClick={() => setEditingMasterShare(null)}
-                                          disabled={updatingSplits}
-                                        >
-                                          Cancel
-                                        </Button>
+                                        <div className="flex items-center gap-1">
+                                          <span className="text-sm text-muted-foreground">Master Revenue:</span>
+                                          <Input
+                                            type="number"
+                                            step="0.01"
+                                            min="0"
+                                            max="100"
+                                            value={masterShareValue}
+                                            onChange={(e) => setMasterShareValue(e.target.value)}
+                                            className="h-6 w-14 text-xs"
+                                            autoFocus
+                                          />
+                                          <span className="text-sm text-muted-foreground">%</span>
+                                        </div>
+                                        <div className="flex gap-1 mt-1">
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-6 px-1 text-xs"
+                                            onClick={() => {
+                                              const value = parseFloat(masterShareValue)
+                                              if (!isNaN(value) && value >= 0 && value <= 100) {
+                                                handleUpdateMasterShare(sc.id, value)
+                                              } else {
+                                                alert("Please enter a valid percentage between 0 and 100")
+                                              }
+                                            }}
+                                            disabled={updatingSplits}
+                                          >
+                                            Save
+                                          </Button>
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-6 px-1 text-xs"
+                                            onClick={() => setEditingMasterShare(null)}
+                                            disabled={updatingSplits}
+                                          >
+                                            Cancel
+                                          </Button>
+                                        </div>
                                       </>
                                     ) : (
-                                      <span className="text-sm text-muted-foreground whitespace-nowrap">{master.toFixed(2)}%</span>
+                                      <div className="text-sm text-muted-foreground">
+                                        <span>Master Revenue: </span>
+                                        <span className="whitespace-nowrap">{master.toFixed(2)}%</span>
+                                      </div>
                                     )}
                                   </div>
 
@@ -2311,6 +2343,18 @@ export default function SongDetailPage() {
                       </div>
                     </div>
                   )}
+                  </div>
+                  {/* Master Revenue Share Split Visualization */}
+                  {canSeeAllShares && (
+                    <div className="border rounded p-4">
+                      <SplitPieChart
+                        songCollaborators={song.songCollaborators}
+                        songPublishingEntities={song.songPublishingEntities}
+                        labelMasterShare={song.labelMasterShare}
+                        showMasterOnly={true}
+                      />
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -2321,22 +2365,6 @@ export default function SongDetailPage() {
             )}
           </CardContent>
         </Card>
-
-      {canSeeAllShares && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Split Visualization</CardTitle>
-            <CardDescription>Visual representation of ownership splits</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <SplitPieChart
-              songCollaborators={song.songCollaborators}
-              songPublishingEntities={song.songPublishingEntities}
-              labelMasterShare={song.labelMasterShare}
-            />
-          </CardContent>
-        </Card>
-      )}
 
       {/* Publishing Splits and Master Revenue Shares cards - Hidden but kept for potential future use */}
       {false && isAdmin && song && (

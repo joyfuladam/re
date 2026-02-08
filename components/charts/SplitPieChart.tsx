@@ -28,6 +28,8 @@ interface SplitPieChartProps {
     ownershipPercentage: number | null
   }>
   labelMasterShare?: number | null
+  showPublishingOnly?: boolean
+  showMasterOnly?: boolean
 }
 
 const PUBLISHING_COLORS = [
@@ -54,7 +56,9 @@ const CustomTooltip = ({ active, payload }: any) => {
 export function SplitPieChart({
   songCollaborators,
   songPublishingEntities = [],
-  labelMasterShare = null
+  labelMasterShare = null,
+  showPublishingOnly = false,
+  showMasterOnly = false
 }: SplitPieChartProps) {
   // Prepare publishing splits data (Writer's Share - totals 50%)
   const publishingSplits: SplitData[] = []
@@ -135,12 +139,16 @@ export function SplitPieChart({
   publishingSplits.sort((a, b) => b.value - a.value)
   masterSplits.sort((a, b) => b.value - a.value)
 
+  const showPublishing = !showMasterOnly && (showPublishingOnly || (!showPublishingOnly && !showMasterOnly))
+  const showMaster = !showPublishingOnly && (showMasterOnly || (!showPublishingOnly && !showMasterOnly))
+
   return (
     <div className="w-full">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className={showPublishing && showMaster ? "grid grid-cols-1 md:grid-cols-2 gap-6" : ""}>
         {/* Publishing Pie Chart */}
+        {showPublishing && (
         <div className="flex flex-col">
-          <h3 className="text-lg font-semibold mb-1 text-center">Publishing Splits</h3>
+          <h3 className="text-sm font-semibold mb-1 text-center">Publishing Splits</h3>
           <div className="flex flex-col" style={{ minHeight: '300px' }}>
             {publishingSplits.length > 0 ? (
               <>
@@ -187,10 +195,12 @@ export function SplitPieChart({
             )}
           </div>
         </div>
+        )}
 
         {/* Master Pie Chart */}
+        {showMaster && (
         <div className="flex flex-col">
-          <h3 className="text-lg font-semibold mb-1 text-center">Master Splits</h3>
+          <h3 className="text-sm font-semibold mb-1 text-center">Master Splits</h3>
           <div className="flex flex-col" style={{ minHeight: '300px' }}>
             {masterSplits.length > 0 ? (
               <>
@@ -237,6 +247,7 @@ export function SplitPieChart({
             )}
           </div>
         </div>
+        )}
       </div>
     </div>
   )
