@@ -37,7 +37,7 @@ Writer has created certain musical compositions for recording and release under 
 
 1. **Assignment of Publishing Rights**
 
-<div class="indent">Writer hereby irrevocably and exclusively assigns to Publisher one hundred percent (100%) of the worldwide publisher's share (including but not limited to performance, mechanical, synchronization, print, and all other royalties) in and to the musical compositions listed in Exhibit A attached hereto (the "Compositions"), which are created for and recorded/released under Publisher's label projects. Writer retains one hundred percent (100%) of the writer's share of all royalties, which shall be paid directly to Writer by Writer's performing rights organization (e.g., ASCAP, BMI, SESAC) without interference from Publisher.</div>
+<div class="indent">Writer hereby irrevocably and exclusively assigns to Publisher one hundred percent (100%) of the worldwide publisher's share (including but not limited to performance, mechanical, synchronization, print, and all other royalties) in and to the musical compositions listed in Exhibit A attached hereto (the "Compositions"), which are created for and recorded/released under Publisher's label projects. Writer retains one hundred percent (100%) of the writer's share of all royalties, which shall be paid directly to Writer by Writer's performing rights organization (e.g., ASCAP, BMI, SESAC) without interference from Publisher. **No payment is due to Writer from the publisher's share**—Publisher retains 100% of the publisher's share as full consideration for administration and promotion of the Compositions.</div>
 
 2. **Scope & Project-Specific Nature**
 
@@ -51,22 +51,18 @@ Writer has created certain musical compositions for recording and release under 
 
 <div class="indent">Perpetual, subject to reversion to Writer upon {{reversion_condition}}.</div>
 
-5. **Administration**
-
-<div class="indent">Publisher shall administer the assigned rights worldwide through its chosen publishing administrator (e.g., Sentric Music). Publisher shall account to Writer quarterly for Publisher's collected share (for transparency only—no payment due to Writer from publisher's share).</div>
-
-6. **Morals & Conduct Clause**
+5. **Morals & Conduct Clause**
 
 <div class="indent">Writer agrees to conduct themselves, both publicly and privately, in a manner consistent with biblical Christian principles. Material breach (as reasonably determined by Publisher, e.g., public conduct contrary to Scripture) shall allow Publisher immediate termination of this Agreement and reversion of rights to Writer.</div>
 
-7. **Warranties & Representations**
+6. **Warranties & Representations**
 
 <div class="indent">Writer warrants that the Compositions are original, do not infringe third-party rights, and Writer has full authority to grant these rights.</div>
 
-8. **Governing Law**<br>
+7. **Governing Law**<br>
    This Agreement shall be governed by the laws of the State of {{governing_state}}, without regard to conflict of laws principles.
 
-9. **Alternative Versions & Expanded Releases**
+8. **Alternative Versions & Expanded Releases**
 
 <div class="indent">Publisher, at its discretion and expense, may create, record, and release alternative versions of the Compositions (including but not limited to acoustic, instrumental, live, radio edit, or featured artist collaborations) to enhance visibility, congregational adoption, and revenue potential. Such versions shall be subject to the same publishing assignment terms herein. Publisher will consult with Writer on creative decisions where practicable and credit Writer appropriately. This provision is intended to maximize the Compositions' ministry impact through diverse formats suitable for church use, streaming, and sync opportunities.</div>
 
@@ -130,7 +126,7 @@ Collaborator shall **not** be entitled to any revenue from the Master outside of
 
 3. **Alternative Versions**
 
-<div class="indent">Label may, at its sole discretion and expense, create, record, and release alternative versions of the Recording (including but not limited to acoustic, instrumental, live, radio edits, or featured artist collaborations) to enhance visibility, congregational adoption, church usage (e.g., CCLI), and revenue potential. All such versions shall be owned exclusively by Label. Alternative versions will be subject to separate contracts specific to those arrangements, and shall not be subject to the revenue share terms of this Agreement. Label will consult with Collaborator on creative decisions where practicable and provide appropriate credit as set forth in Exhibit A.</div>
+<div class="indent">Label may, at its sole discretion and expense, create, record, and release alternative versions of the Recording (including but not limited to acoustic, instrumental, live, radio edits, or featured artist collaborations) to enhance visibility, congregational adoption, church usage, and revenue potential. All such versions shall be owned exclusively by Label. Alternative versions will be subject to separate contracts specific to those arrangements, and shall not be subject to the revenue share terms of this Agreement. Label will consult with Collaborator on creative decisions where practicable and provide appropriate credit as set forth in Exhibit A.</div>
 
 4. **Publishing**
 
