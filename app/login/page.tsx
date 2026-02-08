@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Image from "next/image"
 import { signIn } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -42,7 +43,17 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
+    <div className="flex min-h-screen flex-col items-center justify-center p-4">
+      <div className="mb-8">
+        <Image
+          src="/images/logo.png"
+          alt="River & Ember"
+          width={180}
+          height={60}
+          className="h-16 w-auto"
+          priority
+        />
+      </div>
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Login</CardTitle>

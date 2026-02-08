@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { useSession, signOut } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -30,8 +31,15 @@ export default function DashboardLayout({
       <nav className="border-b">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-6">
-            <Link href="/dashboard" className="text-xl font-bold">
-              River & Ember
+            <Link href="/dashboard" className="flex items-center">
+              <Image
+                src="/images/logo.png"
+                alt="River & Ember"
+                width={120}
+                height={40}
+                className="h-10 w-auto"
+                priority
+              />
             </Link>
             <div className="flex gap-4">
               <Link href="/dashboard" className="hover:underline">

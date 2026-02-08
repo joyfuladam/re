@@ -1427,7 +1427,7 @@ export default function SongDetailPage() {
                 return (role === "writer" || role === "label") && publishing > 0
               }) && (
                 <div>
-                  <div className="grid grid-cols-[2fr_1fr_1fr_2fr] gap-4 items-center mb-3 p-3">
+                  <div className="grid grid-cols-[1.5fr_0.8fr_0.5fr_0.8fr_2fr] gap-3 items-center mb-3 p-3">
                     <div className="flex items-center gap-2">
                       <h3 className="text-lg font-semibold">Publishing Share</h3>
                       {isAdmin && (
@@ -1505,6 +1505,7 @@ export default function SongDetailPage() {
                     </div>
                     <div></div>
                     <div></div>
+                    <div></div>
                     <div className="flex gap-2 justify-end">
                       <h3 className="text-lg font-semibold">Contracts</h3>
                     </div>
@@ -1559,98 +1560,88 @@ export default function SongDetailPage() {
                         return (
                           <div
                             key={`publishing-${sc.id}`}
-                            className="grid grid-cols-[2fr_1fr_1fr_2fr] gap-4 items-center p-3 border rounded"
+                            className="grid grid-cols-[1.5fr_0.8fr_0.5fr_0.8fr_2fr] gap-3 items-center p-3 border rounded"
                           >
-                            {/* Column 1: Name, Status, Remove */}
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium">{collaboratorName}</span>
-                              {contractStatus.status && (
-                                <span className={`px-2 py-0.5 rounded text-xs ${
-                                  isSigned 
-                                    ? "bg-green-100 text-green-800" 
-                                    : contractStatus.status === "sent"
-                                    ? "bg-blue-100 text-blue-800"
-                                    : contractStatus.status === "draft"
-                                    ? "bg-yellow-100 text-yellow-800"
-                                    : contractStatus.status === "declined"
-                                    ? "bg-red-100 text-red-800"
-                                    : "bg-gray-100 text-gray-800"
-                                }`}>
-                                  {isSigned ? "Signed" : contractStatus.status === "sent" ? "Sent" : contractStatus.status === "draft" ? "Draft" : contractStatus.status === "declined" ? "Declined" : contractStatus.status}
-                                </span>
-                              )}
+                            {/* Column 1: Name and Remove */}
+                            <div className="flex flex-col">
+                              <span className="font-medium whitespace-nowrap">{collaboratorName}</span>
                               {isAdmin && (
                                 <button
                                   onClick={() => handleDeleteCollaborator(sc.id, collaboratorName, sc.roleInSong as string)}
                                   disabled={deletingCollaboratorId === sc.id}
-                                  className="text-xs text-red-600 hover:text-red-800 hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
+                                  className="text-xs text-red-600 hover:text-red-800 hover:underline disabled:opacity-50 disabled:cursor-not-allowed text-left mt-1"
                                 >
                                   {deletingCollaboratorId === sc.id ? "Removing..." : "Remove"}
                                 </button>
                               )}
                             </div>
 
-                            {/* Column 2: Role with Edit button */}
-                            <div className="flex items-center gap-2">
+                            {/* Column 2: Role */}
+                            <div className="flex items-center">
                               {canSeeAllShares && (
                                 <>
-                                  {isAdmin && !isEditingRole ? (
-                                    <>
-                                      <span className="text-sm text-muted-foreground">{roleLabel}</span>
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="h-6 px-2 text-xs"
-                                        onClick={() => setEditingRoleId(sc.id)}
-                                        disabled={isUpdatingRole}
-                                      >
-                                        Edit
-                                      </Button>
-                                    </>
-                                  ) : isAdmin && isEditingRole ? (
-                                    <>
-                                      <Select
-                                        value={sc.roleInSong}
-                                        onValueChange={(value) => handleUpdateRole(sc.id, value as CollaboratorRole)}
-                                        disabled={isUpdatingRole}
-                                      >
-                                        <SelectTrigger className="h-7 w-32 text-xs">
-                                          <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          {[...availableRoles, "label"].map((role) => (
-                                            <SelectItem key={role} value={role}>
-                                              {roleLabels[role as CollaboratorRole] || role}
-                                            </SelectItem>
-                                          ))}
-                                        </SelectContent>
-                                      </Select>
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="h-6 px-2 text-xs"
-                                        onClick={() => setEditingRoleId(null)}
-                                        disabled={isUpdatingRole}
-                                      >
-                                        Cancel
-                                      </Button>
-                                    </>
+                                  {isAdmin && isEditingRole ? (
+                                    <Select
+                                      value={sc.roleInSong}
+                                      onValueChange={(value) => handleUpdateRole(sc.id, value as CollaboratorRole)}
+                                      disabled={isUpdatingRole}
+                                    >
+                                      <SelectTrigger className="h-7 w-full text-xs">
+                                        <SelectValue />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        {[...availableRoles, "label"].map((role) => (
+                                          <SelectItem key={role} value={role}>
+                                            {roleLabels[role as CollaboratorRole] || role}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
                                   ) : (
-                                    <span className="text-sm text-muted-foreground">{roleLabel}</span>
+                                    <span className="text-sm text-muted-foreground whitespace-nowrap">{roleLabel}</span>
                                   )}
                                 </>
                               )}
                             </div>
 
-                            {/* Column 3: Share Percentage with Edit */}
-                            <div className="flex items-center gap-2">
+                            {/* Column 3: Edit button for role */}
+                            <div className="flex items-center">
+                              {canSeeAllShares && isAdmin && (
+                                <>
+                                  {!isEditingRole ? (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-6 px-2 text-xs"
+                                      onClick={() => setEditingRoleId(sc.id)}
+                                      disabled={isUpdatingRole}
+                                    >
+                                      Edit
+                                    </Button>
+                                  ) : (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-6 px-2 text-xs"
+                                      onClick={() => setEditingRoleId(null)}
+                                      disabled={isUpdatingRole}
+                                    >
+                                      Cancel
+                                    </Button>
+                                  )}
+                                </>
+                              )}
+                            </div>
+
+                            {/* Column 4: Share Percentage */}
+                            <div className="flex items-center gap-1">
                               {isAdmin && !song.publishingLocked && !editingPublishingShare ? (
                                 <>
-                                  <span className="text-sm text-muted-foreground">Publishing: {publishing.toFixed(2)}%</span>
+                                  <span className="text-sm text-muted-foreground whitespace-nowrap">{publishing.toFixed(2)}%</span>
                                   <Button
                                     variant="ghost"
                                     size="sm"
-                                    className="h-6 px-2 text-xs"
+                                    className="h-6 px-1 text-xs"
                                     onClick={() => {
                                       setEditingPublishingShare(sc.id)
                                       setPublishingShareValue(publishing.toFixed(2))
@@ -1662,7 +1653,6 @@ export default function SongDetailPage() {
                                 </>
                               ) : isAdmin && !song.publishingLocked && editingPublishingShare === sc.id ? (
                                 <>
-                                  <span className="text-sm text-muted-foreground">Publishing:</span>
                                   <Input
                                     type="number"
                                     step="0.01"
@@ -1670,7 +1660,7 @@ export default function SongDetailPage() {
                                     max="100"
                                     value={publishingShareValue}
                                     onChange={(e) => setPublishingShareValue(e.target.value)}
-                                    className="h-6 w-16 text-xs"
+                                    className="h-6 w-14 text-xs"
                                     autoFocus
                                   />
                                   <span className="text-sm text-muted-foreground">%</span>
@@ -1701,12 +1691,27 @@ export default function SongDetailPage() {
                                   </Button>
                                 </>
                               ) : (
-                                <span className="text-sm text-muted-foreground">Publishing: {publishing.toFixed(2)}%</span>
+                                <span className="text-sm text-muted-foreground whitespace-nowrap">{publishing.toFixed(2)}%</span>
                               )}
                             </div>
 
-                            {/* Column 4: Contract Buttons */}
-                            <div className="flex gap-2 items-center justify-end">
+                            {/* Column 5: Contract Status and Buttons */}
+                            <div className="flex gap-2 items-center justify-end flex-wrap">
+                              {contractStatus.status && (
+                                <span className={`px-2 py-0.5 rounded text-xs whitespace-nowrap ${
+                                  isSigned 
+                                    ? "bg-green-100 text-green-800" 
+                                    : contractStatus.status === "sent"
+                                    ? "bg-blue-100 text-blue-800"
+                                    : contractStatus.status === "draft"
+                                    ? "bg-yellow-100 text-yellow-800"
+                                    : contractStatus.status === "declined"
+                                    ? "bg-red-100 text-red-800"
+                                    : "bg-gray-100 text-gray-800"
+                                }`}>
+                                  {isSigned ? "Signed" : contractStatus.status === "sent" ? "Sent" : contractStatus.status === "draft" ? "Draft" : contractStatus.status === "declined" ? "Declined" : contractStatus.status}
+                                </span>
+                              )}
                               {isAdmin && contractStatus.contractId && contractStatus.status && contractStatus.status !== "pending" && (
                                 <Button
                                   variant="ghost"
@@ -1865,7 +1870,7 @@ export default function SongDetailPage() {
                 return isMasterEligible(role) && role !== "label"
               }) && (
                 <div>
-                  <div className="grid grid-cols-[2fr_1fr_1fr_2fr] gap-4 items-center mb-3 p-3">
+                  <div className="grid grid-cols-[1.5fr_0.8fr_0.5fr_0.8fr_2fr] gap-3 items-center mb-3 p-3">
                     <div className="flex items-center gap-2">
                       <h3 className="text-lg font-semibold">Master Revenue Share</h3>
                       {isAdmin && song.publishingLocked && (
@@ -1930,7 +1935,10 @@ export default function SongDetailPage() {
                         )
                       })()}
                     </div>
-                    <div className="flex gap-2 ml-4 justify-center" style={{ minWidth: '140px' }}>
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                    <div className="flex gap-2 justify-end">
                       <h3 className="text-lg font-semibold">Contracts</h3>
                     </div>
                   </div>
@@ -2010,98 +2018,88 @@ export default function SongDetailPage() {
                               return (
                                 <div
                                   key={`master-${sc.id}`}
-                                  className="grid grid-cols-[2fr_1fr_1fr_2fr] gap-4 items-center p-3 border rounded"
+                                  className="grid grid-cols-[1.5fr_0.8fr_0.5fr_0.8fr_2fr] gap-3 items-center p-3 border rounded"
                                 >
-                                  {/* Column 1: Name, Status, Remove */}
-                                  <div className="flex items-center gap-2">
-                                    <span className="font-medium">{collaboratorName}</span>
-                                    {contractStatus.status && (
-                                      <span className={`px-2 py-0.5 rounded text-xs ${
-                                        isSigned 
-                                          ? "bg-green-100 text-green-800" 
-                                          : contractStatus.status === "sent"
-                                          ? "bg-blue-100 text-blue-800"
-                                          : contractStatus.status === "draft"
-                                          ? "bg-yellow-100 text-yellow-800"
-                                          : contractStatus.status === "declined"
-                                          ? "bg-red-100 text-red-800"
-                                          : "bg-gray-100 text-gray-800"
-                                      }`}>
-                                        {isSigned ? "Signed" : contractStatus.status === "sent" ? "Sent" : contractStatus.status === "draft" ? "Draft" : contractStatus.status === "declined" ? "Declined" : contractStatus.status}
-                                      </span>
-                                    )}
+                                  {/* Column 1: Name and Remove */}
+                                  <div className="flex flex-col">
+                                    <span className="font-medium whitespace-nowrap">{collaboratorName}</span>
                                     {isAdmin && (
                                       <button
                                         onClick={() => handleDeleteCollaborator(sc.id, collaboratorName, sc.roleInSong as string)}
                                         disabled={deletingCollaboratorId === sc.id}
-                                        className="text-xs text-red-600 hover:text-red-800 hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="text-xs text-red-600 hover:text-red-800 hover:underline disabled:opacity-50 disabled:cursor-not-allowed text-left mt-1"
                                       >
                                         {deletingCollaboratorId === sc.id ? "Removing..." : "Remove"}
                                       </button>
                                     )}
                                   </div>
 
-                                  {/* Column 2: Role with Edit button */}
-                                  <div className="flex items-center gap-2">
+                                  {/* Column 2: Role */}
+                                  <div className="flex items-center">
                                     {canSeeAllShares && (
                                       <>
-                                        {isAdmin && !isEditingRole ? (
-                                          <>
-                                            <span className="text-sm text-muted-foreground">{roleLabel}</span>
-                                            <Button
-                                              variant="ghost"
-                                              size="sm"
-                                              className="h-6 px-2 text-xs"
-                                              onClick={() => setEditingRoleId(sc.id)}
-                                              disabled={isUpdatingRole}
-                                            >
-                                              Edit
-                                            </Button>
-                                          </>
-                                        ) : isAdmin && isEditingRole ? (
-                                          <>
-                                            <Select
-                                              value={sc.roleInSong}
-                                              onValueChange={(value) => handleUpdateRole(sc.id, value as CollaboratorRole)}
-                                              disabled={isUpdatingRole}
-                                            >
-                                              <SelectTrigger className="h-7 w-32 text-xs">
-                                                <SelectValue />
-                                              </SelectTrigger>
-                                              <SelectContent>
-                                                {[...availableRoles, "label"].map((role) => (
-                                                  <SelectItem key={role} value={role}>
-                                                    {roleLabels[role as CollaboratorRole] || role}
-                                                  </SelectItem>
-                                                ))}
-                                              </SelectContent>
-                                            </Select>
-                                            <Button
-                                              variant="ghost"
-                                              size="sm"
-                                              className="h-6 px-2 text-xs"
-                                              onClick={() => setEditingRoleId(null)}
-                                              disabled={isUpdatingRole}
-                                            >
-                                              Cancel
-                                            </Button>
-                                          </>
+                                        {isAdmin && isEditingRole ? (
+                                          <Select
+                                            value={sc.roleInSong}
+                                            onValueChange={(value) => handleUpdateRole(sc.id, value as CollaboratorRole)}
+                                            disabled={isUpdatingRole}
+                                          >
+                                            <SelectTrigger className="h-7 w-full text-xs">
+                                              <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              {[...availableRoles, "label"].map((role) => (
+                                                <SelectItem key={role} value={role}>
+                                                  {roleLabels[role as CollaboratorRole] || role}
+                                                </SelectItem>
+                                              ))}
+                                            </SelectContent>
+                                          </Select>
                                         ) : (
-                                          <span className="text-sm text-muted-foreground">{roleLabel}</span>
+                                          <span className="text-sm text-muted-foreground whitespace-nowrap">{roleLabel}</span>
                                         )}
                                       </>
                                     )}
                                   </div>
 
-                                  {/* Column 3: Share Percentage with Edit */}
-                                  <div className="flex items-center gap-2">
+                                  {/* Column 3: Edit button for role */}
+                                  <div className="flex items-center">
+                                    {canSeeAllShares && isAdmin && (
+                                      <>
+                                        {!isEditingRole ? (
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-6 px-2 text-xs"
+                                            onClick={() => setEditingRoleId(sc.id)}
+                                            disabled={isUpdatingRole}
+                                          >
+                                            Edit
+                                          </Button>
+                                        ) : (
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-6 px-2 text-xs"
+                                            onClick={() => setEditingRoleId(null)}
+                                            disabled={isUpdatingRole}
+                                          >
+                                            Cancel
+                                          </Button>
+                                        )}
+                                      </>
+                                    )}
+                                  </div>
+
+                                  {/* Column 4: Share Percentage */}
+                                  <div className="flex items-center gap-1">
                                     {isAdmin && song.publishingLocked && !song.masterLocked && !editingMasterShare ? (
                                       <>
-                                        <span className="text-sm text-muted-foreground">Master Revenue: {master.toFixed(2)}%</span>
+                                        <span className="text-sm text-muted-foreground whitespace-nowrap">{master.toFixed(2)}%</span>
                                         <Button
                                           variant="ghost"
                                           size="sm"
-                                          className="h-6 px-2 text-xs"
+                                          className="h-6 px-1 text-xs"
                                           onClick={() => {
                                             setEditingMasterShare(sc.id)
                                             setMasterShareValue(master.toFixed(2))
@@ -2113,7 +2111,6 @@ export default function SongDetailPage() {
                                       </>
                                     ) : isAdmin && song.publishingLocked && !song.masterLocked && editingMasterShare === sc.id ? (
                                       <>
-                                        <span className="text-sm text-muted-foreground">Master Revenue:</span>
                                         <Input
                                           type="number"
                                           step="0.01"
@@ -2121,7 +2118,7 @@ export default function SongDetailPage() {
                                           max="100"
                                           value={masterShareValue}
                                           onChange={(e) => setMasterShareValue(e.target.value)}
-                                          className="h-6 w-16 text-xs"
+                                          className="h-6 w-14 text-xs"
                                           autoFocus
                                         />
                                         <span className="text-sm text-muted-foreground">%</span>
@@ -2152,12 +2149,27 @@ export default function SongDetailPage() {
                                         </Button>
                                       </>
                                     ) : (
-                                      <span className="text-sm text-muted-foreground">Master Revenue: {master.toFixed(2)}%</span>
+                                      <span className="text-sm text-muted-foreground whitespace-nowrap">{master.toFixed(2)}%</span>
                                     )}
                                   </div>
 
-                                  {/* Column 4: Contract Buttons */}
-                                  <div className="flex gap-2 items-center justify-end">
+                                  {/* Column 5: Contract Status and Buttons */}
+                                  <div className="flex gap-2 items-center justify-end flex-wrap">
+                                    {contractStatus.status && (
+                                      <span className={`px-2 py-0.5 rounded text-xs whitespace-nowrap ${
+                                        isSigned 
+                                          ? "bg-green-100 text-green-800" 
+                                          : contractStatus.status === "sent"
+                                          ? "bg-blue-100 text-blue-800"
+                                          : contractStatus.status === "draft"
+                                          ? "bg-yellow-100 text-yellow-800"
+                                          : contractStatus.status === "declined"
+                                          ? "bg-red-100 text-red-800"
+                                          : "bg-gray-100 text-gray-800"
+                                      }`}>
+                                        {isSigned ? "Signed" : contractStatus.status === "sent" ? "Sent" : contractStatus.status === "draft" ? "Draft" : contractStatus.status === "declined" ? "Declined" : contractStatus.status}
+                                      </span>
+                                    )}
                                     {isAdmin && contractStatus.contractId && contractStatus.status && contractStatus.status !== "pending" && (
                                       <Button
                                         variant="ghost"
