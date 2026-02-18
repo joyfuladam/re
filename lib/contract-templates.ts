@@ -58,9 +58,15 @@ Writer has created certain musical compositions for recording and release under 
 6. **Governing Law**<br>
    This Agreement shall be governed by the laws of the State of {{governing_state}}, without regard to conflict of laws principles.
 
-7. **Alternative Versions & Expanded Releases**
+7. **Derivative Works & Alternative Exploitations**
 
-<div class="indent">Publisher, at its discretion and expense, may create, record, and release alternative versions of the Compositions (including but not limited to acoustic, instrumental, live, radio edit, or featured artist collaborations) to enhance visibility, congregational adoption, and revenue potential. Such versions shall be subject to the same publishing assignment terms herein. Publisher will consult with Writer on creative decisions where practicable and credit Writer appropriately. This provision is intended to maximize the Compositions' ministry impact through diverse formats suitable for church use, streaming, and sync opportunities.</div>
+<div class="indent">Publisher shall have the exclusive right to authorize, create, adapt, arrange, edit, translate, modify, and otherwise prepare derivative works based upon the Compositions, including but not limited to alternative arrangements, acoustic versions, instrumental versions, live adaptations, remixes, translations, congregational adaptations, lyric revisions for ministry use, radio edits, featured collaborations, and other derivative versions (collectively, "Derivative Works").</div>
+
+<div class="indent">Publisher may record, authorize, and release such Derivative Works in connection with Publisher's label projects without additional approval from Writer, provided that Writer receives appropriate songwriting credit consistent with Writer's ownership share of the Compositions.</div>
+
+<div class="indent">All Derivative Works shall remain subject to the publishing assignment terms herein, and Publisher shall retain one hundred percent (100%) of the publisher's share of all income derived therefrom.</div>
+
+<div class="indent">Nothing herein shall diminish Writer's retained one hundred percent (100%) writer's share of publishing royalties.</div>
 
 IN WITNESS WHEREOF, the parties have executed this Agreement as of the Effective Date.
 
@@ -114,33 +120,41 @@ Label and Collaborator desire to collaborate on a per-song basis for the sound r
 
 <div class="indent">Collaborator shall provide the services and contributions described in Exhibit A. {% if collaborator_role == "Producer" %}Collaborator hereby grants and assigns to Label all right, title, and interest in and to the master sound recording(s) of the Recording (the "Master"), including all worldwide copyright and other proprietary rights therein. Collaborator further grants Label perpetual, worldwide rights to exploit, distribute, promote, and create derivative works from the Master (including alternative versions), and to use Collaborator's name, likeness, voice, and performance in connection therewith. Collaborator acknowledges that this assignment constitutes full transfer of ownership of the Master to Label, and Collaborator shall have no ownership interest therein.{% else %}Collaborator's services and contributions to the Recording are provided as a "work made for hire" under the Copyright Act of 1976, as amended. To the extent that any portion of Collaborator's contribution is not deemed a work made for hire, Collaborator hereby irrevocably assigns to Label all right, title, and interest in and to Collaborator's specific performance and contribution to the Master, including all worldwide copyright and other proprietary rights therein. Collaborator acknowledges that Label owns the entire Master, including all contributions thereto. Collaborator has no ownership, copyright, or other proprietary interest in the Master, whether as a whole or in any part thereof. Collaborator grants Label a perpetual, worldwide, royalty-free license to use Collaborator's name, likeness, voice, image, and biographical information in connection with the exploitation, distribution, promotion, and marketing of the Master and any derivative works thereof.{% endif %}</div>
 
-2. **Compensation - Master Revenue Share**
+2. **Compensation – Master Revenue Share**
 
-<div class="indent">In full consideration for Collaborator's services and the assignment of Master rights, Label shall pay Collaborator {{collaborator_share_percentage}}% of Net Receipts from digital revenue streams (streaming and downloads). "Net Receipts" means all monies actually received by Label from any source attributable to the digital exploitation of the Master (including streaming and downloads), less any third-party fees, taxes, returns, or customary deductions.  
+<div class="indent">In full consideration for Collaborator's services and the assignment of Master rights, Label shall pay Collaborator {{collaborator_share_percentage}}% of Net Receipts from digital revenue streams (streaming and downloads only) derived from exploitation of the Master.</div>
 
-Collaborator shall **not** be entitled to any revenue from the Master outside of Net Receipts, including but not limited to synchronization licenses, physical sales, live performance fees, direct licensing, or any other exploitation. Label retains 100% of such revenue to fund future ministry projects and Label operations.</div>
+<div class="indent">"Net Receipts" means all monies actually received by Label from digital exploitation of the Master, including but not limited to streaming and download revenue, less any third-party fees, distribution fees, platform fees, mechanical royalties paid on behalf of the Master, taxes, chargebacks, refunds, collection costs, or other customary industry deductions.</div>
+
+<div class="indent">Collaborator shall not be entitled to any revenue from the Master outside of Net Receipts, including but not limited to synchronization licenses, physical sales, live performance fees, direct licensing, merchandise bundling, or any other exploitation. Label retains 100% of such revenue.</div>
+
+<div class="indent">Collaborator's revenue share shall continue for the life of the Master and any renewals or extensions thereof.</div>
+
+<div class="indent">Accounting and payments shall be administered through Label's designated royalty administration platform (currently Wings Access or its successor). Statements and payments issued through such platform shall constitute full accounting under this Agreement.</div>
 
 3. **Alternative Versions**
 
-<div class="indent">Label may, at its sole discretion and expense, create, record, and release alternative versions of the Recording (including but not limited to acoustic, instrumental, live, radio edits, or featured artist collaborations) to enhance visibility, congregational adoption, church usage, and revenue potential. All such versions shall be owned exclusively by Label. Alternative versions will be subject to separate contracts specific to those arrangements, and shall not be subject to the revenue share terms of this Agreement. Label will consult with Collaborator on creative decisions where practicable and provide appropriate credit as set forth in Exhibit A.</div>
+<div class="indent">Label shall have the sole and exclusive right, but not the obligation, to create, record, produce, exploit, and release alternative versions of the Recording, including but not limited to acoustic versions, instrumental versions, live recordings, radio edits, remixes, featured artist collaborations, translations, edits, or other derivative masters (collectively, "Alternative Versions").</div>
+
+<div class="indent">All Alternative Versions shall be owned exclusively by Label as master recordings separate and distinct from the original Master.</div>
+
+<div class="indent">Unless otherwise agreed in writing in a separate agreement specific to such Alternative Version, Collaborator shall have no right to compensation or revenue participation from Alternative Versions.</div>
+
+<div class="indent">Label may determine, in its sole discretion, the creative direction, release strategy, marketing, distribution, and exploitation of any Alternative Versions.</div>
 
 4. **Publishing**
 
 <div class="indent">This Agreement covers **only master rights** and revenues. Publishing rights for the underlying musical composition(s) are governed by a separate Song-by-Song Publishing Assignment Agreement (if applicable). Collaborator has **no right** to publishing revenue or ownership based on their performance or contribution to the Master under this Agreement. If Collaborator is also a songwriter on the underlying composition, Collaborator's publishing rights and shares (if any) are governed exclusively by a separate Publishing Assignment Agreement with River and Ember, and any publishing revenue or ownership shall be in accordance with the terms of that separate publishing agreement. Collaborator is **not** eligible for master revenue share based on songwriting or composition contributions; such contributions are handled separately through publishing agreements and split sheets. Collaborator retains full control of publishing rights in non-Label songs. This Agreement pertains solely to Master rights and revenues.</div>
 
-5. **Conduct Standards**
-
-<div class="indent">Collaborator agrees to conduct themselves, both publicly and privately, in a manner consistent with biblical Christian principles during the term of this Agreement and in connection with promotion of the Recording. Collaborator understands that any public conduct reasonably deemed by Label to be materially inconsistent with such principles may impact Label's willingness to collaborate on future projects, though it shall not affect Label's perpetual ownership of the Master or rights hereunder.</div>
-
-6. **Warranties & Representations**
+5. **Warranties & Representations**
 
 <div class="indent">Collaborator warrants and represents that: (i) Collaborator has full right and authority to grant the rights herein; (ii) Collaborator's contribution is original and does not infringe third-party rights; and (iii) Collaborator will not make any claims inconsistent with Label's ownership of the Master.</div>
 
-7. **Governing Law**
+6. **Governing Law**
 
 <div class="indent">This Agreement shall be governed by the laws of the State of {{governing_state}}, without regard to conflict of laws principles. Any disputes shall be resolved exclusively in the courts of {{governing_state}}.</div>
 
-8. **Entire Agreement**
+7. **Entire Agreement**
 
 <div class="indent">This constitutes the entire understanding between the parties and supersedes all prior agreements. No modifications except in writing signed by both parties.</div>
 
