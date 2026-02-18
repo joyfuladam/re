@@ -137,6 +137,17 @@ export default function SongDetailPage() {
   // Non-writer/artist collaborators can only see their own share
   const canSeeAllShares = isAdmin || isWriterOrArtist
 
+  // For non-admin: only show sections where the current user has an allocation
+  const currentUserHasPublishing = currentUserSongCollaborator
+    ? (currentUserSongCollaborator.roleInSong === "writer" || currentUserSongCollaborator.roleInSong === "label") &&
+      (parseFloat((currentUserSongCollaborator.publishingOwnership ?? 0).toString()) > 0)
+    : false
+  const currentUserHasMaster = currentUserSongCollaborator
+    ? isMasterEligible(currentUserSongCollaborator.roleInSong as CollaboratorRole) &&
+      currentUserSongCollaborator.roleInSong !== "label" &&
+      (parseFloat((currentUserSongCollaborator.masterOwnership ?? 0).toString()) > 0)
+    : false
+
   const handlePreviewContract = async (songCollaboratorId: string, contractType: ContractType, collaboratorName: string) => {
     if (!song) return
     
@@ -1420,13 +1431,12 @@ export default function SongDetailPage() {
         </CardHeader>
           <CardContent>
             <div className="space-y-6">
-              {/* Publishing Share Section */}
-              {song.songCollaborators.some((sc) => {
+              {/* Publishing Share Section: admins see if any have publishing; non-admins only if they have publishing allocation */}
+              {((isAdmin && song.songCollaborators.some((sc) => {
                 const role = sc.roleInSong as CollaboratorRole
                 const publishing = sc.publishingOwnership ? parseFloat(sc.publishingOwnership.toString()) : 0
-                // Only show Writers and Label in Publishing section
                 return (role === "writer" || role === "label") && publishing > 0
-              }) && (
+              })) || (!isAdmin && currentUserHasPublishing)) && (
                 <div className="grid grid-cols-[2fr_1fr] gap-4">
                   <Card>
                     <CardHeader className="p-4">
@@ -1582,9 +1592,9 @@ export default function SongDetailPage() {
                                 )}
                               </div>
 
-                            {/* Column 2: Role with Edit button below */}
+                            {/* Column 2: Role with Edit button below — show role for current user even when canSeeAllShares is false */}
                             <div className="flex flex-col p-3 border rounded">
-                              {canSeeAllShares && (
+                              {(canSeeAllShares || isCurrentUser) && (
                                 <>
                                   {isAdmin && isEditingRole ? (
                                     <>
@@ -1892,11 +1902,11 @@ export default function SongDetailPage() {
                 </div>
               )}
 
-              {/* Master Revenue Share Section */}
-              {song.songCollaborators.some((sc) => {
+              {/* Master Revenue Share Section: admins see if any have master; non-admins only if they have master allocation */}
+              {((isAdmin && song.songCollaborators.some((sc) => {
                 const role = sc.roleInSong as CollaboratorRole
                 return isMasterEligible(role) && role !== "label"
-              }) && (
+              })) || (!isAdmin && currentUserHasMaster)) && (
                 <div className="grid grid-cols-[2fr_1fr] gap-4">
                   <Card>
                     <CardHeader className="p-4">
@@ -2069,10 +2079,10 @@ export default function SongDetailPage() {
                                     )}
                                   </div>
 
-                                  {/* Column 2: Role with Edit button below */}
+                                  {/* Column 2: Role with Edit button below — show role for current user even when canSeeAllShares is false */}
                                   <div className="flex flex-col p-3 border rounded">
-                                    {canSeeAllShares && (
-                                      <>
+                                        {(canSeeAllShares || isCurrentUser) && (
+                                        <>
                                         {isAdmin && isEditingRole ? (
                                           <>
                                             <Select

@@ -51,18 +51,14 @@ Writer has created certain musical compositions for recording and release under 
 
 <div class="indent">Perpetual, subject to reversion to Writer upon {{reversion_condition}}.</div>
 
-5. **Morals & Conduct Clause**
-
-<div class="indent">Writer agrees to conduct themselves, both publicly and privately, in a manner consistent with biblical Christian principles. Material breach (as reasonably determined by Publisher, e.g., public conduct contrary to Scripture) shall allow Publisher immediate termination of this Agreement and reversion of rights to Writer.</div>
-
-6. **Warranties & Representations**
+5. **Warranties & Representations**
 
 <div class="indent">Writer warrants that the Compositions are original, do not infringe third-party rights, and Writer has full authority to grant these rights.</div>
 
-7. **Governing Law**<br>
+6. **Governing Law**<br>
    This Agreement shall be governed by the laws of the State of {{governing_state}}, without regard to conflict of laws principles.
 
-8. **Alternative Versions & Expanded Releases**
+7. **Alternative Versions & Expanded Releases**
 
 <div class="indent">Publisher, at its discretion and expense, may create, record, and release alternative versions of the Compositions (including but not limited to acoustic, instrumental, live, radio edit, or featured artist collaborations) to enhance visibility, congregational adoption, and revenue potential. Such versions shall be subject to the same publishing assignment terms herein. Publisher will consult with Writer on creative decisions where practicable and credit Writer appropriately. This provision is intended to maximize the Compositions' ministry impact through diverse formats suitable for church use, streaming, and sync opportunities.</div>
 
@@ -170,14 +166,12 @@ Date: <span style="color: white;">{{date:2:y}}</span>
 | Role                   | {{collaborator_role}} ({{collaborator_role_description}}) |
 | Specific Services / Contribution | {{services_description}} |
 | Revenue Share          | {{collaborator_share_percentage}}% of Net Receipts (digital streaming & downloads only) |
-| Credit / Billing Wording | {{credit_wording}} |
-| Special Terms / Notes  | {{special_terms}} |
 
 <!-- How to Use:
 - Set collaborator_role to "Producer", "Instrumentalist", "Vocalist", or "Featured Artist"
-- Fill Exhibit A fields completely for each contract
+- Fill Exhibit A fields (Title, ISRC, Role, Services, Revenue Share) for each contract
 - Producers get full master assignment; performers get work-made-for-hire + performance assignment
-- Always use separate publishing/split sheet for songwriting
+- Always use separate publishing/split sheet for songwriting. Do not include song lyrics.
 -->
 `
 
