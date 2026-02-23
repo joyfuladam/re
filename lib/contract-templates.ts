@@ -84,9 +84,9 @@ Date: <span style="color: white;">{{date:2:y}}</span><br>
 
 **Exhibit A: Compositions**
 
-| Title                  | ISWC Code              | Writers & Shares                              |
-|------------------------|------------------------|-----------------------------------------------|
-{% for song in compositions %}| {{song.title}}         | {% if song.iswc %}{{song.iswc}}{% else %}ISWC CODE{% endif %} | {{song.writers}}                              |
+| Title                  | ISWC Code              | ASCAP Work ID        | Writers & Shares                              |
+|------------------------|------------------------|----------------------|-----------------------------------------------|
+{% for song in compositions %}| {{song.title}}         | {% if song.iswc %}{{song.iswc}}{% else %}ISWC CODE{% endif %} | {% if song.ascapWorkId %}{{song.ascapWorkId}}{% else %}—{% endif %} | {{song.writers}}                              |
 {% endfor %}
 
 `

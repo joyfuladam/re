@@ -72,6 +72,7 @@ export async function buildPublishingAssignmentData(
     writers: writersList,
     isrc: song.isrcCode || null,
     iswc: song.iswcCode || null,
+    ascapWorkId: song.proWorkRegistrationNumber || null,
     notes: song.notes || null,
   }
 
