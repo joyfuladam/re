@@ -1173,6 +1173,18 @@ export default function SongDetailPage() {
                 </div>
 
                 <div className="space-y-2">
+                  <Label htmlFor="edit-proWorkRegistrationNumber">ASCAP Work ID (optional)</Label>
+                  <Input
+                    id="edit-proWorkRegistrationNumber"
+                    value={editFormData.proWorkRegistrationNumber}
+                    onChange={(e) =>
+                      setEditFormData({ ...editFormData, proWorkRegistrationNumber: e.target.value })
+                    }
+                    placeholder="e.g. 123456789"
+                  />
+                </div>
+
+                <div className="space-y-2">
                   <Label htmlFor="edit-duration">Duration (seconds)</Label>
                   <Input
                     id="edit-duration"
@@ -1203,15 +1215,6 @@ export default function SongDetailPage() {
 
                 {/* Additional fields */}
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-proWorkRegistrationNumber">PRO Work Registration Number</Label>
-                    <Input
-                      id="edit-proWorkRegistrationNumber"
-                      value={editFormData.proWorkRegistrationNumber}
-                      onChange={(e) => setEditFormData({ ...editFormData, proWorkRegistrationNumber: e.target.value })}
-                    />
-                  </div>
-
                   <div className="space-y-2">
                     <Label htmlFor="edit-publishingAdmin">Publishing Administrator</Label>
                     <Input
@@ -1325,6 +1328,11 @@ export default function SongDetailPage() {
                   <div className="text-sm font-medium text-muted-foreground">ISWC</div>
                   <div>{song.iswcCode || "—"}</div>
                 </div>
+
+                <div>
+                  <div className="text-sm font-medium text-muted-foreground">ASCAP Work ID</div>
+                  <div>{song.proWorkRegistrationNumber || "—"}</div>
+                </div>
                 
                 <div>
                   <div className="text-sm font-medium text-muted-foreground">Duration</div>
@@ -1351,14 +1359,6 @@ export default function SongDetailPage() {
                     })() : "—"}
                   </div>
                 </div>
-                
-                {/* Additional fields (if they exist) */}
-                {song.proWorkRegistrationNumber && (
-                  <div>
-                    <div className="text-sm font-medium text-muted-foreground">PRO Work Registration Number</div>
-                    <div>{song.proWorkRegistrationNumber}</div>
-                  </div>
-                )}
                 
                 {song.publishingAdmin && (
                   <div>
