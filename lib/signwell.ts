@@ -35,15 +35,15 @@ export class SignWellClient {
 
   async sendContract(params: SendContractParams): Promise<{ signatureRequestId: string }> {
     try {
-      // Check for test mode - SignWell may use separate test API keys or account settings
-      // Default to test mode if not explicitly disabled (safer for development)
-      const testMode = process.env.SIGNWELL_TEST_MODE === "false" ? false : true
+      // Test mode: only enable when explicitly set to "true" (default is live/production)
+      const testMode = process.env.SIGNWELL_TEST_MODE === "true"
       
       console.log("📄 Preparing contract for SignWell...")
       console.log(`   Title: ${params.title}`)
       if (testMode) {
-        console.log(`   ⚠️  Test mode: ENABLED (set SIGNWELL_TEST_MODE=false to disable)`)
-        console.log(`   Note: SignWell test mode depends on your account settings`)
+        console.log(`   ⚠️  Test mode: ENABLED (set SIGNWELL_TEST_MODE=false or unset for live)`)
+      } else {
+        console.log(`   Live mode: documents will be sent for real signatures`)
       }
 
       // Build signers array (parallel signing - no order required)
@@ -135,8 +135,7 @@ export class SignWellClient {
       fetch('http://127.0.0.1:7243/ingest/4c8d8774-18d6-406e-b702-2dc324f31e07',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'lib/signwell.ts:115',message:'Document payload created with text_tags enabled',data:{recipientsCount:recipients.length,recipients:recipients.map((r:any)=>({id:r.id,email:r.email})),filesCount:documentPayload.files.length,textTagsEnabled:documentPayload.text_tags},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
       // #endregion
 
-      // Add test mode parameter per SignWell API documentation
-      // Reference: https://developers.signwell.com/reference/getting-started-with-your-api-1#test-mode
+      // Add test mode parameter only when explicitly enabled (per SignWell API docs)
       if (testMode) {
         documentPayload.test_mode = true
         console.log(`   ℹ️  Test mode enabled - document will be created in test environment`)
