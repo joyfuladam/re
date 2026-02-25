@@ -48,9 +48,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Extract event type and document ID
-    // SignWell webhook format: { event: "document.completed", data: { document: { id: ... } } }
-    const eventType = eventData.event || eventData.type
+    // SignWell docs: event is an object with event.type (e.g. "document_completed"); document is at data.object
+    // See https://developers.signwell.com/reference/event-data
+    const eventType =
+      (typeof eventData.event === "object" ? eventData.event?.type : null) ||
+      eventData.event ||
+      eventData.type
     const documentId =
+      eventData.data?.object?.id ||
       eventData.data?.document?.id ||
       eventData.document?.id ||
       eventData.id
@@ -71,23 +76,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ received: true })
     }
 
-    // Handle different event types
-    // SignWell events: document.completed, document.declined, document.canceled
+    // Handle different event types (SignWell uses underscores: document_completed, document_signed, etc.)
+    const doc = eventData.data?.object || eventData.data?.document || eventData.document || {}
     switch (eventType) {
+      case "document_completed":
       case "document.completed":
+      case "document_signed":
       case "document.signed":
       case "document.finished":
         // Contract was signed
         const signedAt =
+          doc.completed_at ||
+          doc.signed_at ||
+          doc.finished_at ||
+          doc.updated_at ||
           eventData.data?.document?.completed_at ||
-          eventData.data?.document?.signed_at ||
-          eventData.data?.document?.finished_at ||
-          eventData.document?.completed_at ||
-          eventData.document?.signed_at ||
-          eventData.document?.finished_at ||
-          eventData.completed_at ||
-          eventData.signed_at ||
-          eventData.finished_at
+          eventData.document?.completed_at
 
         await db.contract.update({
           where: { id: contract.id },
@@ -98,6 +102,7 @@ export async function POST(request: NextRequest) {
         })
         break
 
+      case "document_declined":
       case "document.declined":
       case "document.rejected":
         // Contract was declined
@@ -109,6 +114,7 @@ export async function POST(request: NextRequest) {
         })
         break
 
+      case "document_canceled":
       case "document.canceled":
       case "document.cancelled":
         // Contract was canceled
