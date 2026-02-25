@@ -248,16 +248,17 @@ export class SignWellClient {
 
       const data = await response.json()
       const document = data.document || data.data || data
+      const rawStatus = (document.status || "").toLowerCase()
 
-      // Map SignWell status to our status format
+      // Map SignWell status to our status format (case-insensitive)
       let status = "pending"
-      if (document.status === "completed" || document.status === "signed") {
+      if (rawStatus === "completed" || rawStatus === "signed" || rawStatus === "finished") {
         status = "signed"
-      } else if (document.status === "declined" || document.status === "rejected") {
+      } else if (rawStatus === "declined" || rawStatus === "rejected") {
         status = "declined"
-      } else if (document.status === "canceled" || document.status === "cancelled") {
+      } else if (rawStatus === "canceled" || rawStatus === "cancelled") {
         status = "canceled"
-      } else if (document.status === "sent" || document.status === "pending") {
+      } else if (rawStatus === "sent" || rawStatus === "pending" || rawStatus === "in_progress") {
         status = "sent"
       }
 

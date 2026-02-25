@@ -1731,7 +1731,7 @@ export default function SongDetailPage() {
                                   {isSigned ? "Signed" : contractStatus.status === "sent" ? "Sent" : contractStatus.status === "draft" ? "Draft" : contractStatus.status === "declined" ? "Declined" : contractStatus.status}
                                 </span>
                               )}
-                              {isAdmin && contractStatus.contractId && contractStatus.status && contractStatus.status !== "pending" && (
+                              {isAdmin && contractStatus.contractId && (
                                 <Button
                                   variant="ghost"
                                   size="sm"
@@ -2218,7 +2218,7 @@ export default function SongDetailPage() {
                                         {isSigned ? "Signed" : contractStatus.status === "sent" ? "Sent" : contractStatus.status === "draft" ? "Draft" : contractStatus.status === "declined" ? "Declined" : contractStatus.status}
                                       </span>
                                     )}
-                                    {isAdmin && contractStatus.contractId && contractStatus.status && contractStatus.status !== "pending" && (
+                                    {isAdmin && contractStatus.contractId && (
                                       <Button
                                         variant="ghost"
                                         size="sm"

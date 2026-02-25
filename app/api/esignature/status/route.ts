@@ -41,8 +41,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Contract not found" }, { status: 404 })
     }
 
-    // If contract hasn't been sent yet, return database status
-    if (!contract.esignatureDocId || contract.esignatureStatus === "pending") {
+    // If contract was never sent (no SignWell document ID), return database status only
+    if (!contract.esignatureDocId) {
       return NextResponse.json({
         status: contract.esignatureStatus || "pending",
         signedAt: contract.signedAt?.toISOString() || null,
