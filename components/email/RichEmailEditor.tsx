@@ -2,8 +2,6 @@
 
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react"
 
-let ReactQuill: any = null
-
 export interface RichEmailEditorHandle {
   insertTextAtCursor: (text: string) => void
   insertHtmlAtCursor: (html: string) => void
@@ -16,19 +14,7 @@ interface RichEmailEditorProps {
   className?: string
 }
 
-const Font = (() => {
-  try {
-    const Quill = require("quill") as any
-    const FontAttr = Quill.import("formats/font") as any
-    FontAttr.whitelist = ["arial", "aptos", "calibri", "serif", "monospace"]
-    Quill.register(FontAttr, true)
-    return FontAttr
-  } catch {
-    return null
-  }
-})()
-
-const modules = {
+const QUILL_MODULES = {
   toolbar: [
     [{ font: ["", "arial", "aptos", "calibri", "serif", "monospace"] }],
     [{ size: ["small", false, "large", "huge"] }],
@@ -41,7 +27,7 @@ const modules = {
   ],
 }
 
-const formats = [
+const QUILL_FORMATS = [
   "font",
   "size",
   "bold",
@@ -56,14 +42,41 @@ const formats = [
   "image",
 ]
 
+let fontsRegistered = false
+
+function registerFonts() {
+  if (fontsRegistered) return
+  try {
+    const Quill = require("quill") as any
+    const FontAttr = Quill.import("formats/font") as any
+    FontAttr.whitelist = ["arial", "aptos", "calibri", "serif", "monospace"]
+    Quill.register(FontAttr, true)
+    fontsRegistered = true
+  } catch (e) {
+    console.warn("Could not register Quill fonts:", e)
+  }
+}
+
 export const RichEmailEditor = forwardRef<RichEmailEditorHandle, RichEmailEditorProps>(
   function RichEmailEditor({ value, onChange, placeholder, className }, ref) {
     const quillRef = useRef<any>(null)
-    const [mounted, setMounted] = useState(false)
+    const [QuillComponent, setQuillComponent] = useState<any>(null)
 
     useEffect(() => {
-      ReactQuill = require("react-quill").default
-      setMounted(true)
+      let cancelled = false
+      async function load() {
+        try {
+          registerFonts()
+          const mod = await import("react-quill")
+          if (!cancelled) {
+            setQuillComponent(() => mod.default)
+          }
+        } catch (e) {
+          console.error("Failed to load react-quill:", e)
+        }
+      }
+      load()
+      return () => { cancelled = true }
     }, [])
 
     useImperativeHandle(ref, () => ({
@@ -85,7 +98,7 @@ export const RichEmailEditor = forwardRef<RichEmailEditorHandle, RichEmailEditor
       },
     }))
 
-    if (!mounted || !ReactQuill) {
+    if (!QuillComponent) {
       return (
         <div className={className}>
           <div className="min-h-[300px] border rounded-md bg-muted/30 flex items-center justify-center text-muted-foreground text-sm">
@@ -118,13 +131,13 @@ export const RichEmailEditor = forwardRef<RichEmailEditorHandle, RichEmailEditor
           .ql-snow .ql-picker.ql-font .ql-picker-label::before,
           .ql-snow .ql-picker.ql-font .ql-picker-item::before { content: "Sans Serif"; }
         `}</style>
-        <ReactQuill
+        <QuillComponent
           ref={quillRef}
           value={value}
           onChange={onChange}
           placeholder={placeholder}
-          modules={modules}
-          formats={formats}
+          modules={QUILL_MODULES}
+          formats={QUILL_FORMATS}
           theme="snow"
         />
       </div>
