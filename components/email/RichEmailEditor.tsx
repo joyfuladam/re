@@ -1,10 +1,8 @@
 "use client"
 
-import dynamic from "next/dynamic"
-import { forwardRef, useImperativeHandle, useRef } from "react"
-import type ReactQuillType from "react-quill"
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react"
 
-const ReactQuill = dynamic(async () => (await import("react-quill")).default, { ssr: false }) as unknown as typeof ReactQuillType
+let ReactQuill: any = null
 
 export interface RichEmailEditorHandle {
   insertTextAtCursor: (text: string) => void
@@ -18,13 +16,27 @@ interface RichEmailEditorProps {
   className?: string
 }
 
+const Font = (() => {
+  try {
+    const Quill = require("quill") as any
+    const FontAttr = Quill.import("formats/font") as any
+    FontAttr.whitelist = ["arial", "aptos", "calibri", "serif", "monospace"]
+    Quill.register(FontAttr, true)
+    return FontAttr
+  } catch {
+    return null
+  }
+})()
+
 const modules = {
   toolbar: [
-    [{ font: [] }, { size: [] }],
+    [{ font: ["", "arial", "aptos", "calibri", "serif", "monospace"] }],
+    [{ size: ["small", false, "large", "huge"] }],
     ["bold", "italic", "underline"],
+    [{ color: [] }, { background: [] }],
     [{ list: "ordered" }, { list: "bullet" }],
     [{ align: [] }],
-    ["link"],
+    ["link", "image"],
     ["clean"],
   ],
 }
@@ -35,37 +47,77 @@ const formats = [
   "bold",
   "italic",
   "underline",
+  "color",
+  "background",
   "list",
   "bullet",
   "align",
   "link",
+  "image",
 ]
 
 export const RichEmailEditor = forwardRef<RichEmailEditorHandle, RichEmailEditorProps>(
   function RichEmailEditor({ value, onChange, placeholder, className }, ref) {
     const quillRef = useRef<any>(null)
+    const [mounted, setMounted] = useState(false)
+
+    useEffect(() => {
+      ReactQuill = require("react-quill").default
+      setMounted(true)
+    }, [])
 
     useImperativeHandle(ref, () => ({
       insertTextAtCursor: (text: string) => {
-        const quill = quillRef.current?.getEditor?.()
-        if (!quill) return
-        const range = quill.getSelection(true)
-        const index = range ? range.index : quill.getLength()
-        quill.insertText(index, text, "user")
-        quill.setSelection(index + text.length, 0, "user")
+        const editor = quillRef.current?.getEditor?.()
+        if (!editor) return
+        const range = editor.getSelection(true)
+        const index = range ? range.index : editor.getLength()
+        editor.insertText(index, text, "user")
+        editor.setSelection(index + text.length, 0, "user")
       },
       insertHtmlAtCursor: (html: string) => {
-        const quill = quillRef.current?.getEditor?.()
-        if (!quill) return
-        const range = quill.getSelection(true)
-        const index = range ? range.index : quill.getLength()
-        quill.clipboard.dangerouslyPasteHTML(index, html, "user")
-        quill.setSelection(index + 1, 0, "user")
+        const editor = quillRef.current?.getEditor?.()
+        if (!editor) return
+        const range = editor.getSelection(true)
+        const index = range ? range.index : editor.getLength()
+        editor.clipboard.dangerouslyPasteHTML(index, html, "user")
+        editor.setSelection(index + 1, 0, "user")
       },
     }))
 
+    if (!mounted || !ReactQuill) {
+      return (
+        <div className={className}>
+          <div className="min-h-[300px] border rounded-md bg-muted/30 flex items-center justify-center text-muted-foreground text-sm">
+            Loading editor…
+          </div>
+        </div>
+      )
+    }
+
     return (
       <div className={className}>
+        <style>{`
+          .ql-container { min-height: 300px; }
+          .ql-editor { min-height: 280px; }
+          .ql-font-arial { font-family: Arial, Helvetica, sans-serif; }
+          .ql-font-aptos { font-family: Aptos, Calibri, Arial, sans-serif; }
+          .ql-font-calibri { font-family: Calibri, 'Segoe UI', Arial, sans-serif; }
+          .ql-font-serif { font-family: Georgia, 'Times New Roman', serif; }
+          .ql-font-monospace { font-family: 'Courier New', Courier, monospace; }
+          .ql-snow .ql-picker.ql-font .ql-picker-label[data-value="arial"]::before,
+          .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="arial"]::before { content: "Arial"; font-family: Arial, Helvetica, sans-serif; }
+          .ql-snow .ql-picker.ql-font .ql-picker-label[data-value="aptos"]::before,
+          .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="aptos"]::before { content: "Aptos"; font-family: Aptos, Calibri, Arial, sans-serif; }
+          .ql-snow .ql-picker.ql-font .ql-picker-label[data-value="calibri"]::before,
+          .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="calibri"]::before { content: "Calibri"; font-family: Calibri, 'Segoe UI', Arial, sans-serif; }
+          .ql-snow .ql-picker.ql-font .ql-picker-label[data-value="serif"]::before,
+          .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="serif"]::before { content: "Serif"; font-family: Georgia, 'Times New Roman', serif; }
+          .ql-snow .ql-picker.ql-font .ql-picker-label[data-value="monospace"]::before,
+          .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="monospace"]::before { content: "Monospace"; font-family: 'Courier New', Courier, monospace; }
+          .ql-snow .ql-picker.ql-font .ql-picker-label::before,
+          .ql-snow .ql-picker.ql-font .ql-picker-item::before { content: "Sans Serif"; }
+        `}</style>
         <ReactQuill
           ref={quillRef}
           value={value}
@@ -79,4 +131,3 @@ export const RichEmailEditor = forwardRef<RichEmailEditorHandle, RichEmailEditor
     )
   }
 )
-

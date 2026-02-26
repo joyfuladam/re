@@ -292,20 +292,6 @@ export default function EmailTemplatesPage() {
                 />
               </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium" htmlFor="template-body-text">
-                  Plain Text Body (optional)
-                </label>
-                <textarea
-                  id="template-body-text"
-                  value={formState.bodyText}
-                  onChange={(e) =>
-                    setFormState((prev) => ({ ...prev, bodyText: e.target.value }))
-                  }
-                  placeholder="Optional plain-text version for email clients that don't render HTML."
-                  className="min-h-[120px] w-full border rounded-md px-3 py-2 text-sm"
-                />
-              </div>
 
               <div className="flex items-center gap-2">
                 <Button type="submit" disabled={saving}>

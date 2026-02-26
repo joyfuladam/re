@@ -6,7 +6,6 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
 import { RichEmailEditor, type RichEmailEditorHandle } from "@/components/email/RichEmailEditor"
 import { EmailPlaceholderBar } from "@/components/email/EmailPlaceholderBar"
 
@@ -48,7 +47,7 @@ export default function EmailPage() {
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("")
   const [subject, setSubject] = useState("")
   const [bodyHtml, setBodyHtml] = useState("")
-  const [bodyText, setBodyText] = useState("")
+  const [bodyText] = useState("")
   const [songId, setSongId] = useState(initialSongId)
   const [songs, setSongs] = useState<SongOption[]>([])
   const [collaborators, setCollaborators] = useState<CollaboratorOption[]>([])
@@ -133,7 +132,6 @@ export default function EmailPage() {
     if (!template) return
     setSubject(template.subject)
     setBodyHtml(template.bodyHtml || "")
-    setBodyText(template.bodyText || "")
   }
 
   const handleScopeChange = (newScope: Scope) => {
@@ -182,7 +180,7 @@ export default function EmailPage() {
         return
       }
 
-      alert(`Email queued to ${data.recipients ?? "the selected"} collaborator(s).`)
+      alert(`Email sent to ${data.recipients ?? "the selected"} collaborator(s).`)
     } catch (error) {
       console.error("Error sending email:", error)
       alert("Failed to send email")
@@ -192,12 +190,24 @@ export default function EmailPage() {
   }
 
   const computePreview = () => {
-    // Simple placeholder replacement for preview purposes (client-side only)
     let html = bodyHtml || ""
     if (currentSongTitle) {
       html = html.replace(/\{\{song_title\}\}/g, currentSongTitle)
     }
     setPreviewHtml(html)
+  }
+
+  const openPreviewInNewWindow = () => {
+    let html = bodyHtml || ""
+    if (currentSongTitle) {
+      html = html.replace(/\{\{song_title\}\}/g, currentSongTitle)
+    }
+    const fullHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Email Preview</title><style>body{font-family:Arial,sans-serif;max-width:700px;margin:40px auto;padding:20px;color:#333;}</style></head><body>${html}</body></html>`
+    const win = window.open("", "_blank")
+    if (win) {
+      win.document.write(fullHtml)
+      win.document.close()
+    }
   }
 
   if (loading) {
@@ -363,17 +373,6 @@ export default function EmailPage() {
               </p>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium" htmlFor="email-body-text">
-                Plain Text Body (optional)
-              </label>
-              <Textarea
-                id="email-body-text"
-                value={bodyText}
-                onChange={(e) => setBodyText(e.target.value)}
-                className="min-h-[140px]"
-              />
-            </div>
           </CardContent>
         </Card>
 
@@ -398,6 +397,9 @@ export default function EmailPage() {
             <div className="flex items-center gap-2">
               <Button type="button" variant="outline" size="sm" onClick={computePreview}>
                 Refresh Preview
+              </Button>
+              <Button type="button" variant="outline" size="sm" onClick={openPreviewInNewWindow}>
+                Open in New Window
               </Button>
               {currentSongTitle && (
                 <p className="text-xs text-muted-foreground">
