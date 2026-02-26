@@ -23,12 +23,18 @@ This Agreement is made effective as of {{effective_date}} ("Effective Date"), be
 **PLAIN LANGUAGE SUMMARY**  
 *This summary is provided to help you understand this agreement. The legal terms below are what actually govern our relationship.*
 
-This agreement covers **publishing rights only** for the songs listed in Exhibit A. Here's what that means:
-- **You keep 100% of your writer's share** of publishing royalties (paid directly to you by ASCAP, BMI, or SESAC)
-- **River & Ember gets 100% of the publisher's share** of publishing royalties (performance, mechanical, sync, print, etc.)
-- **This does NOT cover master recording rights** - if you're also a performer, those are handled in a separate Master Revenue Share Agreement
-- **This only applies to the specific songs listed** - you keep full publishing rights to all your other songs
-- **You still own the songs** - you're just giving River & Ember the right to collect and administer the publisher's share of royalties
+This agreement covers **publishing rights only** for the songs listed in Exhibit A. Here is a brief overview of each section:
+
+1. **Publishing Rights (Section 1)** — You assign 100% of the publisher's share of royalties to River & Ember. You keep 100% of the writer's share, which your PRO (ASCAP, BMI, SESAC) pays directly to you.
+2. **Scope (Section 2)** — This only applies to the specific songs listed in Exhibit A. You keep full publishing rights to all your other songs.
+3. **Master Rights (Section 3)** — This agreement does NOT cover master recording rights. If you're also a performer on the recording, those rights are handled in a separate Master Revenue Share Agreement.
+4. **Term & Reversion (Section 4)** — This agreement lasts indefinitely, but you can get your rights back if: (a) at least 10 years have passed since the song's first release, (b) the publisher's share earned less than $500 over the prior 24 months, and (c) River & Ember can't fix that within 6 months of your written notice.
+5. **Warranties (Section 5)** — You confirm the songs are original, don't infringe on anyone else's rights, and you have the authority to sign this agreement.
+6. **Governing Law (Section 6)** — Any legal disputes are handled under the laws of the state specified in this agreement.
+7. **Derivative Works (Section 7)** — River & Ember can create alternative versions of the songs (remixes, acoustic versions, translations, etc.) for their projects. You still get songwriting credit and keep your writer's share on those versions.
+8. **Indemnification (Section 8)** — If either side causes a legal problem (like a copyright claim), the responsible party covers the other's costs and legal fees.
+9. **Entire Agreement (Section 9)** — This document is the complete agreement. Any changes must be in writing and signed by both parties.
+10. **Assignment (Section 10)** — River & Ember can transfer this agreement to another entity (like in a sale or merger). You cannot transfer your obligations without River & Ember's written permission.
 
 **RECITALS**  
 Writer has created certain musical compositions for recording and release under Publisher's label projects. Publisher desires to administer publishing rights in those compositions to maximize congregational and global impact.
@@ -47,9 +53,21 @@ Writer has created certain musical compositions for recording and release under 
 
 <div class="indent">This Agreement covers **only publishing rights** and revenues for the underlying musical compositions. Master rights and revenue shares for sound recordings are governed by a separate Master Revenue Share Agreement (if applicable). Writer has **no right** to master revenue share or ownership based on their songwriting or composition contributions under this Agreement. If Writer is also a performer on the sound recording(s) of the Compositions, Writer's master rights and revenue share (if any) are governed exclusively by a separate Master Revenue Share Agreement with River and Ember, and any master revenue share or ownership shall be in accordance with the terms of that separate master agreement. Writer is **not** eligible for master revenue share based solely on songwriting or composition contributions; such contributions are handled separately through master revenue share agreements. This Agreement pertains solely to Publishing rights and revenues.</div>
 
-4. **Term**
+4. **Term and Reversion**
 
-<div class="indent">Perpetual, subject to reversion to Writer upon {{reversion_condition}}.</div>
+<div class="indent">This Agreement shall remain in full force and effect perpetually from the Effective Date, subject to the following reversion provision:</div>
+
+<div class="indent">Notwithstanding the foregoing, the rights assigned to Publisher hereunder shall automatically revert to Writer, and this Agreement shall terminate with respect to the Compositions, upon written notice from Writer to Publisher if:</div>
+
+<div class="indent">(a) Ten (10) years have passed since the first commercial release of a sound recording embodying any of the Compositions under Publisher's label projects; and</div>
+
+<div class="indent">(b) In the twenty-four (24) consecutive months immediately preceding such notice, the total Publisher's share of royalties actually received by Publisher from all sources (including but not limited to performance, mechanical, synchronization, print, and digital) for the Compositions is less than Five Hundred United States Dollars (USD $500.00); and</div>
+
+<div class="indent">(c) Publisher has failed to cure such low-revenue condition within six (6) months after receipt of Writer's written notice specifying the claimed reversion grounds (during which cure period Publisher may continue to exploit the Compositions and attempt to increase revenue).</div>
+
+<div class="indent">Upon reversion under this Section, all rights assigned to Publisher shall immediately revert to Writer free and clear of any claim by Publisher, except for any Derivative Works created and released by Publisher prior to reversion, which shall remain subject to the terms herein (with Publisher retaining 100% of the publisher's share thereof). Publisher shall execute and deliver to Writer any documents reasonably necessary to effectuate such reversion and transfer of rights.</div>
+
+<div class="indent">This reversion right is personal to Writer and non-assignable without Publisher's consent. Publisher's good-faith efforts to exploit the Compositions (including promotion, licensing, and adaptations for congregational use) shall not be deemed a breach for purposes of triggering reversion.</div>
 
 5. **Warranties & Representations**
 
@@ -67,6 +85,28 @@ Writer has created certain musical compositions for recording and release under 
 <div class="indent">All Derivative Works shall remain subject to the publishing assignment terms herein, and Publisher shall retain one hundred percent (100%) of the publisher's share of all income derived therefrom.</div>
 
 <div class="indent">Nothing herein shall diminish Writer's retained one hundred percent (100%) writer's share of publishing royalties.</div>
+
+8. **Indemnification**
+
+<div class="indent">Each party (the "Indemnifying Party") agrees to indemnify, defend, and hold harmless the other party (the "Indemnified Party"), its officers, directors, members, employees, agents, successors, and assigns, from and against any and all claims, losses, damages, liabilities, costs, and expenses (including reasonable attorneys' fees and court costs) arising out of or resulting from:</div>
+
+<div class="indent">(a) any breach by the Indemnifying Party of any representation, warranty, covenant, or obligation contained in this Agreement;</div>
+
+<div class="indent">(b) any third-party claim alleging infringement of copyright, trademark, or other intellectual property rights in the Compositions (in the case of Writer as Indemnifying Party) or in Publisher's exploitation of the Compositions in accordance with this Agreement (in the case of Publisher as Indemnifying Party), except to the extent caused by the other party's negligence or willful misconduct;</div>
+
+<div class="indent">(c) any negligence or willful misconduct of the Indemnifying Party in connection with this Agreement.</div>
+
+<div class="indent">The Indemnified Party shall promptly notify the Indemnifying Party in writing of any such claim and shall reasonably cooperate with the Indemnifying Party in the defense or settlement thereof (at the Indemnifying Party's expense). The Indemnifying Party shall have the right to control the defense and settlement of any claim, provided that no settlement admitting liability on the part of the Indemnified Party shall be made without the Indemnified Party's prior written consent, which shall not be unreasonably withheld.</div>
+
+<div class="indent">This provision survives termination or expiration of this Agreement.</div>
+
+9. **Entire Agreement**
+
+<div class="indent">This Agreement constitutes the entire understanding and agreement between the parties with respect to the subject matter hereof and supersedes all prior and contemporaneous agreements, understandings, negotiations, representations, and warranties, whether oral or written, relating to such subject matter. No modification, amendment, or waiver of any provision of this Agreement shall be effective unless in writing and signed by both parties. No course of dealing between the parties nor any delay or omission by either party in exercising any right hereunder shall operate as a waiver of any rights hereunder.</div>
+
+10. **Assignment**
+
+<div class="indent">This Agreement and all rights and obligations hereunder may be assigned by Publisher to any person, entity, or successor in interest (including, without limitation, in connection with a merger, consolidation, sale of all or substantially all assets, or any other change in control of Publisher) without the consent of Writer. Writer may not assign this Agreement or any rights or obligations hereunder without the prior written consent of Publisher, which consent may be withheld in Publisher's sole discretion. This Agreement shall be binding upon and inure to the benefit of the parties hereto and their respective permitted successors and assigns.</div>
 
 IN WITNESS WHEREOF, the parties have executed this Agreement as of the Effective Date.
 
