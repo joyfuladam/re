@@ -140,6 +140,19 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Detect collaborator-specific placeholders that require per-recipient sending
+    const combinedContent = `${baseSubject}\n${baseHtml}\n${baseText ?? ""}`
+    const usesCollaboratorName = combinedContent.includes("{{collaborator_name}}")
+    if (usesCollaboratorName && validated.bccMode === "single_bcc") {
+      return NextResponse.json(
+        {
+          error:
+            'Templates using {{collaborator_name}} require per-recipient sending. Per-recipient delivery is not enabled yet when bccMode is "single_bcc".',
+        },
+        { status: 400 }
+      )
+    }
+
     // Build placeholder context (shared across recipients)
     const templateContext: Record<string, string | number | null | undefined> = {
       song_title: songTitle,

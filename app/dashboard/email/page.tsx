@@ -1,12 +1,14 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { RichEmailEditor, type RichEmailEditorHandle } from "@/components/email/RichEmailEditor"
+import { EmailPlaceholderBar } from "@/components/email/EmailPlaceholderBar"
 
 type Scope = "all_collaborators" | "song_collaborators" | "specific_collaborators"
 
@@ -53,6 +55,9 @@ export default function EmailPage() {
   const [selectedCollaboratorIds, setSelectedCollaboratorIds] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState(false)
+
+  const editorRef = useRef<RichEmailEditorHandle | null>(null)
+  const [previewHtml, setPreviewHtml] = useState("")
 
   useEffect(() => {
     if (status === "loading") return
@@ -186,6 +191,15 @@ export default function EmailPage() {
     }
   }
 
+  const computePreview = () => {
+    // Simple placeholder replacement for preview purposes (client-side only)
+    let html = bodyHtml || ""
+    if (currentSongTitle) {
+      html = html.replace(/\{\{song_title\}\}/g, currentSongTitle)
+    }
+    setPreviewHtml(html)
+  }
+
   if (loading) {
     return <div>Loading...</div>
   }
@@ -286,7 +300,8 @@ export default function EmailPage() {
             <CardTitle>Content</CardTitle>
             <CardDescription>
               Choose a template or compose a one-off message. You can still edit the subject and
-              body after selecting a template.
+              body after selecting a template. Formatting and dynamic placeholders are supported via
+              the toolbar below.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -322,12 +337,24 @@ export default function EmailPage() {
               <label className="text-sm font-medium" htmlFor="email-body-html">
                 HTML Body
               </label>
-              <Textarea
-                id="email-body-html"
+              <EmailPlaceholderBar
+                onInsertPlaceholder={(token) =>
+                  editorRef.current?.insertTextAtCursor(token)
+                }
+                onInsertLogo={() => {
+                  const baseUrl =
+                    process.env.NEXT_PUBLIC_SITE_URL ||
+                    process.env.NEXTAUTH_URL ||
+                    "https://riverandember.com"
+                  const logoHtml = `<img src=\"${baseUrl}/images/logo.png\" alt=\"River & Ember\" style=\"width:150px;height:auto;\" />`
+                  editorRef.current?.insertHtmlAtCursor(logoHtml)
+                }}
+              />
+              <RichEmailEditor
+                ref={editorRef}
                 value={bodyHtml}
-                onChange={(e) => setBodyHtml(e.target.value)}
-                className="min-h-[200px]"
-                required
+                onChange={setBodyHtml}
+                placeholder="Main content of the email."
               />
               <p className="text-xs text-muted-foreground">
                 Supported placeholders:{" "}
@@ -358,6 +385,38 @@ export default function EmailPage() {
             Emails are sent as a single message with everyone in BCC to keep addresses private.
           </p>
         </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Preview</CardTitle>
+            <CardDescription>
+              This preview shows how the HTML body will roughly look with basic placeholders (like
+              song title) filled in.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Button type="button" variant="outline" size="sm" onClick={computePreview}>
+                Refresh Preview
+              </Button>
+              {currentSongTitle && (
+                <p className="text-xs text-muted-foreground">
+                  Using <code className="font-mono text-xs">{`{{song_title}}`}</code> →{" "}
+                  <strong>{currentSongTitle}</strong>
+                </p>
+              )}
+            </div>
+            {previewHtml ? (
+              <div className="border rounded-md p-4 prose prose-sm max-w-none">
+                <div dangerouslySetInnerHTML={{ __html: previewHtml }} />
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                Click &quot;Refresh Preview&quot; to view a rendered version of your email body.
+              </p>
+            )}
+          </CardContent>
+        </Card>
       </form>
     </div>
   )

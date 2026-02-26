@@ -1,12 +1,13 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
+import { RichEmailEditor, type RichEmailEditorHandle } from "@/components/email/RichEmailEditor"
+import { EmailPlaceholderBar } from "@/components/email/EmailPlaceholderBar"
 
 interface EmailTemplate {
   id: string
@@ -29,6 +30,8 @@ export default function EmailTemplatesPage() {
   const [saving, setSaving] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [selectedTemplate, setSelectedTemplate] = useState<EmailTemplate | null>(null)
+
+  const editorRef = useRef<RichEmailEditorHandle | null>(null)
 
   const [formState, setFormState] = useState({
     name: "",
@@ -159,7 +162,8 @@ export default function EmailTemplatesPage() {
       <div>
         <h1 className="text-3xl font-bold">Email Templates</h1>
         <p className="text-muted-foreground">
-          Create and manage reusable email templates for collaborators.
+          Create and manage reusable email templates for collaborators. Use the formatting toolbar
+          and placeholder buttons to design messages that can be reused across songs and projects.
         </p>
       </div>
 
@@ -265,12 +269,26 @@ export default function EmailTemplatesPage() {
                 <label className="text-sm font-medium" htmlFor="template-body-html">
                   HTML Body
                 </label>
-                <Textarea
-                  id="template-body-html"
+                <EmailPlaceholderBar
+                  onInsertPlaceholder={(token) =>
+                    editorRef.current?.insertTextAtCursor(token)
+                  }
+                  onInsertLogo={() => {
+                    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXTAUTH_URL || "https://riverandember.com"
+                    const logoHtml = `<img src=\"${baseUrl}/images/logo.png\" alt=\"River & Ember\" style=\"width:150px;height:auto;\" />`
+                    editorRef.current?.insertHtmlAtCursor(logoHtml)
+                  }}
+                />
+                <RichEmailEditor
+                  ref={editorRef}
                   value={formState.bodyHtml}
-                  onChange={(e) => setFormState((prev) => ({ ...prev, bodyHtml: e.target.value }))}
-                  placeholder="Main content of the email (HTML or text)."
-                  className="min-h-[160px]"
+                  onChange={(value) =>
+                    setFormState((prev) => ({
+                      ...prev,
+                      bodyHtml: value,
+                    }))
+                  }
+                  placeholder="Main content of the email."
                 />
               </div>
 
@@ -278,12 +296,14 @@ export default function EmailTemplatesPage() {
                 <label className="text-sm font-medium" htmlFor="template-body-text">
                   Plain Text Body (optional)
                 </label>
-                <Textarea
+                <textarea
                   id="template-body-text"
                   value={formState.bodyText}
-                  onChange={(e) => setFormState((prev) => ({ ...prev, bodyText: e.target.value }))}
+                  onChange={(e) =>
+                    setFormState((prev) => ({ ...prev, bodyText: e.target.value }))
+                  }
                   placeholder="Optional plain-text version for email clients that don't render HTML."
-                  className="min-h-[120px]"
+                  className="min-h-[120px] w-full border rounded-md px-3 py-2 text-sm"
                 />
               </div>
 
