@@ -25,16 +25,25 @@ This Agreement is made effective as of {{effective_date}} ("Effective Date"), be
 
 This agreement covers **publishing rights only** for the songs listed in Exhibit A. Here is a brief overview of each section:
 
-1. **Publishing Rights (Section 1)** — You assign 100% of the publisher's share of royalties to River & Ember. You keep 100% of the writer's share, which your PRO (ASCAP, BMI, SESAC) pays directly to you.
-2. **Scope (Section 2)** — This only applies to the specific songs listed in Exhibit A. You keep full publishing rights to all your other songs.
-3. **Master Rights (Section 3)** — This agreement does NOT cover master recording rights. If you're also a performer on the recording, those rights are handled in a separate Master Revenue Share Agreement.
-4. **Term & Reversion (Section 4)** — This agreement lasts indefinitely, but you can get your rights back if: (a) at least 10 years have passed since the song's first release, (b) the publisher's share earned less than $500 over the prior 24 months, and (c) River & Ember can't fix that within 6 months of your written notice.
-5. **Warranties (Section 5)** — You confirm the songs are original, don't infringe on anyone else's rights, and you have the authority to sign this agreement.
-6. **Governing Law (Section 6)** — Any legal disputes are handled under the laws of the state specified in this agreement.
-7. **Derivative Works (Section 7)** — River & Ember can create alternative versions of the songs (remixes, acoustic versions, translations, etc.) for their projects. You still get songwriting credit and keep your writer's share on those versions.
-8. **Indemnification (Section 8)** — If either side causes a legal problem (like a copyright claim), the responsible party covers the other's costs and legal fees.
-9. **Entire Agreement (Section 9)** — This document is the complete agreement. Any changes must be in writing and signed by both parties.
-10. **Assignment (Section 10)** — River & Ember can transfer this agreement to another entity (like in a sale or merger). You cannot transfer your obligations without River & Ember's written permission.
+- **Publishing Rights (Section 1)** — You assign 100% of the publisher's share of royalties to River & Ember. You keep 100% of the writer's share, which your PRO (ASCAP, BMI, SESAC) pays directly to you.
+
+- **Scope (Section 2)** — This only applies to the specific songs listed in Exhibit A. You keep full publishing rights to all your other songs.
+
+- **Master Rights (Section 3)** — This agreement does NOT cover master recording rights. If you're also a performer on the recording, those rights are handled in a separate Master Revenue Share Agreement.
+
+- **Term & Reversion (Section 4)** — This agreement lasts indefinitely, but you can get your rights back if: (a) at least 10 years have passed since the song's first release, (b) the publisher's share earned less than $500 over the prior 24 months, and (c) River & Ember can't fix that within 6 months of your written notice.
+
+- **Warranties (Section 5)** — You confirm the songs are original, don't infringe on anyone else's rights, and you have the authority to sign this agreement.
+
+- **Governing Law (Section 6)** — Any legal disputes are handled under the laws of the state specified in this agreement.
+
+- **Derivative Works (Section 7)** — River & Ember can create alternative versions of the songs (remixes, acoustic versions, translations, etc.) for their projects. You still get songwriting credit and keep your writer's share on those versions.
+
+- **Indemnification (Section 8)** — If either side causes a legal problem (like a copyright claim), the responsible party covers the other's costs and legal fees.
+
+- **Entire Agreement (Section 9)** — This document is the complete agreement. Any changes must be in writing and signed by both parties.
+
+- **Assignment (Section 10)** — River & Ember can transfer this agreement to another entity (like in a sale or merger). You cannot transfer your obligations without River & Ember's written permission.
 
 **RECITALS**  
 Writer has created certain musical compositions for recording and release under Publisher's label projects. Publisher desires to administer publishing rights in those compositions to maximize congregational and global impact.
@@ -143,13 +152,21 @@ This Agreement is made effective as of {{effective_date}} ("Effective Date"), be
 **PLAIN LANGUAGE SUMMARY**  
 *This summary is provided to help you understand this agreement. The legal terms below are what actually govern our relationship.*
 
-This agreement covers **master recording rights only** for the song listed in Exhibit A. Here's what that means:
-- **River & Ember owns the master recording** - you have no ownership rights to the recording itself
-- **You receive {{collaborator_share_percentage}}% of digital revenue** (streaming and downloads only) from the master recording
-- **You do NOT receive revenue from** sync licenses, physical sales, live performances, or any other uses - River & Ember keeps 100% of those
-- **This does NOT cover publishing rights** - if you're also a songwriter, those are handled in a separate Publishing Assignment Agreement
-- **This only applies to this specific song** - you're free to work on other projects
-- **Your contribution is work-made-for-hire** - River & Ember owns it from the moment you create it
+This agreement covers **master recording rights only** for the song listed in Exhibit A. Here is a brief overview of each section:
+
+- **Services & Rights (Section 1)** — You provide your services for this recording, and River & Ember owns the master recording. Your contribution is considered work-made-for-hire.
+
+- **Compensation (Section 2)** — You receive {{collaborator_share_percentage}}% of Net Receipts from digital revenue (streaming and downloads only). You do NOT receive revenue from sync licenses, physical sales, live performances, or other uses.
+
+- **Alternative Versions (Section 3)** — River & Ember can create remixes, acoustic versions, and other alternative versions of the recording. You have no right to compensation from those unless separately agreed in writing.
+
+- **Publishing (Section 4)** — This agreement does NOT cover publishing rights. If you're also a songwriter, those are handled in a separate Publishing Assignment Agreement.
+
+- **Warranties (Section 5)** — You confirm your contribution is original, doesn't infringe on anyone else's rights, and you have the authority to sign this agreement.
+
+- **Governing Law (Section 6)** — Any legal disputes are handled under the laws of the state specified in this agreement.
+
+- **Entire Agreement (Section 7)** — This document is the complete agreement. Any changes must be in writing and signed by both parties.
 
 **RECITALS**  
 Label and Collaborator desire to collaborate on a per-song basis for the sound recording titled "{{song_title}}" (the "Recording"). Collaborator shall provide the services and contributions described in Exhibit A attached hereto. This Agreement is limited to this specific song and does not create an exclusive or long-term relationship, preserving Collaborator's freedom to pursue other opportunities.
