@@ -276,8 +276,13 @@ export default function EmailTemplatesPage() {
                     editorRef.current?.insertTextAtCursor(token)
                   }
                   onInsertLogo={() => {
-                    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXTAUTH_URL || "https://riverandember.com"
-                    const logoHtml = `<img src=\"${baseUrl}/images/logo.png\" alt=\"River & Ember\" style=\"width:150px;height:auto;\" />`
+                    const baseUrl =
+                      (typeof window !== "undefined" && window.location.origin) ||
+                      process.env.NEXT_PUBLIC_APP_URL ||
+                      process.env.NEXT_PUBLIC_SITE_URL ||
+                      "https://riverandember.com"
+                    const logoUrl = `${baseUrl}/images/logo.png`
+                    const logoHtml = `<img src="${logoUrl}" alt="River & Ember" style="width:150px;height:auto;" />`
                     editorRef.current?.insertHtmlAtCursor(logoHtml)
                   }}
                 />
