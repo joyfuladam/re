@@ -7,24 +7,37 @@ interface SendEmailOptions {
   text?: string
 }
 
+interface SendTemplatedEmailOptions {
+  to?: string | string[]
+  bcc?: string[]
+  subject: string
+  html: string
+  text?: string
+}
+
+function createResendClient() {
+  const apiKey = process.env.RESEND_API_KEY
+  if (!apiKey) {
+    throw new Error('RESEND_API_KEY environment variable is not set')
+  }
+  return new Resend(apiKey)
+}
+
+function getFromAddress() {
+  const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev'
+  const fromName = 'River & Ember'
+  return `${fromName} <${fromEmail}>`
+}
+
+/**
+ * Basic single-recipient email helper used by existing flows.
+ */
 export async function sendEmail({ to, subject, html, text }: SendEmailOptions) {
   try {
-    // Initialize Resend lazily to avoid build-time errors
-    const apiKey = process.env.RESEND_API_KEY
-    if (!apiKey) {
-      throw new Error('RESEND_API_KEY environment variable is not set')
-    }
-    
-    const resend = new Resend(apiKey)
-    
-    // Determine the from email based on whether domain is verified
-    // If RESEND_FROM_EMAIL is set, use it (your verified domain)
-    // Otherwise, use Resend's sandbox domain for testing
-    const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev'
-    const fromName = 'River & Ember'
-    
+    const resend = createResendClient()
+
     const { data, error } = await resend.emails.send({
-      from: `${fromName} <${fromEmail}>`,
+      from: getFromAddress(),
       to: [to],
       subject,
       html,
@@ -41,6 +54,88 @@ export async function sendEmail({ to, subject, html, text }: SendEmailOptions) {
   } catch (error) {
     console.error('Error sending email:', error)
     throw error
+  }
+}
+
+/**
+ * Flexible email helper that supports multiple recipients and BCC.
+ * Used by the admin broadcast/email-template flows.
+ */
+export async function sendTemplatedEmail({
+  to,
+  bcc,
+  subject,
+  html,
+  text,
+}: SendTemplatedEmailOptions) {
+  try {
+    const resend = createResendClient()
+
+    const toArray = Array.isArray(to) ? to : to ? [to] : []
+    const bccArray = bcc && bcc.length > 0 ? bcc : undefined
+
+    if (toArray.length === 0 && !bccArray) {
+      throw new Error('sendTemplatedEmail requires at least one recipient (to or bcc)')
+    }
+
+    // Resend requires a non-empty `to` value in the type definition.
+    // If we're only using BCC, send a copy to the from address so the request is valid.
+    const toParam: string | string[] =
+      toArray.length > 0 ? toArray : getFromAddress()
+
+    const { data, error } = await resend.emails.send({
+      from: getFromAddress(),
+      to: toParam,
+      bcc: bccArray,
+      subject,
+      html,
+      text,
+    })
+
+    if (error) {
+      console.error('Resend error:', error)
+      throw new Error(error.message)
+    }
+
+    console.log('Templated email sent via Resend:', data?.id)
+    return { success: true, messageId: data?.id }
+  } catch (error) {
+    console.error('Error sending templated email:', error)
+    throw error
+  }
+}
+
+/**
+ * Apply {{placeholder}} substitutions inside a string.
+ * Missing placeholders are replaced with an empty string.
+ */
+export function applyEmailTemplatePlaceholders(
+  template: string,
+  context: Record<string, string | number | null | undefined>
+): string {
+  if (!template) return template
+  return template.replace(/\{\{(\w+)\}\}/g, (match, key) => {
+    const value = context[key]
+    if (value === null || value === undefined) {
+      return ''
+    }
+    return String(value)
+  })
+}
+
+/**
+ * Convenience helper to apply placeholders to subject + html/text bodies.
+ */
+export function renderEmailTemplate(
+  subject: string,
+  html: string,
+  text: string | undefined,
+  context: Record<string, string | number | null | undefined>
+): { subject: string; html: string; text?: string } {
+  return {
+    subject: applyEmailTemplatePlaceholders(subject, context),
+    html: applyEmailTemplatePlaceholders(html, context),
+    text: text ? applyEmailTemplatePlaceholders(text, context) : undefined,
   }
 }
 

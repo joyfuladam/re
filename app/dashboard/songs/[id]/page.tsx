@@ -1425,9 +1425,18 @@ export default function SongDetailPage() {
       </Card>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Collaborators</CardTitle>
-          <CardDescription>Manage collaborators for this song</CardDescription>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>Collaborators</CardTitle>
+            <CardDescription>Manage collaborators for this song</CardDescription>
+          </div>
+          {isAdmin && song && (
+            <Link href={`/dashboard/email?songId=${song.id}&scope=song_collaborators`}>
+              <Button variant="outline" size="sm" className="h-7 text-xs">
+                Email collaborators
+              </Button>
+            </Link>
+          )}
         </CardHeader>
           <CardContent>
             <div className="space-y-6">

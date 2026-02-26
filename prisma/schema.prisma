@@ -155,6 +155,7 @@ model Song {
   songPublishingEntities    SongPublishingEntity[]
   contracts                 Contract[]
   splitHistory              SplitHistory[]
+  emailLogs                 EmailLog[]
 }
 
 model SongCollaborator {
@@ -302,5 +303,37 @@ model AccountRequest {
 
   @@index([email])
   @@index([status])
+  @@index([createdAt])
+}
+
+model EmailTemplate {
+  id        String   @id @default(cuid())
+  name      String
+  subject   String
+  bodyHtml  String?  @db.Text
+  bodyText  String?  @db.Text
+  scope     String?  // optional hint for intended use (e.g. collaborator, song, global)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  emailLogs EmailLog[]
+}
+
+model EmailLog {
+  id               String         @id @default(cuid())
+  templateId       String?
+  template         EmailTemplate? @relation(fields: [templateId], references: [id])
+  subject          String
+  bodyPreview      String?        @db.Text
+  scope            String
+  songId           String?
+  song             Song?          @relation(fields: [songId], references: [id])
+  recipientCount   Int
+  recipientEmails  String?        @db.Text // comma-separated list or JSON string of emails
+  triggeredById    String?        // Collaborator ID of the admin who triggered the send
+  triggeredByEmail String?
+  createdAt        DateTime       @default(now())
+
+  @@index([templateId])
+  @@index([songId])
   @@index([createdAt])
 }
