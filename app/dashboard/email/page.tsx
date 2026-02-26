@@ -360,7 +360,7 @@ export default function EmailPage() {
                     process.env.NEXT_PUBLIC_SITE_URL ||
                     "https://riverandember.com"
                   const logoUrl = `${baseUrl}/images/logo.png`
-                  const logoHtml = `<img src="${logoUrl}" alt="River & Ember" style="width:150px;height:auto;" />`
+                  const logoHtml = `<p style="text-align:center;"><img src="${logoUrl}" alt="River & Ember" style="width:150px;height:auto;display:inline-block;" /></p><p><br></p>`
                   editorRef.current?.insertHtmlAtCursor(logoHtml)
                 }}
               />
