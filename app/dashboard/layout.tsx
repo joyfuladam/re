@@ -62,7 +62,7 @@ export default function DashboardLayout({
                   <Link href="/dashboard/contracts" className="hover:underline">
                     Contracts
                   </Link>
-                  <Link href="/dashboard/email-templates" className="hover:underline">
+                  <Link href="/dashboard/email" className="hover:underline">
                     Email
                   </Link>
                   <Link href="/dashboard/account-requests" className="hover:underline">

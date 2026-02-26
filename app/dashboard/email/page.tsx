@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { RichEmailEditor, type RichEmailEditorHandle } from "@/components/email/RichEmailEditor"
 import { EmailPlaceholderBar } from "@/components/email/EmailPlaceholderBar"
+import { EmailSubNav } from "@/components/email/EmailSubNav"
 
 type Scope = "all_collaborators" | "song_collaborators" | "specific_collaborators"
 
@@ -223,6 +224,7 @@ export default function EmailPage() {
           selected group.
         </p>
       </div>
+      <EmailSubNav />
 
       <form className="space-y-6 max-w-5xl" onSubmit={handleSend}>
         <Card>

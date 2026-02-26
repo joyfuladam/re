@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { RichEmailEditor, type RichEmailEditorHandle } from "@/components/email/RichEmailEditor"
 import { EmailPlaceholderBar } from "@/components/email/EmailPlaceholderBar"
+import { EmailSubNav } from "@/components/email/EmailSubNav"
 
 interface EmailTemplate {
   id: string
@@ -163,9 +164,10 @@ export default function EmailTemplatesPage() {
         <h1 className="text-3xl font-bold">Email Templates</h1>
         <p className="text-muted-foreground">
           Create and manage reusable email templates for collaborators. Use the formatting toolbar
-          and placeholder buttons to design messages that can be reused across songs and projects.
+          and placeholder buttons to design messages. Use the Send tab to broadcast emails.
         </p>
       </div>
+      <EmailSubNav />
 
       <div className="grid gap-6 md:grid-cols-[2fr,3fr]">
         <Card>
