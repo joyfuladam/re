@@ -226,6 +226,41 @@ export class SignWellClient {
     }
   }
 
+  async downloadSignedPdf(documentId: string, retries = 3): Promise<Buffer> {
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      try {
+        const response = await fetch(
+          `${this.apiUrl}/v1/documents/${documentId}/completed_pdf/?audit_page=true`,
+          {
+            method: "GET",
+            headers: { "X-Api-Key": this.apiKey },
+          }
+        )
+
+        if (response.status === 400 && attempt < retries) {
+          const waitMs = attempt * 3000
+          console.log(`SignWell PDF not ready yet (attempt ${attempt}/${retries}), retrying in ${waitMs}ms...`)
+          await new Promise((r) => setTimeout(r, waitMs))
+          continue
+        }
+
+        if (!response.ok) {
+          const errorText = await response.text()
+          throw new Error(`Failed to download signed PDF: ${response.status} ${errorText}`)
+        }
+
+        const arrayBuffer = await response.arrayBuffer()
+        return Buffer.from(arrayBuffer)
+      } catch (error) {
+        if (attempt === retries) throw error
+        const waitMs = attempt * 3000
+        console.log(`SignWell download error (attempt ${attempt}/${retries}), retrying in ${waitMs}ms...`)
+        await new Promise((r) => setTimeout(r, waitMs))
+      }
+    }
+    throw new Error("Failed to download signed PDF after all retries")
+  }
+
   async getSignatureStatus(documentId: string): Promise<{
     status: string
     signedAt: string | null

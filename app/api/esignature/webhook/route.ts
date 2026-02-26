@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
+import { createSignWellClient } from "@/lib/signwell"
 import crypto from "crypto"
 
 /**
@@ -93,12 +94,26 @@ export async function POST(request: NextRequest) {
           eventData.data?.document?.completed_at ||
           eventData.document?.completed_at
 
+        const updateData: any = {
+          esignatureStatus: "signed",
+          signedAt: signedAt ? new Date(signedAt) : new Date(),
+        }
+
+        try {
+          const apiKey = process.env.SIGNWELL_API_KEY
+          if (apiKey && documentId) {
+            const client = createSignWellClient(apiKey)
+            const pdfBuffer = await client.downloadSignedPdf(documentId)
+            updateData.signedPdfData = pdfBuffer
+            console.log(`Stored signed PDF for contract ${contract.id} (${pdfBuffer.length} bytes)`)
+          }
+        } catch (pdfError) {
+          console.warn(`Could not download signed PDF for contract ${contract.id}:`, pdfError)
+        }
+
         await db.contract.update({
           where: { id: contract.id },
-          data: {
-            esignatureStatus: "signed",
-            signedAt: signedAt ? new Date(signedAt) : new Date(),
-          },
+          data: updateData,
         })
         break
 

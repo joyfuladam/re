@@ -228,6 +228,7 @@ model Contract {
   esignatureDocId    String? // HelloSign document ID
   signerEmail        String?
   signedAt           DateTime?
+  signedPdfData      Bytes?
   // Revenue scope
   revenueScope       Json? // Allowed/disallowed revenue streams
   // Metadata

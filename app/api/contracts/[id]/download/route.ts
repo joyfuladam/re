@@ -8,6 +8,21 @@ import { buildContractData } from "@/lib/contract-data-builder"
 import { contractConfig } from "@/lib/config"
 import { hasTemplate, renderContractTemplate } from "@/lib/contract-templates"
 import { generateContractHTML } from "@/lib/pdf-generator"
+import { createSignWellClient } from "@/lib/signwell"
+
+function buildFilename(contract: any): string {
+  const collaboratorName = [
+    contract.songCollaborator.collaborator.firstName,
+    contract.songCollaborator.collaborator.middleName,
+    contract.songCollaborator.collaborator.lastName,
+  ]
+    .filter(Boolean)
+    .join("_")
+    .replace(/\s+/g, "_")
+
+  return `${contract.templateType}_${contract.song.title}_${collaboratorName}.pdf`
+    .replace(/[^a-zA-Z0-9_\-.]/g, "_")
+}
 
 export async function GET(
   request: NextRequest,
@@ -41,13 +56,47 @@ export async function GET(
 
     const canAccess = await canAccessSong(session, contract.songId)
     if (!canAccess) {
-      return NextResponse.json(
-        { error: "Forbidden" },
-        { status: 403 }
-      )
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
-    // Generate contract HTML
+    const filename = buildFilename(contract)
+
+    // If we already have the signed PDF stored, return it directly
+    if (contract.signedPdfData) {
+      return new NextResponse(new Uint8Array(contract.signedPdfData), {
+        headers: {
+          "Content-Type": "application/pdf",
+          "Content-Disposition": `attachment; filename="signed_${filename}"`,
+        },
+      })
+    }
+
+    // On-demand fetch: contract is signed but PDF wasn't stored (signed before this feature)
+    if (contract.esignatureStatus === "signed" && contract.esignatureDocId) {
+      const apiKey = process.env.SIGNWELL_API_KEY
+      if (apiKey) {
+        try {
+          const client = createSignWellClient(apiKey)
+          const pdfBuffer = await client.downloadSignedPdf(contract.esignatureDocId)
+
+          await db.contract.update({
+            where: { id: contract.id },
+            data: { signedPdfData: pdfBuffer },
+          })
+
+          return new NextResponse(new Uint8Array(pdfBuffer), {
+            headers: {
+              "Content-Type": "application/pdf",
+              "Content-Disposition": `attachment; filename="signed_${filename}"`,
+            },
+          })
+        } catch (fetchError) {
+          console.warn(`Could not fetch signed PDF from SignWell for contract ${contract.id}:`, fetchError)
+        }
+      }
+    }
+
+    // Fallback: generate unsigned PDF from template
     const contractData = await buildContractData(
       contract.song,
       contract.songCollaborator,
@@ -82,27 +131,9 @@ export async function GET(
       contractHTML = generateContractHTML(contractData)
     }
 
-    // Convert to PDF
     const pdfBuffer = await convertHTMLToPDF(contractHTML)
 
-    // Generate filename
-    const collaboratorName = [
-      contract.songCollaborator.collaborator.firstName,
-      contract.songCollaborator.collaborator.middleName,
-      contract.songCollaborator.collaborator.lastName,
-    ]
-      .filter(Boolean)
-      .join("_")
-      .replace(/\s+/g, "_")
-
-    const filename = `${contract.templateType}_${contract.song.title}_${collaboratorName}.pdf`
-      .replace(/[^a-zA-Z0-9_\-.]/g, "_")
-
-    // Convert Buffer to Uint8Array for NextResponse
-    const pdfArray = new Uint8Array(pdfBuffer)
-
-    // Return PDF as download
-    return new NextResponse(pdfArray, {
+    return new NextResponse(new Uint8Array(pdfBuffer), {
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": `attachment; filename="${filename}"`,
