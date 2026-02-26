@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { PublishingSplitEditor } from "@/components/splits/PublishingSplitEditor"
 import { MasterSplitEditor } from "@/components/splits/MasterSplitEditor"
 import { SplitPieChart } from "@/components/charts/SplitPieChart"
+import { MediaLibraryCard } from "@/components/songs/MediaLibraryCard"
 import { ContractType } from "@prisma/client"
 import { getRequiredContractTypes, getContractTypeLabel } from "@/lib/contract-types"
 import { CollaboratorRole } from "@prisma/client"
@@ -64,6 +65,17 @@ interface Song {
       isInternal: boolean
     }
     ownershipPercentage: number | null
+  }>
+  media?: Array<{
+    id: string
+    songId: string
+    category: string
+    filename: string
+    storagePath: string
+    mimeType: string
+    fileSize: number
+    label: string | null
+    createdAt: string
   }>
 }
 
@@ -2454,6 +2466,15 @@ export default function SongDetailPage() {
             </CardContent>
           </Card>
         </div>
+      )}
+
+      {/* Media Library - uploads stored on Railway Volume */}
+      {song && (
+        <MediaLibraryCard
+          songId={song.id}
+          media={song.media || []}
+          onUpdate={fetchSong}
+        />
       )}
 
       {/* Promo Materials Section - Visible to all users - Always at bottom */}

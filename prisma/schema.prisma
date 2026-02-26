@@ -156,6 +156,8 @@ model Song {
   contracts                 Contract[]
   splitHistory              SplitHistory[]
   emailLogs                 EmailLog[]
+  media                     SongMedia[]
+  adDrafts                  AdDraft[]
 }
 
 model SongCollaborator {
@@ -269,6 +271,43 @@ model SplitHistory {
 
   @@index([songId])
   @@index([timestamp])
+}
+
+model SongMedia {
+  id          String   @id @default(cuid())
+  songId      String
+  category    String   // "audio", "images", "videos"
+  filename    String   // original filename
+  storagePath String   // path on volume, e.g. "songs/abc123/audio/master.wav"
+  mimeType    String   // e.g. "audio/wav", "image/jpeg", "video/mp4"
+  fileSize    Int      // bytes
+  label       String?  // optional user label, e.g. "Final Master", "Album Art"
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  song        Song     @relation(fields: [songId], references: [id], onDelete: Cascade)
+
+  @@index([songId])
+  @@index([category])
+}
+
+model AdDraft {
+  id             String    @id @default(cuid())
+  songId         String
+  name           String    // admin-friendly label
+  headline       String    // ad headline text
+  primaryText    String    @db.Text // main ad copy
+  callToAction   String?   // e.g. "Listen Now", "Pre-Save"
+  destinationUrl String?   // link the ad points to
+  imageMediaId   String?   // selected SongMedia for image creative
+  videoMediaId   String?   // selected SongMedia for video creative
+  audioMediaId   String?   // selected SongMedia for audio (if applicable)
+  format         String    // "image", "video", "carousel"
+  status         String    @default("draft") // "draft", "ready"
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  song           Song      @relation(fields: [songId], references: [id], onDelete: Cascade)
+
+  @@index([songId])
 }
 
 model FaqSubmission {

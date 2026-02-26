@@ -70,6 +70,7 @@ export async function GET(
               publishingEntity: true,
             },
           },
+          media: true,
         },
       })
       // #region agent log
