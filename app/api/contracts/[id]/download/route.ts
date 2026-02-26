@@ -71,12 +71,30 @@ export async function GET(
       })
     }
 
-    // On-demand fetch: contract is signed but PDF wasn't stored (signed before this feature)
-    if (contract.esignatureStatus === "signed" && contract.esignatureDocId) {
+    // On-demand fetch: contract has a SignWell doc but no stored PDF
+    if (contract.esignatureDocId) {
       const apiKey = process.env.SIGNWELL_API_KEY
       if (apiKey) {
         try {
           const client = createSignWellClient(apiKey)
+
+          // If status isn't "signed" yet, check with SignWell first
+          if (contract.esignatureStatus !== "signed") {
+            const statusResult = await client.getSignatureStatus(contract.esignatureDocId)
+            if (statusResult.status === "signed") {
+              await db.contract.update({
+                where: { id: contract.id },
+                data: {
+                  esignatureStatus: "signed",
+                  signedAt: statusResult.signedAt ? new Date(statusResult.signedAt) : new Date(),
+                },
+              })
+            } else {
+              // Not actually signed yet -- skip PDF download
+              throw new Error(`Contract not yet signed (status: ${statusResult.status})`)
+            }
+          }
+
           const pdfBuffer = await client.downloadSignedPdf(contract.esignatureDocId)
 
           await db.contract.update({
