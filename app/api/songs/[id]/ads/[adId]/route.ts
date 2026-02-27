@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { db } from "@/lib/db"
-import { canAccessSong } from "@/lib/permissions"
+import { isAdmin } from "@/lib/permissions"
 import { z } from "zod"
 
 const updateAdSchema = z.object({
@@ -27,9 +27,9 @@ export async function PATCH(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const canAccess = await canAccessSong(session, params.id)
-  if (!canAccess) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+  const userIsAdmin = await isAdmin(session)
+  if (!userIsAdmin) {
+    return NextResponse.json({ error: "Forbidden: admin only" }, { status: 403 })
   }
 
   const draft = await db.adDraft.findFirst({
@@ -73,9 +73,9 @@ export async function DELETE(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const canAccess = await canAccessSong(session, params.id)
-  if (!canAccess) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+  const userIsAdmin = await isAdmin(session)
+  if (!userIsAdmin) {
+    return NextResponse.json({ error: "Forbidden: admin only" }, { status: 403 })
   }
 
   const draft = await db.adDraft.findFirst({

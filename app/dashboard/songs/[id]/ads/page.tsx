@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react"
 import { useParams, useRouter } from "next/navigation"
+import { useSession } from "next-auth/react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -47,6 +48,7 @@ interface AdDraft {
 }
 
 export default function AdBuilderPage() {
+  const { data: session, status } = useSession()
   const params = useParams()
   const router = useRouter()
   const songId = typeof params.id === "string" ? params.id : params.id?.[0]
@@ -94,8 +96,18 @@ export default function AdBuilderPage() {
   }, [songId])
 
   useEffect(() => {
-    fetchData()
-  }, [fetchData])
+    if (status === "unauthenticated") {
+      router.push("/login")
+      return
+    }
+    if (status === "authenticated" && session?.user?.role !== "admin") {
+      router.replace(songId ? `/dashboard/songs/${songId}` : "/dashboard/songs")
+      return
+    }
+    if (status === "authenticated") {
+      fetchData()
+    }
+  }, [status, session?.user?.role, songId, router, fetchData])
 
   const loadDraft = (draft: AdDraft) => {
     setEditingDraftId(draft.id)
@@ -189,6 +201,14 @@ export default function AdBuilderPage() {
   const videos = media.filter((m) => m.category === "videos")
   const selectedImageUrl = imageMediaId ? `/api/media/${imageMediaId}/file` : null
   const selectedVideoUrl = videoMediaId ? `/api/media/${videoMediaId}/file` : null
+
+  if (status === "loading" || (status === "authenticated" && session?.user?.role !== "admin")) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <p>Loading…</p>
+      </div>
+    )
+  }
 
   if (loading) {
     return (

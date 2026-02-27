@@ -158,6 +158,7 @@ model Song {
   emailLogs                 EmailLog[]
   media                     SongMedia[]
   adDrafts                  AdDraft[]
+  smartLinks                SmartLink[]
 }
 
 model SongCollaborator {
@@ -308,6 +309,56 @@ model AdDraft {
   song           Song      @relation(fields: [songId], references: [id], onDelete: Cascade)
 
   @@index([songId])
+}
+
+model SmartLink {
+  id          String                  @id @default(cuid())
+  songId      String
+  slug        String                  @unique
+  title       String
+  description String?
+  imageUrl    String?
+  isActive    Boolean                 @default(true)
+  createdAt   DateTime                @default(now())
+  updatedAt   DateTime                @updatedAt
+  // Relations
+  song        Song                    @relation(fields: [songId], references: [id], onDelete: Cascade)
+  destinations SmartLinkDestination[]
+  clicks      SmartLinkClick[]
+
+  @@index([songId])
+}
+
+model SmartLinkDestination {
+  id          String    @id @default(cuid())
+  smartLinkId String
+  serviceKey  String    // e.g. "spotify", "apple_music", "amazon", "deezer", "tidal", "youtube"
+  label       String    // Button label shown to fans
+  url         String    // Outbound URL
+  sortOrder   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  // Relations
+  smartLink   SmartLink @relation(fields: [smartLinkId], references: [id], onDelete: Cascade)
+
+  @@index([smartLinkId])
+  @@index([serviceKey])
+}
+
+model SmartLinkClick {
+  id          String    @id @default(cuid())
+  smartLinkId String
+  serviceKey  String
+  userAgent   String?   @db.Text
+  country     String?
+  referrer    String?   @db.Text
+  createdAt   DateTime  @default(now())
+  // Relations
+  smartLink   SmartLink @relation(fields: [smartLinkId], references: [id], onDelete: Cascade)
+
+  @@index([smartLinkId])
+  @@index([serviceKey])
+  @@index([createdAt])
 }
 
 model FaqSubmission {

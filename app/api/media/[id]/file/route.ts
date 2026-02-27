@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { db } from "@/lib/db"
-import { canAccessSong } from "@/lib/permissions"
+import { isAdmin } from "@/lib/permissions"
 import { getUploadsBaseDir } from "@/lib/uploads"
 import path from "node:path"
 import fs from "node:fs"
@@ -25,9 +25,9 @@ export async function GET(
     return NextResponse.json({ error: "Media not found" }, { status: 404 })
   }
 
-  const canAccess = await canAccessSong(session, media.songId)
-  if (!canAccess) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+  const userIsAdmin = await isAdmin(session)
+  if (!userIsAdmin) {
+    return NextResponse.json({ error: "Forbidden: admin only" }, { status: 403 })
   }
 
   const base = getUploadsBaseDir()

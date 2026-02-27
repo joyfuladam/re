@@ -1,0 +1,139 @@
+"use client"
+
+import { useEffect, useState } from "react"
+import { useSearchParams } from "next/navigation"
+import Link from "next/link"
+import Image from "next/image"
+
+interface Destination {
+  id: string
+  serviceKey: string
+  label: string
+}
+
+interface SmartLinkResponse {
+  id: string
+  title: string
+  description: string | null
+  imageUrl: string | null
+  slug: string
+  destinations: Destination[]
+}
+
+export default function SmartLinkLandingPage({
+  params,
+}: {
+  params: { slug: string }
+}) {
+  const [smartLink, setSmartLink] = useState<SmartLinkResponse | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const searchParams = useSearchParams()
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const res = await fetch(`/api/public/smart-links/${params.slug}${window.location.search}`, {
+          cache: "no-store",
+        })
+        if (!res.ok) {
+          setError("This link is not available.")
+          setLoading(false)
+          return
+        }
+        const data = await res.json()
+        setSmartLink(data)
+      } catch (err) {
+        console.error("Error loading smart link:", err)
+        setError("Something went wrong loading this link.")
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
+  }, [params.slug, searchParams])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <p className="text-sm text-muted-foreground">Loading…</p>
+      </div>
+    )
+  }
+
+  if (error || !smartLink) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="max-w-md w-full px-6 py-8 text-center space-y-4">
+          <h1 className="text-xl font-semibold">Link unavailable</h1>
+          <p className="text-sm text-muted-foreground">{error}</p>
+          <p className="text-xs text-muted-foreground">
+            If you believe this is an error, please contact the label.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  const query = typeof window !== "undefined" ? window.location.search : ""
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background to-background/80 px-4 py-10">
+      <div className="w-full max-w-md mx-auto">
+        <div className="bg-card/90 border rounded-2xl shadow-sm px-6 py-8 space-y-6">
+          {smartLink.imageUrl && (
+            <div className="flex justify-center">
+              <div className="relative w-40 h-40 rounded-xl overflow-hidden border bg-muted">
+                <Image
+                  src={smartLink.imageUrl}
+                  alt={smartLink.title}
+                  fill
+                  sizes="160px"
+                  className="object-cover"
+                />
+              </div>
+            </div>
+          )}
+
+          <div className="text-center space-y-1">
+            <h1 className="text-2xl font-semibold tracking-tight">
+              {smartLink.title}
+            </h1>
+            {smartLink.description && (
+              <p className="text-sm text-muted-foreground">
+                {smartLink.description}
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            {smartLink.destinations.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center">
+                No streaming services have been configured for this link yet.
+              </p>
+            ) : (
+              smartLink.destinations.map((dest) => (
+                <Link
+                  key={dest.id}
+                  href={`/r/${smartLink.id}/${encodeURIComponent(dest.serviceKey)}${query}`}
+                  className="block w-full"
+                >
+                  <button className="w-full h-11 rounded-full bg-primary text-primary-foreground text-sm font-medium flex items-center justify-center hover:bg-primary/90 transition-colors">
+                    {dest.label}
+                  </button>
+                </Link>
+              ))
+            )}
+          </div>
+
+          <div className="pt-2 text-center">
+            <p className="text-[11px] text-muted-foreground">
+              Powered by River &amp; Ember
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+

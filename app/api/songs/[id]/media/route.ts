@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { db } from "@/lib/db"
-import { canAccessSong } from "@/lib/permissions"
+import { isAdmin } from "@/lib/permissions"
 import busboy from "busboy"
 import { Readable } from "node:stream"
 import fs from "node:fs"
@@ -32,9 +32,9 @@ export async function GET(
   }
 
   const songId = params.id
-  const canAccess = await canAccessSong(session, songId)
-  if (!canAccess) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+  const userIsAdmin = await isAdmin(session)
+  if (!userIsAdmin) {
+    return NextResponse.json({ error: "Forbidden: admin only" }, { status: 403 })
   }
 
   const song = await db.song.findUnique({
@@ -71,9 +71,9 @@ export async function POST(
   }
 
   const songId = params.id
-  const canAccess = await canAccessSong(session, songId)
-  if (!canAccess) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+  const userIsAdmin = await isAdmin(session)
+  if (!userIsAdmin) {
+    return NextResponse.json({ error: "Forbidden: admin only" }, { status: 403 })
   }
 
   const song = await db.song.findUnique({
@@ -229,9 +229,9 @@ export async function DELETE(
   }
 
   const songId = params.id
-  const canAccess = await canAccessSong(session, songId)
-  if (!canAccess) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+  const userIsAdmin = await isAdmin(session)
+  if (!userIsAdmin) {
+    return NextResponse.json({ error: "Forbidden: admin only" }, { status: 403 })
   }
 
   const { searchParams } = new URL(request.url)

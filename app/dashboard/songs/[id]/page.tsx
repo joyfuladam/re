@@ -14,6 +14,7 @@ import { PublishingSplitEditor } from "@/components/splits/PublishingSplitEditor
 import { MasterSplitEditor } from "@/components/splits/MasterSplitEditor"
 import { SplitPieChart } from "@/components/charts/SplitPieChart"
 import { MediaLibraryCard } from "@/components/songs/MediaLibraryCard"
+import { SmartLinkEditorCard } from "@/components/songs/SmartLinkEditorCard"
 import { ContractType } from "@prisma/client"
 import { getRequiredContractTypes, getContractTypeLabel } from "@/lib/contract-types"
 import { CollaboratorRole } from "@prisma/client"
@@ -2468,8 +2469,13 @@ export default function SongDetailPage() {
         </div>
       )}
 
-      {/* Media Library - uploads stored on Railway Volume */}
-      {song && (
+      {/* Smart Link - admin only */}
+      {song && session?.user?.role === "admin" && (
+        <SmartLinkEditorCard songId={song.id} songTitle={song.title} />
+      )}
+
+      {/* Media Library - admin only */}
+      {song && session?.user?.role === "admin" && (
         <MediaLibraryCard
           songId={song.id}
           media={song.media || []}
