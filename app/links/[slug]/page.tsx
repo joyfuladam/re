@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
-import Image from "next/image"
 
 interface Destination {
   id: string
@@ -83,13 +82,12 @@ export default function SmartLinkLandingPage({
         <div className="rounded-3xl border border-white/10 bg-black/60 backdrop-blur-sm shadow-2xl px-6 py-8 sm:px-10 sm:py-10 space-y-8">
           {smartLink.imageUrl && (
             <div className="flex justify-center">
-              <div className="relative w-40 h-40 sm:w-56 sm:h-56 rounded-2xl overflow-hidden border border-white/10 bg-neutral-800">
-                <Image
+              <div className="w-40 h-40 sm:w-56 sm:h-56 rounded-2xl overflow-hidden border border-white/10 bg-neutral-800">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
                   src={smartLink.imageUrl}
                   alt={smartLink.title}
-                  fill
-                  sizes="224px"
-                  className="object-cover"
+                  className="w-full h-full object-cover"
                 />
               </div>
             </div>
