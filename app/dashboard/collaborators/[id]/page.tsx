@@ -186,7 +186,7 @@ export default function CollaboratorDetailPage() {
         email: formData.email?.trim() || null,
         phone: formData.phone?.trim() || null,
         address: formData.address?.trim() || null,
-        capableRoles: formData.capableRoles,
+        ...(isAdmin ? { capableRoles: formData.capableRoles } : {}),
         proAffiliation: formData.proAffiliation?.trim() || null,
         ipiNumber: formData.ipiNumber?.trim() || null,
         publishingCompany: formData.publishingCompany?.trim() || null,
@@ -414,16 +414,15 @@ export default function CollaboratorDetailPage() {
               disabled={!editing}
             />
           </div>
-          {editing && (
+          {editing && isAdmin && (
             <div className="space-y-2">
               <MultiRoleSelector
                 value={formData.capableRoles}
                 onValueChange={(roles) => setFormData({ ...formData, capableRoles: roles })}
-                disabled={!isAdmin}
               />
             </div>
           )}
-          {!editing && collaborator.capableRoles.length > 0 && (
+          {(!editing || !isAdmin) && collaborator.capableRoles.length > 0 && (
             <div className="space-y-2">
               <Label>Capable Roles</Label>
               <div className="flex flex-wrap gap-2">
@@ -433,6 +432,11 @@ export default function CollaboratorDetailPage() {
                   </span>
                 ))}
               </div>
+              {!isAdmin && (
+                <p className="text-xs text-muted-foreground">
+                  Only an administrator can change your roles.
+                </p>
+              )}
             </div>
           )}
         </CardContent>

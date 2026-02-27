@@ -1,11 +1,12 @@
 /**
  * Classifies smart link clicks to filter out suspected scanner/bot duplicates.
- * When the same user-agent hits multiple service URLs (Spotify, Apple, Amazon, etc.)
- * within a few seconds, we treat that as one "session" and count only the first click.
+ * Per (smartLinkId, userAgent), clicks within a session window are treated as one visit;
+ * we keep only the last click in each session so prefetches and link-checker hits are dropped.
  * Raw data is never deleted; this is used only for analytics display.
  */
 
-const BURST_WINDOW_MS = 3000
+/** Clicks within this window (ms) from the same UA on the same smart link = one "session"; we count only the last click. */
+const SESSION_WINDOW_MS = 45_000
 
 export interface ClickForFilter {
   id: string
@@ -16,9 +17,9 @@ export interface ClickForFilter {
 }
 
 /**
- * Returns the subset of clicks that are considered "human" (not suspected scanner duplicates).
- * Within each (smartLinkId, userAgent) group, clicks in a 3-second burst with multiple
- * different serviceKeys are collapsed to one: we keep only the first click in the burst.
+ * Returns the subset of clicks that are considered "human" (one per session per service intent).
+ * Within each (smartLinkId, userAgent) group, clicks within SESSION_WINDOW_MS are one session;
+ * we keep only the chronologically last click in that session (so the user's actual click wins over prefetches).
  */
 export function filterHumanClicks<T extends ClickForFilter>(clicks: T[]): T[] {
   if (clicks.length === 0) return []
@@ -38,28 +39,29 @@ export function filterHumanClicks<T extends ClickForFilter>(clicks: T[]): T[] {
       (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
     )
 
-    let burstStart = 0
-    const processBurst = (end: number) => {
-      const burst = sorted.slice(burstStart, end)
-      const serviceKeys = new Set(burst.map((b) => b.serviceKey))
-      if (serviceKeys.size >= 2) {
-        humanIds.add(burst[0].id)
-      } else {
-        burst.forEach((b) => humanIds.add(b.id))
+    let session: T[] = []
+    const flushSession = () => {
+      if (session.length > 0) {
+        humanIds.add(session[session.length - 1].id)
+        session = []
       }
     }
 
-    for (let i = 1; i <= sorted.length; i++) {
-      const t0 = new Date(sorted[burstStart].createdAt).getTime()
-      const ti = i < sorted.length ? new Date(sorted[i].createdAt).getTime() : t0 + BURST_WINDOW_MS + 1
-      if (ti - t0 > BURST_WINDOW_MS) {
-        processBurst(i)
-        burstStart = i
+    for (const c of sorted) {
+      const t = new Date(c.createdAt).getTime()
+      if (session.length === 0) {
+        session.push(c)
+        continue
+      }
+      const firstInSession = new Date(session[0].createdAt).getTime()
+      if (t - firstInSession <= SESSION_WINDOW_MS) {
+        session.push(c)
+      } else {
+        flushSession()
+        session.push(c)
       }
     }
-    if (burstStart < sorted.length) {
-      processBurst(sorted.length)
-    }
+    flushSession()
   }
 
   return clicks.filter((c) => humanIds.has(c.id))
