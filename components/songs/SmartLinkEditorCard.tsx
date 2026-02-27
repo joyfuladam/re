@@ -33,6 +33,9 @@ interface SongImage {
   createdAt: string
 }
 
+const SMART_LINK_BASE_URL =
+  process.env.NEXT_PUBLIC_SMART_LINK_BASE_URL || "https://go.riverandember.com"
+
 const DEFAULT_SERVICES: { key: string; label: string; placeholder: string }[] = [
   { key: "spotify", label: "Spotify", placeholder: "https://open.spotify.com/..." },
   { key: "apple_music", label: "Apple Music", placeholder: "https://music.apple.com/..." },
@@ -271,10 +274,7 @@ export function SmartLinkEditorCard({
     )
   }
 
-  const publicUrl =
-    typeof window !== "undefined"
-      ? `${window.location.origin}/links/${smartLink.slug}`
-      : `/links/${smartLink.slug}`
+  const publicUrl = `${SMART_LINK_BASE_URL}/links/${smartLink.slug}`
 
   return (
     <Card>

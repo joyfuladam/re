@@ -19,6 +19,9 @@ interface SignupItem {
   songTitle: string | null
 }
 
+const SMART_LINK_BASE_URL =
+  process.env.NEXT_PUBLIC_SMART_LINK_BASE_URL || "https://go.riverandember.com"
+
 interface SignupResponse {
   total: number
   page: number
@@ -255,7 +258,7 @@ export default function SmartLinkSignupsPage() {
                       <td className="py-2 pr-4">
                         <span className="block font-medium">{s.smartLinkTitle}</span>
                         <span className="block text-xs text-muted-foreground">
-                          /links/{s.smartLinkSlug}
+                          {SMART_LINK_BASE_URL}/links/{s.smartLinkSlug}
                         </span>
                       </td>
                       <td className="py-2 pr-4">

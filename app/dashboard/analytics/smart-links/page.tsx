@@ -18,6 +18,9 @@ interface SummaryItem {
   clicksByService: Record<string, number>
 }
 
+const SMART_LINK_BASE_URL =
+  process.env.NEXT_PUBLIC_SMART_LINK_BASE_URL || "https://go.riverandember.com"
+
 interface DetailResponse {
   range: string
   smartLink: {
@@ -237,7 +240,7 @@ export default function SmartLinkAnalyticsPage() {
                           <td className="py-2 pr-4">
                             <div className="font-medium">{item.title}</div>
                             <div className="text-xs text-muted-foreground truncate max-w-[260px]">
-                              /links/{item.slug}
+                              {SMART_LINK_BASE_URL}/links/{item.slug}
                             </div>
                           </td>
                           <td className="py-2 pr-4 text-right">{item.totalClicks}</td>
@@ -299,7 +302,7 @@ export default function SmartLinkAnalyticsPage() {
                   </div>
                   <div>
                     <span className="font-medium">Smart Link:</span> {detail.smartLink.title} (
-                    /links/{detail.smartLink.slug})
+                    {SMART_LINK_BASE_URL}/links/{detail.smartLink.slug})
                   </div>
                   <div>
                     <span className="font-medium">Range:</span> {detail.range}
