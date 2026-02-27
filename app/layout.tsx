@@ -7,7 +7,7 @@ import { Providers } from "@/components/providers/SessionProvider"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "River & Ember - Record Label Management",
+  title: "River & Ember - Collaborator Portal",
   description: "Manage collaborators, songs, splits, and contracts for River & Ember releases",
 }
 

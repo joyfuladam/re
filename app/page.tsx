@@ -7,7 +7,7 @@ export default function Home() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center p-24">
       <h1 className="text-4xl font-bold mb-8">River & Ember</h1>
-      <p className="text-xl mb-8">Record Label Management System</p>
+      <p className="text-xl mb-8">Collaborator Portal</p>
       <div className="flex gap-4">
         <Link
           href="/login"
