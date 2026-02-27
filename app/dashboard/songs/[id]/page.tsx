@@ -2471,7 +2471,11 @@ export default function SongDetailPage() {
 
       {/* Smart Link - admin only */}
       {song && session?.user?.role === "admin" && (
-        <SmartLinkEditorCard songId={song.id} songTitle={song.title} />
+        <SmartLinkEditorCard
+          songId={song.id}
+          songTitle={song.title}
+          hasIsrc={!!song.isrcCode}
+        />
       )}
 
       {/* Media Library - admin only */}

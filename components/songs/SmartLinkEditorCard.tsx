@@ -50,12 +50,21 @@ function generateSlug(title: string): string {
     .replace(/^-+|-+$/g, "")
 }
 
-export function SmartLinkEditorCard({ songId, songTitle }: { songId: string; songTitle: string }) {
+export function SmartLinkEditorCard({
+  songId,
+  songTitle,
+  hasIsrc,
+}: {
+  songId: string
+  songTitle: string
+  hasIsrc: boolean
+}) {
   const [smartLink, setSmartLink] = useState<SmartLink | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [images, setImages] = useState<SongImage[]>([])
+  const [discoverMessage, setDiscoverMessage] = useState<string | null>(null)
 
   useEffect(() => {
     async function load() {
@@ -190,6 +199,41 @@ export function SmartLinkEditorCard({ songId, songTitle }: { songId: string; son
     }
   }
 
+  const handleDiscover = async () => {
+    setDiscoverMessage(null)
+    setError(null)
+    try {
+      const res = await fetch("/api/smart-links/discover", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          songId,
+          providers: ["spotify", "apple_music"],
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error || "Failed to auto-discover links")
+        return
+      }
+      if (data.smartLink) {
+        setSmartLink(data.smartLink)
+      }
+      const messages: string[] = []
+      const results = data.results || {}
+      if (results.spotify) {
+        messages.push(`Spotify: ${results.spotify.message}`)
+      }
+      if (results.apple_music) {
+        messages.push(`Apple Music: ${results.apple_music.message}`)
+      }
+      setDiscoverMessage(messages.join(" • "))
+    } catch (err) {
+      console.error("Error during auto-discover:", err)
+      setError("Failed to auto-discover links")
+    }
+  }
+
   if (loading) {
     return (
       <Card>
@@ -244,6 +288,12 @@ export function SmartLinkEditorCard({ songId, songTitle }: { songId: string; son
         {error && (
           <p className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-md">
             {error}
+          </p>
+        )}
+
+        {discoverMessage && (
+          <p className="text-xs text-muted-foreground bg-muted/50 px-3 py-2 rounded-md">
+            {discoverMessage}
           </p>
         )}
 
@@ -328,9 +378,21 @@ export function SmartLinkEditorCard({ songId, songTitle }: { songId: string; son
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <Label>Destinations</Label>
-            <Button variant="outline" size="sm" onClick={handleAddDestination}>
-              Add service
-            </Button>
+            <div className="flex items-center gap-2">
+              {hasIsrc && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  type="button"
+                  onClick={handleDiscover}
+                >
+                  Auto-discover links
+                </Button>
+              )}
+              <Button variant="outline" size="sm" type="button" onClick={handleAddDestination}>
+                Add service
+              </Button>
+            </div>
           </div>
 
           {smartLink.destinations.length === 0 && (
