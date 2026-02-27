@@ -325,6 +325,7 @@ model SmartLink {
   song        Song                    @relation(fields: [songId], references: [id], onDelete: Cascade)
   destinations SmartLinkDestination[]
   clicks      SmartLinkClick[]
+  signups     SmartLinkSignup[]
 
   @@index([songId])
 }
@@ -358,6 +359,20 @@ model SmartLinkClick {
 
   @@index([smartLinkId])
   @@index([serviceKey])
+  @@index([createdAt])
+}
+
+model SmartLinkSignup {
+  id          String    @id @default(cuid())
+  smartLinkId String
+  name        String?
+  email       String
+  createdAt   DateTime  @default(now())
+  // Relations
+  smartLink   SmartLink @relation(fields: [smartLinkId], references: [id], onDelete: Cascade)
+
+  @@index([smartLinkId])
+  @@index([email])
   @@index([createdAt])
 }
 

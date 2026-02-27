@@ -27,6 +27,11 @@ export default function SmartLinkLandingPage({
   const [smartLink, setSmartLink] = useState<SmartLinkResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [name, setName] = useState("")
+  const [email, setEmail] = useState("")
+  const [signupMessage, setSignupMessage] = useState<string | null>(null)
+  const [signupError, setSignupError] = useState<string | null>(null)
+  const [submitting, setSubmitting] = useState(false)
   const searchParams = useSearchParams()
 
   useEffect(() => {
@@ -122,6 +127,90 @@ export default function SmartLinkLandingPage({
                 </Link>
               ))
             )}
+          </div>
+
+          <div className="space-y-3 rounded-2xl border border-white/10 bg-black/40 px-4 py-4">
+            <div className="space-y-1">
+              <h2 className="text-sm font-semibold text-white">Stay updated</h2>
+              <p className="text-xs text-slate-300">
+                Share your email to receive updates from River &amp; Ember about this and future releases.
+              </p>
+            </div>
+            <form
+              className="space-y-2"
+              onSubmit={async (e) => {
+                e.preventDefault()
+                if (!email.trim()) {
+                  setSignupError("Please enter a valid email.")
+                  setSignupMessage(null)
+                  return
+                }
+                setSubmitting(true)
+                setSignupError(null)
+                setSignupMessage(null)
+                try {
+                  const res = await fetch(`/api/public/smart-links/${params.slug}/signup`, {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                      name: name.trim() || undefined,
+                      email: email.trim(),
+                    }),
+                  })
+                  const data = await res.json().catch(() => ({}))
+                  if (!res.ok) {
+                    console.error("Smart link signup error:", data)
+                    setSignupError(data.error || "Something went wrong. Please try again.")
+                    return
+                  }
+                  setSignupMessage("Thanks! You're on the list.")
+                  setName("")
+                  setEmail("")
+                } catch (err) {
+                  console.error("Smart link signup error:", err)
+                  setSignupError("Something went wrong. Please try again.")
+                } finally {
+                  setSubmitting(false)
+                }
+              }}
+            >
+              <div className="flex flex-col sm:flex-row gap-2">
+                <input
+                  type="text"
+                  name="name"
+                  placeholder="Name (optional)"
+                  className="flex-1 rounded-full border border-white/15 bg-black/40 px-3 py-2 text-sm text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-white/40"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  autoComplete="name"
+                />
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="Email address"
+                  className="flex-1 rounded-full border border-white/15 bg-black/40 px-3 py-2 text-sm text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-white/40"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="email"
+                  required
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={submitting}
+                className="mt-1 inline-flex h-9 w-full items-center justify-center rounded-full bg-white text-slate-900 text-xs font-medium hover:bg-slate-100 transition-colors disabled:opacity-70"
+              >
+                {submitting ? "Submitting…" : "Get updates"}
+              </button>
+              {signupError && (
+                <p className="text-[11px] text-red-300 mt-1">{signupError}</p>
+              )}
+              {signupMessage && !signupError && (
+                <p className="text-[11px] text-emerald-300 mt-1">{signupMessage}</p>
+              )}
+            </form>
           </div>
 
           <div className="pt-2 text-center">

@@ -46,16 +46,10 @@ export default function DashboardLayout({
                 Dashboard
               </Link>
               {isAdmin ? (
-                <Link href="/dashboard/collaborators" className="hover:underline">
-                  Collaborators
-                </Link>
-              ) : (
-                <Link href={`/dashboard/collaborators/${session?.user?.id}`} className="hover:underline">
-                  My Profile
-                </Link>
-              )}
-              {isAdmin && (
                 <>
+                  <Link href="/dashboard/collaborators" className="hover:underline">
+                    Collaborators
+                  </Link>
                   <Link href="/dashboard/songs" className="hover:underline">
                     Songs
                   </Link>
@@ -65,6 +59,9 @@ export default function DashboardLayout({
                   <Link href="/dashboard/email" className="hover:underline">
                     Email
                   </Link>
+                  <Link href="/dashboard/smart-link-signups" className="hover:underline">
+                    Email Signups
+                  </Link>
                   <Link href="/dashboard/account-requests" className="hover:underline">
                     Account Requests
                   </Link>
@@ -72,6 +69,10 @@ export default function DashboardLayout({
                     FAQ Submissions
                   </Link>
                 </>
+              ) : (
+                <Link href={`/dashboard/collaborators/${session?.user?.id}`} className="hover:underline">
+                  My Profile
+                </Link>
               )}
               <Link href="/dashboard/faq" className="hover:underline">
                 FAQ
