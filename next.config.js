@@ -9,6 +9,10 @@ const nextConfig = {
   serverRuntimeConfig: {
     maxDuration: 30, // 30 seconds for Vercel Pro, adjust as needed
   },
+  // Allow external artwork (e.g. Spotify) in smart links
+  images: {
+    domains: ['i.scdn.co'],
+  },
   // Optimize output for Railway
   output: 'standalone',
 }
