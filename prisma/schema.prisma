@@ -47,6 +47,12 @@ enum UserRole {
   collaborator
 }
 
+enum NotificationType {
+  MESSAGE
+  CONTRACT
+  SYSTEM
+}
+
 model Collaborator {
   id                 String             @id @default(cuid())
   firstName          String
@@ -85,6 +91,10 @@ model Collaborator {
   songCollaborators  SongCollaborator[]
   accounts           Account[]
   sessions           Session[]
+  messageParticipants MessageParticipant[]
+  sentMessages        Message[]
+  notifications       Notification[]
+  createdThreads      MessageThread[]
 }
 
 model Account {
@@ -159,6 +169,7 @@ model Song {
   media                     SongMedia[]
   adDrafts                  AdDraft[]
   smartLinks                SmartLink[]
+  messageThreads            MessageThread[]
 }
 
 model SongCollaborator {
@@ -240,6 +251,7 @@ model Contract {
   // Relations
   song               Song             @relation(fields: [songId], references: [id], onDelete: Cascade)
   songCollaborator   SongCollaborator @relation(fields: [songCollaboratorId], references: [id], onDelete: Cascade)
+  notifications      Notification[]
 
   @@unique([songCollaboratorId, templateType]) // Prevent duplicate contracts for same collaborator/type
   @@index([songId])
@@ -439,8 +451,87 @@ model EmailLog {
   triggeredById    String?        // Collaborator ID of the admin who triggered the send
   triggeredByEmail String?
   createdAt        DateTime       @default(now())
+  messages         Message[]
 
   @@index([templateId])
   @@index([songId])
   @@index([createdAt])
+}
+
+model MessageThread {
+  id          String              @id @default(cuid())
+  subject     String
+  songId      String?
+  createdById String
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  // Relations
+  song         Song?              @relation(fields: [songId], references: [id], onDelete: SetNull)
+  createdBy    Collaborator       @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  participants MessageParticipant[]
+  messages     Message[]
+
+  @@index([songId])
+  @@index([createdById])
+  @@index([updatedAt])
+}
+
+model MessageParticipant {
+  id         String         @id @default(cuid())
+  threadId   String
+  userId     String
+  lastReadAt DateTime?
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  // Relations
+  thread MessageThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  user   Collaborator @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([threadId, userId])
+  @@index([userId])
+  @@index([threadId])
+}
+
+model Message {
+  id         String         @id @default(cuid())
+  threadId   String
+  senderId   String
+  bodyHtml   String?        @db.Text
+  bodyText   String?        @db.Text
+  emailLogId String?
+  createdAt  DateTime       @default(now())
+
+  // Relations
+  thread    MessageThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  sender    Collaborator  @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  emailLog  EmailLog?     @relation(fields: [emailLogId], references: [id])
+  notifications Notification[]
+
+  @@index([threadId])
+  @@index([senderId])
+  @@index([emailLogId])
+  @@index([createdAt])
+}
+
+model Notification {
+  id         String           @id @default(cuid())
+  userId     String
+  type       NotificationType
+  messageId  String?
+  contractId String?
+  metadata   Json?
+  createdAt  DateTime         @default(now())
+  readAt     DateTime?
+
+  // Relations
+  user     Collaborator @relation(fields: [userId], references: [id], onDelete: Cascade)
+  message  Message?     @relation(fields: [messageId], references: [id])
+  contract Contract?    @relation(fields: [contractId], references: [id])
+
+  @@index([userId])
+  @@index([type])
+  @@index([createdAt])
+  @@index([readAt])
 }

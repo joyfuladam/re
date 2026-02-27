@@ -6,6 +6,13 @@ import { useSession, signOut } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { RoleBadge } from "@/components/auth/RoleBadge"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 export default function DashboardLayout({
   children,
@@ -53,36 +60,62 @@ export default function DashboardLayout({
                   <Link href="/dashboard/songs" className="hover:underline">
                     Songs
                   </Link>
-                  <Link href="/dashboard/contracts" className="hover:underline">
-                    Contracts
-                  </Link>
-                  <Link href="/dashboard/email" className="hover:underline">
-                    Email
-                  </Link>
-                  <Link href="/dashboard/email-history" className="hover:underline">
-                    Email History
-                  </Link>
-                  <Link href="/dashboard/smart-link-signups" className="hover:underline">
-                    Email Signups
-                  </Link>
+
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button type="button" className="hover:underline">
+                        Email
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start">
+                      <DropdownMenuItem asChild>
+                        <Link href="/dashboard/email">Send</Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/dashboard/email-templates">Templates</Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/dashboard/email-history">History</Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <Link href="/dashboard/smart-link-signups">Email Signups</Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/dashboard/account-requests">Account Requests</Link>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+
                   <Link href="/dashboard/analytics/smart-links" className="hover:underline">
                     Analytics
                   </Link>
-                  <Link href="/dashboard/account-requests" className="hover:underline">
-                    Account Requests
-                  </Link>
-                  <Link href="/dashboard/faq/submissions" className="hover:underline">
-                    FAQ Submissions
-                  </Link>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button type="button" className="hover:underline">
+                        FAQ
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start">
+                      <DropdownMenuItem asChild>
+                        <Link href="/dashboard/faq">FAQ (View)</Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/dashboard/faq/submissions">Submissions</Link>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </>
               ) : (
                 <Link href={`/dashboard/collaborators/${session?.user?.id}`} className="hover:underline">
                   My Profile
                 </Link>
               )}
-              <Link href="/dashboard/faq" className="hover:underline">
-                FAQ
-              </Link>
+              {!isAdmin && (
+                <Link href="/dashboard/faq" className="hover:underline">
+                  FAQ
+                </Link>
+              )}
               {!isAdmin && (
                 <Link href="/dashboard/songs" className="hover:underline">
                   My Songs
