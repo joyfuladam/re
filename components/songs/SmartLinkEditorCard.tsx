@@ -27,6 +27,12 @@ interface SmartLink {
   clickStats?: Record<string, number>
 }
 
+interface SongImage {
+  id: string
+  label: string | null
+  createdAt: string
+}
+
 const DEFAULT_SERVICES: { key: string; label: string; placeholder: string }[] = [
   { key: "spotify", label: "Spotify", placeholder: "https://open.spotify.com/..." },
   { key: "apple_music", label: "Apple Music", placeholder: "https://music.apple.com/..." },
@@ -49,6 +55,7 @@ export function SmartLinkEditorCard({ songId, songTitle }: { songId: string; son
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [images, setImages] = useState<SongImage[]>([])
 
   useEffect(() => {
     async function load() {
@@ -68,6 +75,20 @@ export function SmartLinkEditorCard({ songId, songTitle }: { songId: string; son
       }
     }
     load()
+  }, [songId])
+
+  useEffect(() => {
+    async function loadImages() {
+      try {
+        const res = await fetch(`/api/songs/${songId}/media?category=images`)
+        if (!res.ok) return
+        const data = await res.json()
+        setImages(data)
+      } catch (err) {
+        console.error("Error loading song images for smart link:", err)
+      }
+    }
+    loadImages()
   }, [songId])
 
   const handleCreate = async () => {
@@ -258,6 +279,37 @@ export function SmartLinkEditorCard({ songId, songTitle }: { songId: string; son
             onChange={(e) => handleFieldChange("description", e.target.value)}
             placeholder="Short tagline or description"
           />
+        </div>
+
+        <div className="space-y-2">
+          <Label>Choose image from Media Library (optional)</Label>
+          {images.length === 0 ? (
+            <p className="text-xs text-muted-foreground">
+              No images found in the Media Library for this song. Upload artwork in the Media
+              Library card above, or paste an external URL below.
+            </p>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {images.map((img) => {
+                const url = `/api/media/${img.id}/file`
+                const isSelected = smartLink.imageUrl === url
+                return (
+                  <button
+                    key={img.id}
+                    type="button"
+                    onClick={() => handleFieldChange("imageUrl", url)}
+                    className={`relative w-16 h-16 rounded-md border overflow-hidden bg-muted ${
+                      isSelected ? "ring-2 ring-primary border-primary" : "border-input"
+                    }`}
+                    title={img.label || "Artwork"}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={url} alt={img.label || "Artwork"} className="w-full h-full object-cover" />
+                  </button>
+                )
+              })}
+            </div>
+          )}
         </div>
 
         <div className="space-y-2">
