@@ -103,6 +103,14 @@ export async function POST(request: NextRequest) {
               },
             })
           }
+
+          if ((!smartLink.imageUrl || smartLink.imageUrl.trim() === "") && match.imageUrl) {
+            await db.smartLink.update({
+              where: { id: smartLink.id },
+              data: { imageUrl: match.imageUrl },
+            })
+          }
+
           results.spotify = {
             status: "ok",
             message: "Spotify link discovered",

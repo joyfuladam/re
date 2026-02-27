@@ -69,6 +69,7 @@ export interface SpotifyTrackMatch {
   url: string
   name: string
   artists: string[]
+  imageUrl?: string
 }
 
 /**
@@ -116,11 +117,15 @@ export async function searchTrackByIsrc(isrc: string): Promise<SpotifyTrackMatch
     ? best.artists.map((a: any) => a?.name).filter(Boolean)
     : []
 
+  const images: any[] = best.album?.images ?? []
+  const imageUrl: string | undefined = images[0]?.url
+
   return {
     id,
     url: `https://open.spotify.com/track/${id}`,
     name: best.name ?? "",
     artists,
+    imageUrl,
   }
 }
 
