@@ -159,7 +159,6 @@ export async function POST(request: NextRequest, { params }: Params) {
           userId: p.userId,
           type: "MESSAGE",
           messageId: message.id,
-          metadata: null,
         })),
     })
   }
