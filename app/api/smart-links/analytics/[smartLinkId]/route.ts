@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { isAdmin } from "@/lib/permissions"
+import { filterHumanClicks } from "@/lib/smart-link-click-filter"
 
 function resolveRange(searchParams: URLSearchParams): { from?: Date; to?: Date; range: string } {
   const range = searchParams.get("range") || "30d"
@@ -47,6 +48,7 @@ export async function GET(
 
   const { searchParams } = new URL(request.url)
   const { from, to, range } = resolveRange(searchParams)
+  const humanOnly = searchParams.get("humanOnly") !== "false"
 
   const where: any = {
     smartLinkId: params.smartLinkId,
@@ -61,15 +63,20 @@ export async function GET(
     }
   }
 
-  const clicks = await db.smartLinkClick.findMany({
+  const rawClicks = await db.smartLinkClick.findMany({
     where,
     orderBy: { createdAt: "asc" },
     select: {
-      createdAt: true,
+      id: true,
+      smartLinkId: true,
       serviceKey: true,
+      createdAt: true,
+      userAgent: true,
       referrer: true,
     },
   })
+
+  const clicks = humanOnly ? filterHumanClicks(rawClicks) : rawClicks
 
   const totalClicks = clicks.length
   const clicksByService: Record<string, number> = {}
@@ -87,10 +94,15 @@ export async function GET(
     .map(([date, count]) => ({ date, total: count }))
     .sort((a, b) => (a.date < b.date ? -1 : 1))
 
-  const recentClicks = clicks.slice(-50).reverse()
+  const recentClicks = clicks.slice(-50).reverse().map((c) => ({
+    createdAt: c.createdAt,
+    serviceKey: c.serviceKey,
+    referrer: c.referrer,
+  }))
 
   return NextResponse.json({
     range,
+    humanOnly,
     smartLink: {
       id: smartLink.id,
       slug: smartLink.slug,

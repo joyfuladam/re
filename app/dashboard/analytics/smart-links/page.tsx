@@ -43,6 +43,7 @@ export default function SmartLinkAnalyticsPage() {
   const isAdmin = session?.user?.role === "admin"
 
   const [range, setRange] = useState<RangeOption>("30d")
+  const [humanOnly, setHumanOnly] = useState(true)
   const [summaryItems, setSummaryItems] = useState<SummaryItem[]>([])
   const [loadingSummary, setLoadingSummary] = useState(true)
   const [summaryError, setSummaryError] = useState<string | null>(null)
@@ -58,15 +59,16 @@ export default function SmartLinkAnalyticsPage() {
       router.push("/dashboard")
       return
     }
-    void loadSummary(range)
+    void loadSummary(range, humanOnly)
   }, [status, isAdmin])
 
-  const loadSummary = async (currentRange: RangeOption) => {
+  const loadSummary = async (currentRange: RangeOption, excludeScanners: boolean) => {
     try {
       setLoadingSummary(true)
       setSummaryError(null)
       const params = new URLSearchParams()
       params.set("range", currentRange)
+      if (!excludeScanners) params.set("humanOnly", "false")
       const res = await fetch(`/api/smart-links/analytics/summary?${params.toString()}`)
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
@@ -80,9 +82,9 @@ export default function SmartLinkAnalyticsPage() {
       if (!selectedId && items.length > 0) {
         const firstId = items[0].smartLinkId
         setSelectedId(firstId)
-        void loadDetail(firstId, currentRange)
+        void loadDetail(firstId, currentRange, excludeScanners)
       } else if (selectedId && items.find((i) => i.smartLinkId === selectedId)) {
-        void loadDetail(selectedId, currentRange)
+        void loadDetail(selectedId, currentRange, excludeScanners)
       } else {
         setDetail(null)
       }
@@ -94,12 +96,17 @@ export default function SmartLinkAnalyticsPage() {
     }
   }
 
-  const loadDetail = async (smartLinkId: string, currentRange: RangeOption) => {
+  const loadDetail = async (
+    smartLinkId: string,
+    currentRange: RangeOption,
+    excludeScanners: boolean
+  ) => {
     try {
       setLoadingDetail(true)
       setDetailError(null)
       const params = new URLSearchParams()
       params.set("range", currentRange)
+      if (!excludeScanners) params.set("humanOnly", "false")
       const res = await fetch(
         `/api/smart-links/analytics/${encodeURIComponent(smartLinkId)}?${params.toString()}`
       )
@@ -121,12 +128,18 @@ export default function SmartLinkAnalyticsPage() {
 
   const handleRangeChange = (newRange: RangeOption) => {
     setRange(newRange)
-    void loadSummary(newRange)
+    void loadSummary(newRange, humanOnly)
+  }
+
+  const handleHumanOnlyChange = (exclude: boolean) => {
+    setHumanOnly(exclude)
+    void loadSummary(range, exclude)
+    if (selectedId) void loadDetail(selectedId, range, exclude)
   }
 
   const handleSelectSmartLink = (id: string) => {
     setSelectedId(id)
-    void loadDetail(id, range)
+    void loadDetail(id, range, humanOnly)
   }
 
   if (status === "loading") {
@@ -151,18 +164,31 @@ export default function SmartLinkAnalyticsPage() {
                 Click performance for each smart link in the selected time range.
               </CardDescription>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground">Range</span>
-              <select
-                className="border rounded-md px-2 py-1 text-xs"
-                value={range}
-                onChange={(e) => handleRangeChange(e.target.value as RangeOption)}
-              >
-                <option value="7d">Last 7 days</option>
-                <option value="30d">Last 30 days</option>
-                <option value="90d">Last 90 days</option>
-                <option value="all">All time</option>
-              </select>
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">Range</span>
+                <select
+                  className="border rounded-md px-2 py-1 text-xs"
+                  value={range}
+                  onChange={(e) => handleRangeChange(e.target.value as RangeOption)}
+                >
+                  <option value="7d">Last 7 days</option>
+                  <option value="30d">Last 30 days</option>
+                  <option value="90d">Last 90 days</option>
+                  <option value="all">All time</option>
+                </select>
+              </div>
+              <label className="flex items-center gap-2 text-xs cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={!humanOnly}
+                  onChange={(e) => handleHumanOnlyChange(!e.target.checked)}
+                  className="rounded border-input"
+                />
+                <span className="text-muted-foreground">
+                  Include suspected bot/scanner traffic
+                </span>
+              </label>
             </div>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -239,7 +265,7 @@ export default function SmartLinkAnalyticsPage() {
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => selectedId && loadDetail(selectedId, range)}
+              onClick={() => selectedId && loadDetail(selectedId, range, humanOnly)}
               disabled={!selectedId || loadingDetail}
             >
               {loadingDetail ? "Refreshing…" : "Refresh"}

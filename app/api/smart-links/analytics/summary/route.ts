@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { isAdmin } from "@/lib/permissions"
+import { filterHumanClicks } from "@/lib/smart-link-click-filter"
 
 function resolveRange(searchParams: URLSearchParams): { from?: Date; to?: Date; range: string } {
   const range = searchParams.get("range") || "30d"
@@ -31,6 +32,7 @@ export async function GET(request: NextRequest) {
 
   const { searchParams } = new URL(request.url)
   const { from, to, range } = resolveRange(searchParams)
+  const humanOnly = searchParams.get("humanOnly") !== "false"
 
   const where: any = {}
   if (from || to) {
@@ -43,32 +45,97 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  const grouped = await db.smartLinkClick.groupBy({
-    by: ["smartLinkId", "serviceKey"],
+  if (!humanOnly) {
+    const grouped = await db.smartLinkClick.groupBy({
+      by: ["smartLinkId", "serviceKey"],
+      where,
+      _count: { _all: true },
+    })
+
+    if (!grouped.length) {
+      return NextResponse.json({ range, humanOnly: false, items: [] })
+    }
+
+    const smartLinkIds = Array.from(new Set(grouped.map((g) => g.smartLinkId)))
+    const smartLinks = await db.smartLink.findMany({
+      where: { id: { in: smartLinkIds } },
+      include: { song: { select: { id: true, title: true } } },
+    })
+    const smartLinkMap = new Map(
+      smartLinks.map((sl) => [
+        sl.id,
+        {
+          id: sl.id,
+          slug: sl.slug,
+          title: sl.title,
+          songId: sl.song?.id ?? null,
+          songTitle: sl.song?.title ?? null,
+        },
+      ])
+    )
+
+    const bySmartLink: Record<string, { total: number; byService: Record<string, number> }> = {}
+    for (const row of grouped) {
+      if (!bySmartLink[row.smartLinkId]) {
+        bySmartLink[row.smartLinkId] = { total: 0, byService: {} }
+      }
+      bySmartLink[row.smartLinkId].total += row._count._all
+      const sk = row.serviceKey
+      bySmartLink[row.smartLinkId].byService[sk] =
+        (bySmartLink[row.smartLinkId].byService[sk] || 0) + row._count._all
+    }
+
+    const summaries = Object.entries(bySmartLink)
+      .map(([smartLinkId]) => {
+        const meta = smartLinkMap.get(smartLinkId)
+        if (!meta) return null
+        const agg = bySmartLink[smartLinkId]
+        return {
+          smartLinkId,
+          slug: meta.slug,
+          title: meta.title,
+          songId: meta.songId,
+          songTitle: meta.songTitle,
+          totalClicks: agg.total,
+          clicksByService: agg.byService,
+        }
+      })
+      .filter(Boolean) as Array<{
+      smartLinkId: string
+      slug: string
+      title: string
+      songId: string | null
+      songTitle: string | null
+      totalClicks: number
+      clicksByService: Record<string, number>
+    }>
+    summaries.sort((a, b) => b.totalClicks - a.totalClicks)
+
+    return NextResponse.json({ range, humanOnly: false, items: summaries })
+  }
+
+  const rawClicks = await db.smartLinkClick.findMany({
     where,
-    _count: {
-      _all: true,
+    select: {
+      id: true,
+      smartLinkId: true,
+      serviceKey: true,
+      createdAt: true,
+      userAgent: true,
     },
   })
 
-  if (!grouped.length) {
-    return NextResponse.json({
-      range,
-      items: [],
-    })
-  }
+  const humanClicks = filterHumanClicks(rawClicks)
 
-  const smartLinkIds = Array.from(new Set(grouped.map((g) => g.smartLinkId)))
+  const smartLinkIds = Array.from(new Set(humanClicks.map((c) => c.smartLinkId)))
+  if (smartLinkIds.length === 0) {
+    return NextResponse.json({ range, humanOnly: true, items: [] })
+  }
 
   const smartLinks = await db.smartLink.findMany({
     where: { id: { in: smartLinkIds } },
-    include: {
-      song: {
-        select: { id: true, title: true },
-      },
-    },
+    include: { song: { select: { id: true, title: true } } },
   })
-
   const smartLinkMap = new Map(
     smartLinks.map((sl) => [
       sl.id,
@@ -82,7 +149,33 @@ export async function GET(request: NextRequest) {
     ])
   )
 
-  const summaries: Array<{
+  const bySmartLink: Record<string, { total: number; byService: Record<string, number> }> = {}
+  for (const c of humanClicks) {
+    if (!bySmartLink[c.smartLinkId]) {
+      bySmartLink[c.smartLinkId] = { total: 0, byService: {} }
+    }
+    bySmartLink[c.smartLinkId].total += 1
+    const sk = c.serviceKey
+    bySmartLink[c.smartLinkId].byService[sk] =
+      (bySmartLink[c.smartLinkId].byService[sk] || 0) + 1
+  }
+
+  const summaries = Object.entries(bySmartLink)
+    .map(([smartLinkId]) => {
+      const meta = smartLinkMap.get(smartLinkId)
+      if (!meta) return null
+      const agg = bySmartLink[smartLinkId]
+      return {
+        smartLinkId,
+        slug: meta.slug,
+        title: meta.title,
+        songId: meta.songId,
+        songTitle: meta.songTitle,
+        totalClicks: agg.total,
+        clicksByService: agg.byService,
+      }
+    })
+    .filter(Boolean) as Array<{
     smartLinkId: string
     slug: string
     title: string
@@ -90,47 +183,9 @@ export async function GET(request: NextRequest) {
     songTitle: string | null
     totalClicks: number
     clicksByService: Record<string, number>
-  }> = []
-
-  const bySmartLink: Record<
-    string,
-    {
-      total: number
-      byService: Record<string, number>
-    }
-  > = {}
-
-  for (const row of grouped) {
-    if (!bySmartLink[row.smartLinkId]) {
-      bySmartLink[row.smartLinkId] = { total: 0, byService: {} }
-    }
-    bySmartLink[row.smartLinkId].total += row._count._all
-    const serviceKey = row.serviceKey
-    bySmartLink[row.smartLinkId].byService[serviceKey] =
-      (bySmartLink[row.smartLinkId].byService[serviceKey] || 0) + row._count._all
-  }
-
-  for (const smartLinkId of Object.keys(bySmartLink)) {
-    const meta = smartLinkMap.get(smartLinkId)
-    if (!meta) continue
-    const agg = bySmartLink[smartLinkId]
-    summaries.push({
-      smartLinkId,
-      slug: meta.slug,
-      title: meta.title,
-      songId: meta.songId,
-      songTitle: meta.songTitle,
-      totalClicks: agg.total,
-      clicksByService: agg.byService,
-    })
-  }
-
-  // Order by total clicks desc
+  }>
   summaries.sort((a, b) => b.totalClicks - a.totalClicks)
 
-  return NextResponse.json({
-    range,
-    items: summaries,
-  })
+  return NextResponse.json({ range, humanOnly: true, items: summaries })
 }
 
