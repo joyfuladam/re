@@ -183,6 +183,7 @@ export async function POST(request: NextRequest) {
         data: {
           templateId: validated.templateId || null,
           subject: rendered.subject,
+          bodyHtml: rendered.html,
           bodyPreview: rendered.html.slice(0, 1000),
           scope: validated.scope,
           songId: validated.songId || null,

@@ -429,6 +429,7 @@ model EmailLog {
   templateId       String?
   template         EmailTemplate? @relation(fields: [templateId], references: [id])
   subject          String
+  bodyHtml         String?        @db.Text
   bodyPreview      String?        @db.Text
   scope            String
   songId           String?

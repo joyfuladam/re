@@ -7,6 +7,7 @@ export function EmailSubNav() {
   const pathname = usePathname()
   const isSend = pathname === "/dashboard/email"
   const isTemplates = pathname === "/dashboard/email-templates"
+  const isHistory = pathname === "/dashboard/email-history"
 
   return (
     <nav className="flex gap-1 border-b mb-6" aria-label="Email section">
@@ -29,6 +30,16 @@ export function EmailSubNav() {
         }`}
       >
         Templates
+      </Link>
+      <Link
+        href="/dashboard/email-history"
+        className={`px-4 py-2 text-sm font-medium rounded-t-md transition-colors ${
+          isHistory
+            ? "bg-muted border-b-2 border-b-primary -mb-px"
+            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+        }`}
+      >
+        History
       </Link>
     </nav>
   )

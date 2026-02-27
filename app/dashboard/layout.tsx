@@ -59,8 +59,14 @@ export default function DashboardLayout({
                   <Link href="/dashboard/email" className="hover:underline">
                     Email
                   </Link>
+                  <Link href="/dashboard/email-history" className="hover:underline">
+                    Email History
+                  </Link>
                   <Link href="/dashboard/smart-link-signups" className="hover:underline">
                     Email Signups
+                  </Link>
+                  <Link href="/dashboard/analytics/smart-links" className="hover:underline">
+                    Analytics
                   </Link>
                   <Link href="/dashboard/account-requests" className="hover:underline">
                     Account Requests

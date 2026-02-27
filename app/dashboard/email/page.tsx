@@ -42,6 +42,7 @@ export default function EmailPage() {
 
   const initialSongId = searchParams.get("songId") || ""
   const initialScopeParam = searchParams.get("scope") as Scope | null
+  const fromLogId = searchParams.get("fromLogId")
 
   const [scope, setScope] = useState<Scope>(initialScopeParam || (initialSongId ? "song_collaborators" : "all_collaborators"))
   const [templates, setTemplates] = useState<EmailTemplate[]>([])
@@ -72,8 +73,30 @@ export default function EmailPage() {
     try {
       setLoading(true)
       await Promise.all([fetchTemplates(), fetchSongs(), fetchCollaborators()])
+      if (fromLogId) {
+        await loadDraftFromLog(fromLogId)
+      }
     } finally {
       setLoading(false)
+    }
+  }
+
+  const loadDraftFromLog = async (logId: string) => {
+    try {
+      const res = await fetch(`/api/email-history/${logId}`)
+      if (!res.ok) {
+        console.error("Failed to load email log for draft reuse")
+        return
+      }
+      const data = await res.json()
+      setSubject(data.subject || "")
+      setBodyHtml(data.bodyHtml || data.bodyPreview || "")
+      if (data.songId) {
+        setSongId(data.songId)
+        setScope("song_collaborators")
+      }
+    } catch (error) {
+      console.error("Error loading email log for draft reuse:", error)
     }
   }
 
