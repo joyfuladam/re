@@ -78,37 +78,37 @@ export default function SmartLinkLandingPage({
   const query = typeof window !== "undefined" ? window.location.search : ""
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background to-background/80 px-4 py-10">
-      <div className="w-full max-w-md mx-auto">
-        <div className="bg-card/90 border rounded-2xl shadow-sm px-6 py-8 space-y-6">
+    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-950 to-black px-4 py-8 flex items-center justify-center">
+      <div className="w-full max-w-lg mx-auto">
+        <div className="rounded-3xl border border-white/10 bg-black/60 backdrop-blur-sm shadow-2xl px-6 py-8 sm:px-10 sm:py-10 space-y-8">
           {smartLink.imageUrl && (
             <div className="flex justify-center">
-              <div className="relative w-40 h-40 rounded-xl overflow-hidden border bg-muted">
+              <div className="relative w-40 h-40 sm:w-56 sm:h-56 rounded-2xl overflow-hidden border border-white/10 bg-neutral-800">
                 <Image
                   src={smartLink.imageUrl}
                   alt={smartLink.title}
                   fill
-                  sizes="160px"
+                  sizes="224px"
                   className="object-cover"
                 />
               </div>
             </div>
           )}
 
-          <div className="text-center space-y-1">
-            <h1 className="text-2xl font-semibold tracking-tight">
+          <div className="text-center space-y-2">
+            <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-white">
               {smartLink.title}
             </h1>
-            {smartLink.description && (
-              <p className="text-sm text-muted-foreground">
-                {smartLink.description}
-              </p>
+            {smartLink.description ? (
+              <p className="text-sm text-slate-300">{smartLink.description}</p>
+            ) : (
+              <p className="text-sm text-slate-400">Choose a music service</p>
             )}
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-3">
             {smartLink.destinations.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center">
+              <p className="text-sm text-slate-300 text-center">
                 No streaming services have been configured for this link yet.
               </p>
             ) : (
@@ -118,7 +118,7 @@ export default function SmartLinkLandingPage({
                   href={`/r/${smartLink.id}/${encodeURIComponent(dest.serviceKey)}${query}`}
                   className="block w-full"
                 >
-                  <button className="w-full h-11 rounded-full bg-primary text-primary-foreground text-sm font-medium flex items-center justify-center hover:bg-primary/90 transition-colors">
+                  <button className="w-full h-12 rounded-full bg-white text-slate-900 text-sm font-medium flex items-center justify-center hover:bg-slate-100 transition-colors">
                     {dest.label}
                   </button>
                 </Link>
@@ -127,7 +127,7 @@ export default function SmartLinkLandingPage({
           </div>
 
           <div className="pt-2 text-center">
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-[11px] text-slate-400">
               Powered by River &amp; Ember
             </p>
           </div>
