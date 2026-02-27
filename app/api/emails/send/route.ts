@@ -294,7 +294,6 @@ export async function POST(request: NextRequest) {
               userId: recipient.id,
               type: "MESSAGE",
               messageId: message.id,
-              metadata: null,
             },
           })
         }
