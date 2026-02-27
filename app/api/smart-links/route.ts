@@ -18,7 +18,8 @@ const createSmartLinkSchema = z.object({
   slug: z.string().min(1),
   title: z.string().min(1),
   description: z.string().optional().nullable(),
-  imageUrl: z.string().url().optional().nullable(),
+  // Allow relative or absolute URLs for the image (e.g. /api/media/...)
+  imageUrl: z.string().min(1).optional().nullable(),
   destinations: z.array(destinationSchema).optional().default([]),
 })
 
@@ -27,7 +28,8 @@ const updateSmartLinkSchema = z.object({
   slug: z.string().min(1).optional(),
   title: z.string().min(1).optional(),
   description: z.string().optional().nullable(),
-  imageUrl: z.string().url().optional().nullable(),
+  // Allow relative or absolute URLs for the image (e.g. /api/media/...)
+  imageUrl: z.string().min(1).optional().nullable(),
   isActive: z.boolean().optional(),
   destinations: z.array(destinationSchema).optional(),
 })
