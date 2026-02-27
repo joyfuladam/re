@@ -6,6 +6,7 @@ import { useSession, signOut } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { RoleBadge } from "@/components/auth/RoleBadge"
+import { NotificationBell } from "@/components/nav/NotificationBell"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -64,7 +65,7 @@ export default function DashboardLayout({
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <button type="button" className="hover:underline">
-                        Email
+                        Communication
                       </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start">
@@ -124,6 +125,7 @@ export default function DashboardLayout({
             </div>
           </div>
           <div className="flex items-center gap-4">
+            <NotificationBell />
             <RoleBadge />
             <span className="text-sm">{session?.user?.email}</span>
             <Button

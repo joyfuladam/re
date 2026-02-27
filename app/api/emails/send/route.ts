@@ -37,7 +37,8 @@ export async function POST(request: NextRequest) {
     const validated = sendEmailSchema.parse(body)
 
     // Resolve recipients based on scope
-    let recipientEmails: string[] = []
+    type Recipient = { id: string; email: string }
+    let recipients: Recipient[] = []
     let songTitle: string | undefined
 
     if (validated.scope === "all_collaborators") {
@@ -48,11 +49,11 @@ export async function POST(request: NextRequest) {
           },
           status: "active",
         },
-        select: { email: true },
+        select: { id: true, email: true },
       })
-      recipientEmails = collaborators
-        .map((c) => c.email)
-        .filter((e): e is string => !!e)
+      recipients = collaborators
+        .filter((c) => !!c.email)
+        .map((c) => ({ id: c.id, email: c.email! }))
     } else if (validated.scope === "song_collaborators") {
       if (!validated.songId) {
         return NextResponse.json(
@@ -69,7 +70,7 @@ export async function POST(request: NextRequest) {
           songCollaborators: {
             include: {
               collaborator: {
-                select: { email: true, status: true },
+                select: { id: true, email: true, status: true },
               },
             },
           },
@@ -81,9 +82,10 @@ export async function POST(request: NextRequest) {
       }
 
       songTitle = song.title
-      recipientEmails = song.songCollaborators
-        .map((sc) => sc.collaborator.email)
-        .filter((email): email is string => !!email)
+      recipients = song.songCollaborators
+        .map((sc) => sc.collaborator)
+        .filter((c) => !!c.email)
+        .map((c) => ({ id: c.id, email: c.email! }))
     } else if (validated.scope === "specific_collaborators") {
       if (!validated.collaboratorIds || validated.collaboratorIds.length === 0) {
         return NextResponse.json(
@@ -97,15 +99,23 @@ export async function POST(request: NextRequest) {
           id: { in: validated.collaboratorIds },
           email: { not: null },
         },
-        select: { email: true },
+        select: { id: true, email: true },
       })
-      recipientEmails = collaborators
-        .map((c) => c.email)
-        .filter((e): e is string => !!e)
+      recipients = collaborators
+        .filter((c) => !!c.email)
+        .map((c) => ({ id: c.id, email: c.email! }))
     }
 
-    // De-duplicate and filter invalid emails
-    const uniqueEmails = Array.from(new Set(recipientEmails)).filter(Boolean)
+    // De-duplicate by collaborator id and email
+    const uniqueById = new Map<string, Recipient>()
+    for (const r of recipients) {
+      if (!r.email) continue
+      if (!uniqueById.has(r.id)) {
+        uniqueById.set(r.id, r)
+      }
+    }
+    const uniqueRecipients = Array.from(uniqueById.values())
+    const uniqueEmails = Array.from(new Set(uniqueRecipients.map((r) => r.email))).filter(Boolean)
 
     if (uniqueEmails.length === 0) {
       return NextResponse.json(
@@ -178,8 +188,9 @@ export async function POST(request: NextRequest) {
     })
 
     // Create email log entry (best-effort; errors here shouldn't fail the send)
+    let emailLogId: string | null = null
     try {
-      await db.emailLog.create({
+      const log = await db.emailLog.create({
         data: {
           templateId: validated.templateId || null,
           subject: rendered.subject,
@@ -193,8 +204,103 @@ export async function POST(request: NextRequest) {
           triggeredByEmail: session.user?.email || null,
         },
       })
+      emailLogId = log.id
     } catch (logError) {
       console.error("Failed to create EmailLog entry:", logError)
+    }
+
+    // Create or update in-app message threads and notifications for each recipient
+    try {
+      const adminId = session.user?.id
+      if (adminId) {
+        const songIdForThread = validated.songId || null
+        const now = new Date()
+
+        for (const recipient of uniqueRecipients) {
+          // Find existing thread between admin and this collaborator for this song (if any)
+          let thread = await db.messageThread.findFirst({
+            where: {
+              createdById: adminId,
+              songId: songIdForThread,
+              AND: [
+                { participants: { some: { userId: adminId } } },
+                { participants: { some: { userId: recipient.id } } },
+              ],
+            },
+          })
+
+          if (!thread) {
+            thread = await db.messageThread.create({
+              data: {
+                subject: songTitle ? `[${songTitle}] ${rendered.subject}` : rendered.subject,
+                songId: songIdForThread,
+                createdById: adminId,
+                participants: {
+                  createMany: {
+                    data: [
+                      { userId: adminId, lastReadAt: now },
+                      { userId: recipient.id },
+                    ],
+                  },
+                },
+              },
+            })
+          } else {
+            // Ensure both participants exist
+            await db.messageParticipant.upsert({
+              where: {
+                threadId_userId: {
+                  threadId: thread.id,
+                  userId: adminId,
+                },
+              },
+              update: {
+                lastReadAt: now,
+              },
+              create: {
+                threadId: thread.id,
+                userId: adminId,
+                lastReadAt: now,
+              },
+            })
+
+            await db.messageParticipant.upsert({
+              where: {
+                threadId_userId: {
+                  threadId: thread.id,
+                  userId: recipient.id,
+                },
+              },
+              update: {},
+              create: {
+                threadId: thread.id,
+                userId: recipient.id,
+              },
+            })
+          }
+
+          const message = await db.message.create({
+            data: {
+              threadId: thread.id,
+              senderId: adminId,
+              bodyHtml: rendered.html,
+              bodyText: rendered.text ?? null,
+              emailLogId: emailLogId,
+            },
+          })
+
+          await db.notification.create({
+            data: {
+              userId: recipient.id,
+              type: "MESSAGE",
+              messageId: message.id,
+              metadata: null,
+            },
+          })
+        }
+      }
+    } catch (messagingError) {
+      console.error("Failed to create internal messages for email broadcast:", messagingError)
     }
 
     return NextResponse.json({
