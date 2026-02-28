@@ -55,6 +55,7 @@ export default function SmartLinkAnalyticsPage() {
   const [detail, setDetail] = useState<DetailResponse | null>(null)
   const [loadingDetail, setLoadingDetail] = useState(false)
   const [detailError, setDetailError] = useState<string | null>(null)
+  const [clearing, setClearing] = useState(false)
 
   useEffect(() => {
     if (status === "loading") return
@@ -145,6 +146,29 @@ export default function SmartLinkAnalyticsPage() {
     void loadDetail(id, range, humanOnly)
   }
 
+  const handleClearAllClicks = async () => {
+    if (!confirm("Delete all smart link click records? Counts will reset to zero. This cannot be undone.")) return
+    setClearing(true)
+    try {
+      const res = await fetch("/api/smart-links/analytics/clicks", { method: "DELETE" })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setSummaryError(data.error || "Failed to clear counts")
+        return
+      }
+      setSummaryItems([])
+      setDetail(null)
+      setSelectedId(null)
+      await loadSummary(range, humanOnly)
+      alert(data.message ?? "Click counts cleared.")
+    } catch (err) {
+      console.error("Failed to clear clicks:", err)
+      setSummaryError("Failed to clear counts")
+    } finally {
+      setClearing(false)
+    }
+  }
+
   if (status === "loading") {
     return <div>Loading...</div>
   }
@@ -192,6 +216,14 @@ export default function SmartLinkAnalyticsPage() {
                   Include suspected bot/scanner traffic
                 </span>
               </label>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => void handleClearAllClicks()}
+                disabled={clearing || loadingSummary}
+              >
+                {clearing ? "Clearing…" : "Reset all click counts"}
+              </Button>
             </div>
           </CardHeader>
           <CardContent className="space-y-3">

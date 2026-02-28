@@ -120,6 +120,7 @@ export default function SmartLinkLandingPage({
                   key={dest.id}
                   href={`/r/${smartLink.id}/${encodeURIComponent(dest.serviceKey)}${query}`}
                   className="block w-full"
+                  prefetch={false}
                 >
                   <button className="w-full h-12 rounded-full bg-white text-slate-900 text-sm font-medium flex items-center justify-center hover:bg-slate-100 transition-colors">
                     {dest.label}
