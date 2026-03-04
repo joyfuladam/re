@@ -5,22 +5,19 @@ import path from "node:path"
 import fs from "node:fs"
 import { Readable } from "node:stream"
 
-/**
- * Public, read-only media file endpoint.
- *
- * Used by smart links and other public pages to serve artwork and assets.
- * Uploads and media listing remain admin-only via /api/songs/[id]/media,
- * but once a file is uploaded its contents can be fetched here by ID.
- */
+// Public, read-only media endpoint for artwork used on smart links.
+// Only serves SongMedia records in the "images" category so that audio/video
+// masters remain protected behind the authenticated admin route.
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   const media = await db.songMedia.findUnique({
     where: { id: params.id },
-    select: { storagePath: true, mimeType: true, filename: true },
+    select: { category: true, storagePath: true, mimeType: true, filename: true },
   })
-  if (!media) {
+
+  if (!media || media.category !== "images") {
     return NextResponse.json({ error: "Media not found" }, { status: 404 })
   }
 
@@ -45,3 +42,4 @@ export async function GET(
     headers,
   })
 }
+

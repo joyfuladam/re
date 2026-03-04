@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
+import { trackSmartLinkClick } from "@/components/smart-link/MetaPixel"
 
 interface Destination {
   id: string
@@ -121,6 +122,13 @@ export default function SmartLinkLandingPage({
                   href={`/r/${smartLink.id}/${encodeURIComponent(dest.serviceKey)}${query}`}
                   className="block w-full"
                   prefetch={false}
+                  onClick={() =>
+                    trackSmartLinkClick({
+                      contentName: smartLink.title,
+                      service: dest.serviceKey,
+                      smartLinkId: smartLink.id,
+                    })
+                  }
                 >
                   <button className="w-full h-12 rounded-full bg-white text-slate-900 text-sm font-medium flex items-center justify-center hover:bg-slate-100 transition-colors">
                     {dest.label}
