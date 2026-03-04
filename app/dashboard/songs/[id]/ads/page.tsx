@@ -16,6 +16,9 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
+const SMART_LINK_BASE_URL =
+  process.env.NEXT_PUBLIC_SMART_LINK_BASE_URL || "https://go.riverandember.com"
+
 const CTA_OPTIONS = [
   "Listen Now",
   "Pre-Save",
@@ -59,6 +62,8 @@ export default function AdBuilderPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [publishingId, setPublishingId] = useState<string | null>(null)
+  const [smartLinkUrl, setSmartLinkUrl] = useState<string | null>(null)
 
   const [format, setFormat] = useState<"image" | "video">("image")
   const [draftName, setDraftName] = useState("")
@@ -75,10 +80,11 @@ export default function AdBuilderPage() {
     if (!songId) return
     setLoading(true)
     try {
-      const [songRes, mediaRes, adsRes] = await Promise.all([
+      const [songRes, mediaRes, adsRes, smartLinkRes] = await Promise.all([
         fetch(`/api/songs/${songId}`),
         fetch(`/api/songs/${songId}/media`),
         fetch(`/api/songs/${songId}/ads`),
+        fetch(`/api/smart-links/by-song/${songId}`),
       ])
       if (!songRes.ok || !mediaRes.ok || !adsRes.ok) {
         setError("Failed to load data")
@@ -88,6 +94,20 @@ export default function AdBuilderPage() {
       setSongTitle(songData.title || "Song")
       setMedia(await mediaRes.json())
       setDrafts(await adsRes.json())
+      if (smartLinkRes.ok) {
+        const smartLinkData = await smartLinkRes.json()
+        if (smartLinkData && smartLinkData.slug) {
+          const url = `${SMART_LINK_BASE_URL}/links/${smartLinkData.slug}`
+          setSmartLinkUrl(url)
+          // If no destination URL is set yet and we're creating a new draft,
+          // prefill with the smart link URL to save typing (still fully editable).
+          setDestinationUrl((current) => current || url)
+        } else {
+          setSmartLinkUrl(null)
+        }
+      } else {
+        setSmartLinkUrl(null)
+      }
     } catch {
       setError("Failed to load data")
     } finally {
@@ -130,6 +150,29 @@ export default function AdBuilderPage() {
     setDestinationUrl("")
     setImageMediaId(null)
     setVideoMediaId(null)
+  }
+
+  const handlePublishToMeta = async (draftId: string) => {
+    if (!songId) return
+    setError(null)
+    setPublishingId(draftId)
+    try {
+      const res = await fetch(`/api/songs/${songId}/ads/${draftId}/publish`, {
+        method: "POST",
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setError(data.error || "Failed to publish ad to Meta")
+        return
+      }
+      await fetchData()
+      // eslint-disable-next-line no-alert
+      alert("Ad pushed to Meta in PAUSED state. Review and activate it in Ads Manager.")
+    } catch {
+      setError("Failed to publish ad to Meta")
+    } finally {
+      setPublishingId(null)
+    }
   }
 
   const handleSave = async () => {
@@ -385,6 +428,18 @@ export default function AdBuilderPage() {
                 onChange={(e) => setDestinationUrl(e.target.value)}
                 placeholder="https://..."
               />
+              {smartLinkUrl && (
+                <p className="text-xs text-muted-foreground">
+                  Smart link for this song:{" "}
+                  <button
+                    type="button"
+                    className="underline underline-offset-2"
+                    onClick={() => setDestinationUrl(smartLinkUrl)}
+                  >
+                    {smartLinkUrl}
+                  </button>
+                </p>
+              )}
             </div>
 
             <div className="flex gap-2">
@@ -403,7 +458,7 @@ export default function AdBuilderPage() {
                 <Label>Existing drafts</Label>
                 <ul className="space-y-1">
                   {drafts.map((d) => (
-                    <li key={d.id} className="flex items-center gap-2">
+                    <li key={d.id} className="flex items-center justify-between gap-2">
                       <button
                         type="button"
                         onClick={() => loadDraft(d)}
@@ -411,6 +466,19 @@ export default function AdBuilderPage() {
                       >
                         {d.name}
                       </button>
+                      <Button
+                        type="button"
+                        size="xs"
+                        variant={d.status === "ready" ? "outline" : "secondary"}
+                        disabled={publishingId === d.id || d.status === "ready"}
+                        onClick={() => handlePublishToMeta(d.id)}
+                      >
+                        {d.status === "ready"
+                          ? "Sent to Meta"
+                          : publishingId === d.id
+                          ? "Publishing…"
+                          : "Push to Meta"}
+                      </Button>
                     </li>
                   ))}
                 </ul>
