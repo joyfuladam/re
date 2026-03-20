@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && prisma db push && next build",
+    "build": "prisma generate && prisma migrate deploy && next build",
     "start": "next start",
     "lint": "next lint",
     "db:generate": "prisma generate",
@@ -21,7 +21,8 @@
     "data:export": "tsx scripts/export-local-data.ts",
     "data:import": "tsx scripts/import-to-production.ts",
     "data:transfer": "./scripts/transfer-local-to-production.sh",
-    "data:clear-smart-link-clicks": "tsx scripts/clear-smart-link-clicks.ts"
+    "data:clear-smart-link-clicks": "tsx scripts/clear-smart-link-clicks.ts",
+    "data:backfill-works": "tsx scripts/backfill-works.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.4.0",

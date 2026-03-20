@@ -140,8 +140,22 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+/// Musical work (composition). Songs (recordings) link here via `workId`.
+/// Phase 1: optional link; backfill script creates one Work per existing Song.
+model Work {
+  id                     String   @id @default(cuid())
+  title                  String
+  iswcCode               String?  @unique
+  labelPublishingShare   Decimal  @default(0.5) @db.Decimal(5, 4)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+  songs                  Song[]
+}
+
 model Song {
   id                        String                 @id @default(cuid())
+  workId                    String?
+  work                      Work?                  @relation(fields: [workId], references: [id], onDelete: SetNull)
   title                     String
   isrcCode                  String?                @unique
   iswcCode                  String?
@@ -178,6 +192,8 @@ model Song {
   adDrafts                  AdDraft[]
   smartLinks                SmartLink[]
   messageThreads            MessageThread[]
+
+  @@index([workId])
 }
 
 model SongCollaborator {
