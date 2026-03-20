@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { canAccessSong, canManageSongs } from "@/lib/permissions"
+import { createWorkForSong } from "@/lib/work-helpers"
 import { z } from "zod"
 
 const songUpdateSchema = z.object({
@@ -22,6 +23,8 @@ const songUpdateSchema = z.object({
   notes: z.string().optional().nullable(),
   promoMaterialsFolderId: z.string().optional().nullable(),
   status: z.enum(["draft", "active", "archived"]).optional(),
+  /** Link to a composition; use `"__create__"` to create a new Work from the song title; `null` unlinks. */
+  workId: z.union([z.string().cuid(), z.literal("__create__"), z.null()]).optional(),
 })
 
 export async function GET(
@@ -71,6 +74,13 @@ export async function GET(
             },
           },
           media: true,
+          work: {
+            select: {
+              id: true,
+              title: true,
+              iswcCode: true,
+            },
+          },
         },
       })
       // #region agent log
@@ -126,8 +136,8 @@ export async function PATCH(
     const validated = songUpdateSchema.parse(body)
 
     // Remove catalogNumber from update - it's permanent and cannot be changed
-    const { catalogNumber, ...rest } = validated
-    
+    const { catalogNumber, workId, ...rest } = validated
+
     // Build update data with proper Date conversions
     const updateData: any = { ...rest }
     if (validated.releaseDate) {
@@ -135,6 +145,29 @@ export async function PATCH(
     }
     if (validated.recordingDate) {
       updateData.recordingDate = new Date(validated.recordingDate)
+    }
+
+    if (workId !== undefined) {
+      if (workId === null) {
+        updateData.workId = null
+      } else if (workId === "__create__") {
+        const existing = await db.song.findUnique({
+          where: { id: params.id },
+          select: { title: true, iswcCode: true },
+        })
+        if (!existing) {
+          return NextResponse.json({ error: "Song not found" }, { status: 404 })
+        }
+        const titleForWork = validated.title ?? existing.title
+        const w = await createWorkForSong(db, titleForWork, validated.iswcCode ?? existing.iswcCode)
+        updateData.workId = w.id
+      } else {
+        const w = await db.work.findUnique({ where: { id: workId } })
+        if (!w) {
+          return NextResponse.json({ error: "Work not found" }, { status: 404 })
+        }
+        updateData.workId = workId
+      }
     }
 
     const song = await db.song.update({

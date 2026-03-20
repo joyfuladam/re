@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input"
 interface Song {
   id: string
   title: string
+  work?: { id: string; title: string; iswcCode: string | null } | null
   isrcCode: string | null
   iswcCode: string | null
   catalogNumber: string | null
@@ -108,6 +109,12 @@ export default function SongsPage() {
                 <div>
                   <CardTitle>{song.title}</CardTitle>
                   <CardDescription>
+                    {song.work && (
+                      <>
+                        Work: {song.work.title}
+                        {song.isrcCode || song.catalogNumber ? " • " : ""}
+                      </>
+                    )}
                     {song.isrcCode && `ISRC: ${song.isrcCode}`}
                     {song.catalogNumber && ` • Catalog: ${song.catalogNumber}`}
                     {song.songCollaborators.length > 0 && (

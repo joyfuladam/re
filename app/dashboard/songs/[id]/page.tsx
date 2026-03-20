@@ -1,6 +1,6 @@
    "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import React from "react"
 import { useSession } from "next-auth/react"
 import { useParams, useRouter } from "next/navigation"
@@ -23,6 +23,12 @@ import { isPublishingEligible, isMasterEligible } from "@/lib/roles"
 interface Song {
   id: string
   title: string
+  workId?: string | null
+  work?: {
+    id: string
+    title: string
+    iswcCode: string | null
+  } | null
   isrcCode: string | null
   iswcCode: string | null
   catalogNumber: string | null
@@ -102,6 +108,9 @@ export default function SongDetailPage() {
   const [updatingSplits, setUpdatingSplits] = useState(false)
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [worksList, setWorksList] = useState<
+    Array<{ id: string; title: string; iswcCode: string | null }>
+  >([])
   const [editFormData, setEditFormData] = useState({
     title: "",
     isrcCode: "",
@@ -119,6 +128,8 @@ export default function SongDetailPage() {
     notes: "",
     promoMaterialsFolderId: "",
     status: "draft",
+    /** cuid, "__create__", or "__unlink__" */
+    workId: "__create__",
   })
   const [viewingContract, setViewingContract] = useState<{
     html: string
@@ -136,6 +147,18 @@ export default function SongDetailPage() {
   }>>([])
 
   const isAdmin = session?.user?.role === "admin"
+
+  const workSelectOptions = useMemo(() => {
+    const list = [...worksList]
+    if (song?.work && !list.some((w) => w.id === song.work!.id)) {
+      list.push({
+        id: song.work.id,
+        title: song.work.title,
+        iswcCode: song.work.iswcCode,
+      })
+    }
+    return list.sort((a, b) => a.title.localeCompare(b.title))
+  }, [worksList, song?.work])
   
   // Find the current user's role on this song
   const currentUserSongCollaborator = song 
@@ -845,6 +868,14 @@ export default function SongDetailPage() {
     }
   }, [isAdmin])
 
+  useEffect(() => {
+    if (!isAdmin) return
+    fetch("/api/works")
+      .then((r) => r.json())
+      .then((data) => setWorksList(Array.isArray(data) ? data : []))
+      .catch(() => setWorksList([]))
+  }, [isAdmin])
+
   const fetchSong = async () => {
     // #region agent log
     fetch('http://127.0.0.1:7243/ingest/4c8d8774-18d6-406e-b702-2dc324f31e07',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app/dashboard/songs/[id]/page.tsx:64',message:'fetchSong entry',data:{paramsId:params?.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
@@ -931,6 +962,9 @@ export default function SongDetailPage() {
           notes: processedData.notes || "",
           promoMaterialsFolderId: processedData.promoMaterialsFolderId || "",
           status: processedData.status || "draft",
+          workId: processedData.workId
+            ? processedData.workId
+            : "__create__",
         })
         // #region agent log
         fetch('http://127.0.0.1:7243/ingest/4c8d8774-18d6-406e-b702-2dc324f31e07',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app/dashboard/songs/[id]/page.tsx:96',message:'Song set in state',data:{songId:processedData?.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
@@ -1005,6 +1039,7 @@ export default function SongDetailPage() {
       notes: song.notes || "",
       promoMaterialsFolderId: song.promoMaterialsFolderId || "",
       status: song.status || "draft",
+      workId: song.workId ? song.workId : "__create__",
     })
     setEditing(false)
   }
@@ -1031,6 +1066,12 @@ export default function SongDetailPage() {
         notes: editFormData.notes || null,
         promoMaterialsFolderId: editFormData.promoMaterialsFolderId || null,
         status: editFormData.status,
+        workId:
+          editFormData.workId === "__create__"
+            ? "__create__"
+            : editFormData.workId === "__unlink__"
+              ? null
+              : editFormData.workId,
       }
       
       console.log("Saving song with payload:", payload)
@@ -1090,6 +1131,18 @@ export default function SongDetailPage() {
             {song.isrcCode && `ISRC: ${song.isrcCode}`}
             {song.catalogNumber && ` • Catalog: ${song.catalogNumber}`}
           </p>
+          {song.work && (
+            <p className="text-sm text-muted-foreground mt-1">
+              Composition:{" "}
+              <span className="font-medium text-foreground">{song.work.title}</span>
+              {song.work.iswcCode && ` • ISWC: ${song.work.iswcCode}`}
+            </p>
+          )}
+          {!song.work && isAdmin && (
+            <p className="text-sm text-amber-600 dark:text-amber-500 mt-1">
+              No composition linked — Edit Song to create or link one.
+            </p>
+          )}
         </div>
         <div className="flex gap-2">
           {isAdmin && !editing && (
@@ -1152,6 +1205,33 @@ export default function SongDetailPage() {
                     onChange={(e) => setEditFormData({ ...editFormData, title: e.target.value })}
                     required
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="edit-workId">Composition (Work)</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Link this recording to a composition, create a new one from the title above, or clear the link.
+                  </p>
+                  <Select
+                    value={editFormData.workId}
+                    onValueChange={(v) =>
+                      setEditFormData({ ...editFormData, workId: v })
+                    }
+                  >
+                    <SelectTrigger id="edit-workId">
+                      <SelectValue placeholder="Select composition" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__create__">New composition (from title above)</SelectItem>
+                      <SelectItem value="__unlink__">No composition linked</SelectItem>
+                      {workSelectOptions.map((w) => (
+                        <SelectItem key={w.id} value={w.id}>
+                          {w.title}
+                          {w.iswcCode ? ` (${w.iswcCode})` : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="space-y-2">
@@ -1325,6 +1405,22 @@ export default function SongDetailPage() {
                 <div>
                   <div className="text-sm font-medium text-muted-foreground">Title</div>
                   <div className="text-lg font-semibold">{song.title}</div>
+                </div>
+
+                <div>
+                  <div className="text-sm font-medium text-muted-foreground">Composition (Work)</div>
+                  <div>
+                    {song.work ? (
+                      <>
+                        {song.work.title}
+                        {song.work.iswcCode && (
+                          <span className="text-muted-foreground"> • {song.work.iswcCode}</span>
+                        )}
+                      </>
+                    ) : (
+                      "—"
+                    )}
+                  </div>
                 </div>
                 
                 <div>

@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { getUserPermissions, canManageSongs, canAccessSong } from "@/lib/permissions"
 import { generateNextCatalogNumber } from "@/lib/catalog-number"
+import { createWorkForSong } from "@/lib/work-helpers"
 import { z } from "zod"
 
 export const dynamic = 'force-dynamic'
@@ -24,6 +25,8 @@ const songSchema = z.object({
   recordingLocation: z.string().optional().nullable(),
   notes: z.string().optional().nullable(),
   status: z.enum(["draft", "active", "archived"]).default("draft"),
+  /** Link to an existing composition; if omitted, a new Work is created from the recording title. */
+  workId: z.string().optional().nullable(),
 })
 
 export async function GET(request: NextRequest) {
@@ -68,6 +71,13 @@ export async function GET(request: NextRequest) {
         songCollaborators: {
           include: {
             collaborator: true,
+          },
+        },
+        work: {
+          select: {
+            id: true,
+            title: true,
+            iswcCode: true,
           },
         },
       },
@@ -115,30 +125,56 @@ export async function POST(request: NextRequest) {
       catalogNumber = await generateNextCatalogNumber()
     }
 
-    const song = await db.song.create({
-      data: {
-        title: validated.title,
-        isrcCode: validated.isrcCode,
-        iswcCode: validated.iswcCode,
-        catalogNumber: catalogNumber,
-        releaseDate: validated.releaseDate ? new Date(validated.releaseDate) : null,
-        proWorkRegistrationNumber: validated.proWorkRegistrationNumber,
-        publishingAdmin: validated.publishingAdmin,
-        masterOwner: validated.masterOwner,
-        genre: validated.genre,
-        subGenre: validated.subGenre,
-        duration: validated.duration,
-        recordingDate: validated.recordingDate ? new Date(validated.recordingDate) : null,
-        recordingLocation: validated.recordingLocation,
-        notes: validated.notes,
-        status: validated.status,
-      },
+    const song = await db.$transaction(async (tx) => {
+      let workId: string | null = validated.workId ?? null
+      if (workId) {
+        const w = await tx.work.findUnique({ where: { id: workId } })
+        if (!w) {
+          throw new Error("WORK_NOT_FOUND")
+        }
+      } else {
+        const work = await createWorkForSong(tx, validated.title, validated.iswcCode)
+        workId = work.id
+      }
+
+      return tx.song.create({
+        data: {
+          title: validated.title,
+          isrcCode: validated.isrcCode,
+          iswcCode: validated.iswcCode,
+          catalogNumber: catalogNumber,
+          releaseDate: validated.releaseDate ? new Date(validated.releaseDate) : null,
+          proWorkRegistrationNumber: validated.proWorkRegistrationNumber,
+          publishingAdmin: validated.publishingAdmin,
+          masterOwner: validated.masterOwner,
+          genre: validated.genre,
+          subGenre: validated.subGenre,
+          duration: validated.duration,
+          recordingDate: validated.recordingDate ? new Date(validated.recordingDate) : null,
+          recordingLocation: validated.recordingLocation,
+          notes: validated.notes,
+          status: validated.status,
+          workId,
+        },
+        include: {
+          work: {
+            select: {
+              id: true,
+              title: true,
+              iswcCode: true,
+            },
+          },
+        },
+      })
     })
 
     return NextResponse.json(song, { status: 201 })
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.errors }, { status: 400 })
+    }
+    if (error instanceof Error && error.message === "WORK_NOT_FOUND") {
+      return NextResponse.json({ error: "Work not found" }, { status: 404 })
     }
     console.error("Error creating song:", error)
     return NextResponse.json(
