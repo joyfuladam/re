@@ -10,8 +10,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { PublishingSplitEditor } from "@/components/splits/PublishingSplitEditor"
-import { MasterSplitEditor } from "@/components/splits/MasterSplitEditor"
 import { SplitPieChart } from "@/components/charts/SplitPieChart"
 import { MediaLibraryCard } from "@/components/songs/MediaLibraryCard"
 import { SmartLinkEditorCard } from "@/components/songs/SmartLinkEditorCard"
@@ -841,9 +839,6 @@ export default function SongDetailPage() {
   }
 
   useEffect(() => {
-    // #region agent log
-    fetch('http://127.0.0.1:7243/ingest/4c8d8774-18d6-406e-b702-2dc324f31e07',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app/dashboard/songs/[id]/page.tsx:57',message:'useEffect triggered',data:{paramsId:params?.id,paramsKeys:params?Object.keys(params):null},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
     if (params?.id) {
       fetchSong()
     }
@@ -877,32 +872,17 @@ export default function SongDetailPage() {
   }, [isAdmin])
 
   const fetchSong = async () => {
-    // #region agent log
-    fetch('http://127.0.0.1:7243/ingest/4c8d8774-18d6-406e-b702-2dc324f31e07',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app/dashboard/songs/[id]/page.tsx:64',message:'fetchSong entry',data:{paramsId:params?.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
     if (!params?.id) {
-      // #region agent log
-      fetch('http://127.0.0.1:7243/ingest/4c8d8774-18d6-406e-b702-2dc324f31e07',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app/dashboard/songs/[id]/page.tsx:66',message:'No params.id found',data:{params:params},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
       console.error("No song ID in params:", params)
       setLoading(false)
       return
     }
     try {
-      // #region agent log
-      fetch('http://127.0.0.1:7243/ingest/4c8d8774-18d6-406e-b702-2dc324f31e07',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app/dashboard/songs/[id]/page.tsx:71',message:'Before API call',data:{songId:params.id,url:`/api/songs/${params.id}`},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
       console.log("Fetching song with ID:", params.id)
       const response = await fetch(`/api/songs/${params.id}`)
-      // #region agent log
-      fetch('http://127.0.0.1:7243/ingest/4c8d8774-18d6-406e-b702-2dc324f31e07',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app/dashboard/songs/[id]/page.tsx:73',message:'API response received',data:{status:response.status,statusText:response.statusText,ok:response.ok},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
       console.log("Response status:", response.status)
       if (response.ok) {
         const data = await response.json()
-        // #region agent log
-        fetch('http://127.0.0.1:7243/ingest/4c8d8774-18d6-406e-b702-2dc324f31e07',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app/dashboard/songs/[id]/page.tsx:75',message:'Song data received',data:{songId:data?.id,songTitle:data?.title,hasCollaborators:!!data?.songCollaborators,hasPublishingEntities:!!data?.songPublishingEntities},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-        // #endregion
         console.log("Song data received:", data)
         // Convert Decimal to number
         // Format dates for input fields (YYYY-MM-DD)
@@ -966,14 +946,8 @@ export default function SongDetailPage() {
             ? processedData.workId
             : "__create__",
         })
-        // #region agent log
-        fetch('http://127.0.0.1:7243/ingest/4c8d8774-18d6-406e-b702-2dc324f31e07',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app/dashboard/songs/[id]/page.tsx:96',message:'Song set in state',data:{songId:processedData?.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-        // #endregion
       } else {
         const errorData = await response.json().catch(() => ({ error: "Unknown error" }))
-        // #region agent log
-        fetch('http://127.0.0.1:7243/ingest/4c8d8774-18d6-406e-b702-2dc324f31e07',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app/dashboard/songs/[id]/page.tsx:99',message:'API error response',data:{status:response.status,errorData},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-        // #endregion
         console.error("Error fetching song:", response.status, errorData)
         // Set song to null to show error message
         setSong(null)
@@ -2506,64 +2480,6 @@ export default function SongDetailPage() {
             )}
           </CardContent>
         </Card>
-
-      {/* Publishing Splits and Master Revenue Shares cards - Hidden but kept for potential future use */}
-      {false && isAdmin && song && (
-        <div className="grid gap-4 md:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Publishing Splits</CardTitle>
-              <CardDescription>
-                {song?.publishingLocked
-                  ? "Publishing splits are locked"
-                  : "Set publishing ownership percentages (must total 100%)"}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {song && (
-                <PublishingSplitEditor
-                  songId={song!.id}
-                  songCollaborators={song!.songCollaborators.map(sc => ({
-                    ...sc,
-                    roleInSong: sc.roleInSong as CollaboratorRole
-                  })) as any}
-                  songPublishingEntities={song!.songPublishingEntities}
-                  isLocked={song!.publishingLocked}
-                  onUpdate={fetchSong}
-                />
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Master Revenue Shares</CardTitle>
-              <CardDescription>
-                {!song?.publishingLocked
-                  ? "Publishing splits must be locked first"
-                  : song?.masterLocked
-                  ? "Master revenue shares are locked"
-                  : "Set master ownership percentages (must total 100%)"}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {song && (
-                <MasterSplitEditor
-                  songId={song!.id}
-                  songCollaborators={song!.songCollaborators.map(sc => ({
-                    ...sc,
-                    roleInSong: sc.roleInSong as CollaboratorRole
-                  })) as any}
-                  labelMasterShare={song!.labelMasterShare}
-                  isLocked={song!.masterLocked}
-                  publishingLocked={song!.publishingLocked}
-                  onUpdate={fetchSong}
-                />
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      )}
 
       {/* Smart Link - admin only */}
       {song && session?.user?.role === "admin" && (

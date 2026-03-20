@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { db } from "@/lib/db"
-import { canManageSongs } from "@/lib/permissions"
+import { canManageSongs, getUserPermissions } from "@/lib/permissions"
+import type { Prisma } from "@prisma/client"
 import { createWorkForSong } from "@/lib/work-helpers"
 import { z } from "zod"
 
@@ -13,7 +14,7 @@ const createWorkSchema = z.object({
   iswcCode: z.string().optional().nullable(),
 })
 
-/** List works (for linking recordings). Admins only. */
+/** List works (admins: all; collaborators: works linked to recordings they’re on). */
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
@@ -22,8 +23,9 @@ export async function GET(request: NextRequest) {
     }
 
     const canManage = await canManageSongs(session)
-    if (!canManage) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    const permissions = await getUserPermissions(session)
+    if (!permissions) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     const q = request.nextUrl.searchParams.get("q")?.trim()
@@ -33,9 +35,30 @@ export async function GET(request: NextRequest) {
       Math.max(1, limitRaw ? parseInt(limitRaw, 10) || 200 : 200)
     )
 
-    const where = q
-      ? { title: { contains: q, mode: "insensitive" as const } }
-      : {}
+    const where: Prisma.WorkWhereInput = {}
+    if (q) {
+      where.title = { contains: q, mode: "insensitive" }
+    }
+
+    if (!canManage) {
+      if (!permissions.collaboratorId) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+      }
+      const linked = await db.song.findMany({
+        where: {
+          workId: { not: null },
+          songCollaborators: {
+            some: { collaboratorId: permissions.collaboratorId },
+          },
+        },
+        select: { workId: true },
+      })
+      const workIds = [...new Set(linked.map((s) => s.workId).filter(Boolean))] as string[]
+      if (workIds.length === 0) {
+        return NextResponse.json([])
+      }
+      where.id = { in: workIds }
+    }
 
     const works = await db.work.findMany({
       where,

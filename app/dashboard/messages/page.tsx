@@ -22,6 +22,7 @@ interface ThreadSummary {
   subject: string
   threadType: ThreadType
   song: { id: string; title: string } | null
+  work?: { id: string; title: string } | null
   lastMessage: {
     id: string
     createdAt: string
@@ -57,6 +58,7 @@ interface ThreadDetail {
   subject: string
   threadType: ThreadType
   song: { id: string; title: string } | null
+  work?: { id: string; title: string } | null
   messages: ThreadMessage[]
 }
 
@@ -72,12 +74,17 @@ interface SongOption {
   title: string
 }
 
+interface WorkOption {
+  id: string
+  title: string
+}
+
 const THREAD_TYPE_LABEL: Record<ThreadType, string> = {
   direct: "Direct",
   group: "Group",
-  song_scoped: "Song",
+  song_scoped: "Recording",
   org_wide: "Org-wide",
-  work_collab: "Work",
+  work_collab: "Composition",
 }
 
 function displayName(sender: ThreadMessage["sender"]) {
@@ -110,6 +117,8 @@ export default function MessagesPage() {
   const [composeParticipantIds, setComposeParticipantIds] = useState<string[]>([])
   const [peers, setPeers] = useState<Peer[]>([])
   const [songs, setSongs] = useState<SongOption[]>([])
+  const [worksOptions, setWorksOptions] = useState<WorkOption[]>([])
+  const [composeWorkId, setComposeWorkId] = useState("")
   const [creatingThread, setCreatingThread] = useState(false)
 
   useEffect(() => {
@@ -124,12 +133,17 @@ export default function MessagesPage() {
 
   const loadComposeData = async () => {
     try {
-      const [peersRes, songsRes] = await Promise.all([
+      const [peersRes, songsRes, worksRes] = await Promise.all([
         fetch("/api/messages/compose-candidates", { cache: "no-store" }),
         fetch("/api/songs", { cache: "no-store" }),
+        fetch("/api/works?limit=500", { cache: "no-store" }),
       ])
       if (peersRes.ok) setPeers(await peersRes.json())
       if (songsRes.ok) setSongs(await songsRes.json())
+      if (worksRes.ok) {
+        const w = await worksRes.json()
+        setWorksOptions(Array.isArray(w) ? w : [])
+      }
     } catch {
       /* ignore */
     }
@@ -234,6 +248,7 @@ export default function MessagesPage() {
     e.preventDefault()
     if (!composeSubject.trim() || composeParticipantIds.length === 0) return
     if (composeType === "song_scoped" && !composeSongId) return
+    if (composeType === "work_collab" && !composeWorkId) return
     if (composeType === "direct" && composeParticipantIds.length !== 1) return
     if (composeType === "org_wide" && !isAdmin) return
 
@@ -246,6 +261,7 @@ export default function MessagesPage() {
           subject: composeSubject.trim(),
           participantIds: composeParticipantIds,
           songId: composeType === "song_scoped" ? composeSongId : null,
+          workId: composeType === "work_collab" ? composeWorkId : null,
           threadType: composeType,
         }),
       })
@@ -259,6 +275,7 @@ export default function MessagesPage() {
       setComposeSubject("")
       setComposeParticipantIds([])
       setComposeSongId("")
+      setComposeWorkId("")
       setComposeType("group")
       await loadThreads()
       await selectThread(id)
@@ -314,6 +331,8 @@ export default function MessagesPage() {
                   onValueChange={(v) => {
                     setComposeType(v as ThreadType)
                     setComposeParticipantIds([])
+                    setComposeSongId("")
+                    setComposeWorkId("")
                   }}
                 >
                   <SelectTrigger>
@@ -322,22 +341,40 @@ export default function MessagesPage() {
                   <SelectContent>
                     <SelectItem value="group">Group</SelectItem>
                     <SelectItem value="direct">Direct (1 other person)</SelectItem>
-                    <SelectItem value="song_scoped">Song-scoped</SelectItem>
+                    <SelectItem value="song_scoped">Recording-scoped</SelectItem>
+                    <SelectItem value="work_collab">Composition (work)</SelectItem>
                     {isAdmin && <SelectItem value="org_wide">Org-wide (admin)</SelectItem>}
                   </SelectContent>
                 </Select>
               </div>
               {composeType === "song_scoped" && (
                 <div className="space-y-2">
-                  <Label>Song</Label>
+                  <Label>Recording</Label>
                   <Select value={composeSongId} onValueChange={setComposeSongId}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select song" />
+                      <SelectValue placeholder="Select recording" />
                     </SelectTrigger>
                     <SelectContent>
                       {songs.map((s) => (
                         <SelectItem key={s.id} value={s.id}>
                           {s.title}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              {composeType === "work_collab" && (
+                <div className="space-y-2">
+                  <Label>Composition (Work)</Label>
+                  <Select value={composeWorkId} onValueChange={setComposeWorkId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select composition" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {worksOptions.map((w) => (
+                        <SelectItem key={w.id} value={w.id}>
+                          {w.title}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -427,7 +464,12 @@ export default function MessagesPage() {
                 </div>
                 {thread.song && (
                   <div className="text-xs text-muted-foreground mt-0.5">
-                    Song: {thread.song.title}
+                    Recording: {thread.song.title}
+                  </div>
+                )}
+                {thread.work && (
+                  <div className="text-xs text-muted-foreground mt-0.5">
+                    Composition: {thread.work.title}
                   </div>
                 )}
                 {thread.lastMessage && (
@@ -458,7 +500,12 @@ export default function MessagesPage() {
                   </p>
                   {selectedThread.song && (
                     <p className="text-sm text-muted-foreground">
-                      Related song: {selectedThread.song.title}
+                      Related recording: {selectedThread.song.title}
+                    </p>
+                  )}
+                  {selectedThread.work && (
+                    <p className="text-sm text-muted-foreground">
+                      Related composition: {selectedThread.work.title}
                     </p>
                   )}
                 </div>

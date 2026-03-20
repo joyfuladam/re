@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useSession } from "next-auth/react"
 import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { WorkPublishingSplitEditor } from "@/components/splits/WorkPublishingSplitEditor"
+import { CollaboratorRole } from "@prisma/client"
 
 type SongBrief = {
   id: string
@@ -22,6 +24,7 @@ type WorkCollaboratorRow = {
   roleInWork: string
   publishingOwnership: unknown
   collaborator: {
+    id: string
     firstName?: string
     middleName?: string | null
     lastName?: string
@@ -62,6 +65,29 @@ export default function WorkDetailPage() {
   const [labelPct, setLabelPct] = useState("50")
 
   const isAdmin = session?.user?.role === "admin"
+
+  const workCollaboratorsForEditor = useMemo(() => {
+    if (!work?.workCollaborators?.length) return []
+    return work.workCollaborators.map((wc) => ({
+      ...wc,
+      roleInWork: wc.roleInWork as CollaboratorRole,
+      publishingOwnership:
+        wc.publishingOwnership != null
+          ? parseFloat(String(wc.publishingOwnership)) * 100
+          : null,
+    }))
+  }, [work])
+
+  const workPublishingEntitiesForEditor = useMemo(() => {
+    if (!work?.workPublishingEntities?.length) return []
+    return work.workPublishingEntities.map((wpe) => ({
+      ...wpe,
+      ownershipPercentage:
+        wpe.ownershipPercentage != null
+          ? parseFloat(String(wpe.ownershipPercentage)) * 100
+          : null,
+    }))
+  }, [work])
 
   const load = async () => {
     if (!id) return
@@ -252,77 +278,39 @@ export default function WorkDetailPage() {
         <CardHeader>
           <CardTitle>Publishing splits</CardTitle>
           <CardDescription>
-            Writer and publisher shares are stored per composition and kept in sync across all
-            recordings. Edit splits on any linked song below.
+            Writer and publisher shares apply to this composition and stay in sync with every
+            linked recording. You can also edit from a song page.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-3">
-          {work.publishingLocked ? (
-            <p className="text-sm font-medium text-amber-700 dark:text-amber-400">
-              Publishing locked (all recordings on this composition are locked).
+        <CardContent className="space-y-4 max-w-2xl">
+          {work.songs.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Add a recording first, then add collaborators on that song — splits will appear here.
+            </p>
+          ) : workCollaboratorsForEditor.length === 0 &&
+            workPublishingEntitiesForEditor.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              No splits yet. Add collaborators and publishing entities on a linked recording, or save
+              once splits exist on a song.
             </p>
           ) : (
-            <p className="text-sm text-muted-foreground">Publishing is editable.</p>
+            <WorkPublishingSplitEditor
+              workId={work.id}
+              workCollaborators={workCollaboratorsForEditor}
+              workPublishingEntities={workPublishingEntitiesForEditor}
+              isLocked={!!work.publishingLocked}
+              onUpdate={() => void load()}
+            />
           )}
-          {work.songs && work.songs.length > 0 && (
-            <p>
+          {work.songs.length > 0 && (
+            <p className="text-sm">
               <Button variant="outline" size="sm" asChild>
                 <Link href={`/dashboard/songs/${work.songs[0].id}`}>
-                  Open first recording to edit splits
+                  Open a recording
                 </Link>
               </Button>
             </p>
           )}
-          {(work.workCollaborators?.length ?? 0) > 0 && (
-            <div>
-              <h4 className="text-sm font-medium mb-2">Writer&apos;s share (50%)</h4>
-              <ul className="text-sm space-y-1 border rounded-md p-3">
-                {work.workCollaborators!.map((wc) => {
-                  const name = [wc.collaborator.firstName, wc.collaborator.middleName, wc.collaborator.lastName]
-                    .filter(Boolean)
-                    .join(" ")
-                  const pct =
-                    wc.publishingOwnership != null
-                      ? (parseFloat(String(wc.publishingOwnership)) * 100).toFixed(2)
-                      : "0"
-                  return (
-                    <li key={wc.id} className="flex justify-between gap-2">
-                      <span>
-                        {name} <span className="text-muted-foreground">({wc.roleInWork})</span>
-                      </span>
-                      <span>{pct}%</span>
-                    </li>
-                  )
-                })}
-              </ul>
-            </div>
-          )}
-          {(work.workPublishingEntities?.length ?? 0) > 0 && (
-            <div>
-              <h4 className="text-sm font-medium mb-2">Publisher&apos;s share (50%)</h4>
-              <ul className="text-sm space-y-1 border rounded-md p-3">
-                {work.workPublishingEntities!.map((wpe) => {
-                  const pct =
-                    wpe.ownershipPercentage != null
-                      ? (parseFloat(String(wpe.ownershipPercentage)) * 100).toFixed(2)
-                      : "0"
-                  return (
-                    <li key={wpe.id} className="flex justify-between gap-2">
-                      <span>{wpe.publishingEntity.name}</span>
-                      <span>{pct}%</span>
-                    </li>
-                  )
-                })}
-              </ul>
-            </div>
-          )}
-          {(work.workCollaborators?.length ?? 0) === 0 &&
-            (work.workPublishingEntities?.length ?? 0) === 0 && (
-              <p className="text-sm text-muted-foreground">
-                No work-level splits yet — they will appear after you save publishing splits on a
-                linked recording.
-              </p>
-            )}
         </CardContent>
       </Card>
 

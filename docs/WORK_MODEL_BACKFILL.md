@@ -20,7 +20,7 @@ Safe to re-run: only processes rows where `workId` is still `null`.
 
 - **POST `/api/songs`**: Optional body `workId` (existing composition). If omitted, a new `Work` is created from the recording title (and ISWC when unique on `Work`).
 - **PATCH `/api/songs/[id]`**: `workId` may be a composition id, `"__create__"` (new `Work` from current title/ISWC), or `null` (unlink).
-- **GET `/api/works`**: Admin-only list for pickers (`?q=` search).
+- **GET `/api/works`**: Admins see all compositions; collaborators see compositions linked to recordings they’re on (`?q=` search). Used for messaging compose and pickers.
 - **POST `/api/works`**: Admin-only create a standalone composition.
 - Dashboard **New Song** and **Edit Song** include composition linking.
 - **Works hub** (admin): `/dashboard/works` lists compositions; `/dashboard/works/[id]` edits title, ISWC, and label publishing share; `/dashboard/works/new` creates a composition without a recording.
@@ -36,3 +36,7 @@ railway run npm run data:backfill-work-publishing
 ```
 
 This copies splits from each work’s oldest recording into work tables and mirrors to siblings. Safe to re-run: skips works that already have work-level rows.
+
+## Composition-scoped messaging
+
+Migration `20260209140000_message_thread_work_id` adds optional `MessageThread.workId` so `work_collab` threads can reference a composition. Apply with your usual deploy flow (`npm run db:migrate:deploy` / Railway).

@@ -31,23 +31,13 @@ export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  // #region agent log
-  try{const fs=require('fs');const p='/Users/adamf/projects/REAPP/.cursor/debug.log';fs.appendFileSync(p,JSON.stringify({location:'app/api/songs/[id]/route.ts:25',message:'GET handler entry',data:{paramsId:params?.id,paramsType:typeof params,paramsKeys:params?Object.keys(params):null},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})+'\n');}catch(e){}
-  // #endregion
   try {
     const session = await getServerSession(authOptions)
-    // #region agent log
-    try{const fs=require('fs');const p='/Users/adamf/projects/REAPP/.cursor/debug.log';fs.appendFileSync(p,JSON.stringify({location:'app/api/songs/[id]/route.ts:31',message:'Session check',data:{hasSession:!!session,userId:session?.user?.id,userRole:session?.user?.role},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})+'\n');}catch(e){}
-    // #endregion
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Check if user can access this song
     const canAccess = await canAccessSong(session, params.id)
-    // #region agent log
-    try{const fs=require('fs');const p='/Users/adamf/projects/REAPP/.cursor/debug.log';fs.appendFileSync(p,JSON.stringify({location:'app/api/songs/[id]/route.ts:37',message:'canAccessSong result',data:{canAccess,songId:params.id,userId:session.user.id,userRole:session.user.role},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})+'\n');}catch(e){}
-    // #endregion
     if (!canAccess) {
       return NextResponse.json(
         { error: "Forbidden: You don't have access to this song" },
@@ -55,56 +45,36 @@ export async function GET(
       )
     }
 
-    // #region agent log
-    try{const fs=require('fs');const p='/Users/adamf/projects/REAPP/.cursor/debug.log';fs.appendFileSync(p,JSON.stringify({location:'app/api/songs/[id]/route.ts:44',message:'Before database query',data:{songId:params.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'C'})+'\n');}catch(e){}
-    // #endregion
-    let song
-    try {
-      song = await db.song.findUnique({
-        where: { id: params.id },
-        include: {
-          songCollaborators: {
-            include: {
-              collaborator: true,
-            },
-          },
-          songPublishingEntities: {
-            include: {
-              publishingEntity: true,
-            },
-          },
-          media: true,
-          work: {
-            select: {
-              id: true,
-              title: true,
-              iswcCode: true,
-            },
+    const song = await db.song.findUnique({
+      where: { id: params.id },
+      include: {
+        songCollaborators: {
+          include: {
+            collaborator: true,
           },
         },
-      })
-      // #region agent log
-      try{const fs=require('fs');const p='/Users/adamf/projects/REAPP/.cursor/debug.log';fs.appendFileSync(p,JSON.stringify({location:'app/api/songs/[id]/route.ts:66',message:'Database query completed',data:{songFound:!!song,songId:params.id,foundSongId:song?.id,foundSongTitle:song?.title},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'C'})+'\n');}catch(e){}
-      // #endregion
-    } catch (dbError: any) {
-      // #region agent log
-      try{const fs=require('fs');const p='/Users/adamf/projects/REAPP/.cursor/debug.log';fs.appendFileSync(p,JSON.stringify({location:'app/api/songs/[id]/route.ts:68',message:'Database query error',data:{error:dbError?.message,errorName:dbError?.name,stack:dbError?.stack?.substring(0,200)},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'C'})+'\n');}catch(e){}
-      // #endregion
-      throw dbError
-    }
+        songPublishingEntities: {
+          include: {
+            publishingEntity: true,
+          },
+        },
+        media: true,
+        work: {
+          select: {
+            id: true,
+            title: true,
+            iswcCode: true,
+          },
+        },
+      },
+    })
 
-    // #region agent log
-    try{const fs=require('fs');const p='/Users/adamf/projects/REAPP/.cursor/debug.log';fs.appendFileSync(p,JSON.stringify({location:'app/api/songs/[id]/route.ts:72',message:'After database query',data:{songFound:!!song},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'C'})+'\n');}catch(e){}
-    // #endregion
     if (!song) {
       return NextResponse.json({ error: "Song not found" }, { status: 404 })
     }
 
     return NextResponse.json(song)
-  } catch (error: any) {
-    // #region agent log
-    try{const fs=require('fs');const p='/Users/adamf/projects/REAPP/.cursor/debug.log';fs.appendFileSync(p,JSON.stringify({location:'app/api/songs/[id]/route.ts:80',message:'Catch block error',data:{errorMessage:error?.message,errorName:error?.name,errorStack:error?.stack?.substring(0,300)},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'C'})+'\n');}catch(e){}
-    // #endregion
+  } catch (error: unknown) {
     console.error("Error fetching song:", error)
     return NextResponse.json(
       { error: "Failed to fetch song" },

@@ -156,6 +156,7 @@ model Work {
   songs                  Song[]
   workCollaborators      WorkCollaborator[]
   workPublishingEntities WorkPublishingEntity[]
+  messageThreads         MessageThread[]
 }
 
 /// Writer-side publishing splits for a composition (mirrored to SongCollaborator on each linked recording).
@@ -526,6 +527,7 @@ model MessageThread {
   id          String              @id @default(cuid())
   subject     String
   songId      String?
+  workId      String?
   threadType  MessageThreadType   @default(group)
   createdById String
   createdAt   DateTime            @default(now())
@@ -533,11 +535,13 @@ model MessageThread {
 
   // Relations
   song         Song?              @relation(fields: [songId], references: [id], onDelete: SetNull)
+  work         Work?              @relation(fields: [workId], references: [id], onDelete: SetNull)
   createdBy    Collaborator       @relation(fields: [createdById], references: [id], onDelete: Cascade)
   participants MessageParticipant[]
   messages     Message[]
 
   @@index([songId])
+  @@index([workId])
   @@index([createdById])
   @@index([updatedAt])
   @@index([threadType])

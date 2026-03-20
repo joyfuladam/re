@@ -26,6 +26,9 @@ export async function GET(request: NextRequest, { params }: Params) {
           song: {
             select: { id: true, title: true },
           },
+          work: {
+            select: { id: true, title: true },
+          },
           messages: {
             orderBy: { createdAt: "asc" },
             include: {
@@ -78,6 +81,12 @@ export async function GET(request: NextRequest, { params }: Params) {
       ? {
           id: thread.song.id,
           title: thread.song.title,
+        }
+      : null,
+    work: thread.work
+      ? {
+          id: thread.work.id,
+          title: thread.work.title,
         }
       : null,
     messages: thread.messages.map((m) => ({

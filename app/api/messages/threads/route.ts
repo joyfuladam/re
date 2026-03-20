@@ -10,6 +10,7 @@ const createThreadSchema = z.object({
   subject: z.string().min(1).max(500),
   participantIds: z.array(z.string().min(1)).min(1),
   songId: z.string().optional().nullable(),
+  workId: z.string().optional().nullable(),
   threadType: z.nativeEnum(MessageThreadType),
 })
 
@@ -28,6 +29,9 @@ export async function GET(_request: NextRequest) {
       thread: {
         include: {
           song: {
+            select: { id: true, title: true },
+          },
+          work: {
             select: { id: true, title: true },
           },
           messages: {
@@ -79,6 +83,12 @@ export async function GET(_request: NextRequest) {
                 title: thread.song.title,
               }
             : null,
+          work: thread.work
+            ? {
+                id: thread.work.id,
+                title: thread.work.title,
+              }
+            : null,
           lastMessage: lastMessage
             ? {
                 id: lastMessage.id,
@@ -110,7 +120,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Validation failed", details: parsed.error.flatten() }, { status: 400 })
   }
 
-  const { subject, participantIds, songId, threadType } = parsed.data
+  const { subject, participantIds, songId, workId, threadType } = parsed.data
 
   if (threadType === MessageThreadType.org_wide) {
     const allowed = await isAdmin(session)
@@ -121,6 +131,10 @@ export async function POST(request: NextRequest) {
 
   if (threadType === MessageThreadType.song_scoped && !songId) {
     return NextResponse.json({ error: "songId is required for song_scoped threads" }, { status: 400 })
+  }
+
+  if (threadType === MessageThreadType.work_collab && !workId) {
+    return NextResponse.json({ error: "workId is required for work_collab threads" }, { status: 400 })
   }
 
   if (threadType === MessageThreadType.direct && participantIds.length !== 1) {
@@ -151,12 +165,20 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  if (workId) {
+    const work = await db.work.findUnique({ where: { id: workId }, select: { id: true } })
+    if (!work) {
+      return NextResponse.json({ error: "Work not found" }, { status: 404 })
+    }
+  }
+
   const now = new Date()
 
   const thread = await db.messageThread.create({
     data: {
       subject: subject.trim(),
       songId: songId || null,
+      workId: workId || null,
       threadType,
       createdById: userId,
       participants: {

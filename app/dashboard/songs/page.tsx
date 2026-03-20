@@ -75,9 +75,11 @@ export default function SongsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">{isAdmin ? "Songs" : "My Songs"}</h1>
+          <h1 className="text-3xl font-bold">{isAdmin ? "Recordings" : "My recordings"}</h1>
           <p className="text-muted-foreground">
-            {isAdmin ? "Manage your song catalog" : "View songs you're a collaborator on"}
+            {isAdmin
+              ? "Catalog of masters (recordings); compositions live under Works"
+              : "Recordings you’re a collaborator on"}
           </p>
         </div>
         {isAdmin && (

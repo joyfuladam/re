@@ -59,7 +59,7 @@ export default function DashboardLayout({
                     Collaborators
                   </Link>
                   <Link href="/dashboard/songs" className="hover:underline">
-                    Songs
+                    Recordings
                   </Link>
                   <Link href="/dashboard/works" className="hover:underline">
                     Works
@@ -122,7 +122,7 @@ export default function DashboardLayout({
               )}
               {!isAdmin && (
                 <Link href="/dashboard/songs" className="hover:underline">
-                  My Songs
+                  My recordings
                 </Link>
               )}
             </div>

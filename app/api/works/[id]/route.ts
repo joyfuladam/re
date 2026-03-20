@@ -145,6 +145,26 @@ export async function PATCH(
             },
             orderBy: { title: "asc" },
           },
+          workCollaborators: {
+            include: {
+              collaborator: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  middleName: true,
+                  lastName: true,
+                },
+              },
+            },
+            orderBy: { roleInWork: "asc" },
+          },
+          workPublishingEntities: {
+            include: {
+              publishingEntity: {
+                select: { id: true, name: true, isInternal: true },
+              },
+            },
+          },
         },
       })
       return NextResponse.json(work)

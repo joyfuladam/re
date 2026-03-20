@@ -123,8 +123,8 @@ export default function NewSongPage() {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">New Song</h1>
-        <p className="text-muted-foreground">Add a new song to the catalog</p>
+        <h1 className="text-3xl font-bold">New recording</h1>
+        <p className="text-muted-foreground">Add a master to the catalog (linked to a composition)</p>
       </div>
 
       <Card>

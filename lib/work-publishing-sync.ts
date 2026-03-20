@@ -1,8 +1,52 @@
 import type { CollaboratorRole } from "@prisma/client"
 import { db } from "@/lib/db"
 import { isPublishingEligible } from "@/lib/roles"
+import { numberToDecimal } from "@/lib/validators"
 
 /** True if publishing is locked on the Work (when linked) or on the Song. */
+export async function isPublishingLockedForWork(workId: string): Promise<boolean> {
+  const w = await db.work.findUnique({
+    where: { id: workId },
+    select: { publishingLocked: true },
+  })
+  return w?.publishingLocked ?? false
+}
+
+export async function getPublishingValidationDataByWorkId(workId: string): Promise<{
+  collaboratorSplits: Array<{
+    collaboratorId: string
+    role: CollaboratorRole
+    percentage: number
+  }>
+  entitySplits: Array<{ publishingEntityId: string; percentage: number }>
+} | null> {
+  const work = await db.work.findUnique({
+    where: { id: workId },
+    include: {
+      workCollaborators: true,
+      workPublishingEntities: true,
+    },
+  })
+  if (!work) return null
+  return {
+    collaboratorSplits: work.workCollaborators
+      .filter((wc) => isPublishingEligible(wc.roleInWork))
+      .map((wc) => ({
+        collaboratorId: wc.collaboratorId,
+        role: wc.roleInWork,
+        percentage: wc.publishingOwnership
+          ? parseFloat(wc.publishingOwnership.toString()) * 100
+          : 0,
+      })),
+    entitySplits: work.workPublishingEntities.map((wpe) => ({
+      publishingEntityId: wpe.publishingEntityId,
+      percentage: wpe.ownershipPercentage
+        ? parseFloat(wpe.ownershipPercentage.toString()) * 100
+        : 0,
+    })),
+  }
+}
+
 export async function isPublishingLockedForSong(songId: string): Promise<boolean> {
   const song = await db.song.findUnique({
     where: { id: songId },
@@ -174,6 +218,24 @@ export async function mirrorSongPublishingEntitiesToWork(songId: string): Promis
   }
 
   await syncWorkPublishingEntitiesToAllSongs(song.workId)
+}
+
+/** Replace all publisher rows for a work and mirror to every linked song. */
+export async function replaceWorkPublishingEntities(
+  workId: string,
+  entities: Array<{ publishingEntityId: string; ownershipPercentage: number }>
+): Promise<void> {
+  await db.workPublishingEntity.deleteMany({ where: { workId } })
+  for (const e of entities) {
+    await db.workPublishingEntity.create({
+      data: {
+        workId,
+        publishingEntityId: e.publishingEntityId,
+        ownershipPercentage: numberToDecimal(e.ownershipPercentage / 100),
+      },
+    })
+  }
+  await syncWorkPublishingEntitiesToAllSongs(workId)
 }
 
 export async function syncWorkPublishingEntitiesToAllSongs(workId: string): Promise<void> {
