@@ -53,6 +53,9 @@ export default function DashboardLayout({
               <Link href="/dashboard" className="hover:underline">
                 Dashboard
               </Link>
+              <Link href="/dashboard/messages" className="hover:underline">
+                Messages
+              </Link>
               {isAdmin ? (
                 <>
                   <Link href="/dashboard/collaborators" className="hover:underline">
