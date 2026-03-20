@@ -27,6 +27,12 @@ export async function GET(request: NextRequest) {
     }
 
     const q = request.nextUrl.searchParams.get("q")?.trim()
+    const limitRaw = request.nextUrl.searchParams.get("limit")
+    const limit = Math.min(
+      500,
+      Math.max(1, limitRaw ? parseInt(limitRaw, 10) || 200 : 200)
+    )
+
     const where = q
       ? { title: { contains: q, mode: "insensitive" as const } }
       : {}
@@ -37,10 +43,12 @@ export async function GET(request: NextRequest) {
         id: true,
         title: true,
         iswcCode: true,
+        labelPublishingShare: true,
         createdAt: true,
+        _count: { select: { songs: true } },
       },
       orderBy: { title: "asc" },
-      take: 200,
+      take: limit,
     })
 
     return NextResponse.json(works)

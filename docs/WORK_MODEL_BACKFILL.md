@@ -23,3 +23,4 @@ Safe to re-run: only processes rows where `workId` is still `null`.
 - **GET `/api/works`**: Admin-only list for pickers (`?q=` search).
 - **POST `/api/works`**: Admin-only create a standalone composition.
 - Dashboard **New Song** and **Edit Song** include composition linking.
+- **Works hub** (admin): `/dashboard/works` lists compositions; `/dashboard/works/[id]` edits title, ISWC, and label publishing share; `/dashboard/works/new` creates a composition without a recording.

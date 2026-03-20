@@ -61,6 +61,9 @@ export default function DashboardLayout({
                   <Link href="/dashboard/songs" className="hover:underline">
                     Songs
                   </Link>
+                  <Link href="/dashboard/works" className="hover:underline">
+                    Works
+                  </Link>
 
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
