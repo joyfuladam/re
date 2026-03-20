@@ -17,14 +17,34 @@ type SongBrief = {
   status: string
 }
 
+type WorkCollaboratorRow = {
+  id: string
+  roleInWork: string
+  publishingOwnership: unknown
+  collaborator: {
+    firstName?: string
+    middleName?: string | null
+    lastName?: string
+  }
+}
+
+type WorkPublishingEntityRow = {
+  id: string
+  ownershipPercentage: unknown
+  publishingEntity: { id: string; name: string; isInternal: boolean }
+}
+
 type WorkDetail = {
   id: string
   title: string
   iswcCode: string | null
   labelPublishingShare: unknown
+  publishingLocked?: boolean
   createdAt: string
   updatedAt: string
   songs: SongBrief[]
+  workCollaborators?: WorkCollaboratorRow[]
+  workPublishingEntities?: WorkPublishingEntityRow[]
 }
 
 export default function WorkDetailPage() {
@@ -225,6 +245,84 @@ export default function WorkDetailPage() {
               </div>
             </dl>
           )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Publishing splits</CardTitle>
+          <CardDescription>
+            Writer and publisher shares are stored per composition and kept in sync across all
+            recordings. Edit splits on any linked song below.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {work.publishingLocked ? (
+            <p className="text-sm font-medium text-amber-700 dark:text-amber-400">
+              Publishing locked (all recordings on this composition are locked).
+            </p>
+          ) : (
+            <p className="text-sm text-muted-foreground">Publishing is editable.</p>
+          )}
+          {work.songs && work.songs.length > 0 && (
+            <p>
+              <Button variant="outline" size="sm" asChild>
+                <Link href={`/dashboard/songs/${work.songs[0].id}`}>
+                  Open first recording to edit splits
+                </Link>
+              </Button>
+            </p>
+          )}
+          {(work.workCollaborators?.length ?? 0) > 0 && (
+            <div>
+              <h4 className="text-sm font-medium mb-2">Writer&apos;s share (50%)</h4>
+              <ul className="text-sm space-y-1 border rounded-md p-3">
+                {work.workCollaborators!.map((wc) => {
+                  const name = [wc.collaborator.firstName, wc.collaborator.middleName, wc.collaborator.lastName]
+                    .filter(Boolean)
+                    .join(" ")
+                  const pct =
+                    wc.publishingOwnership != null
+                      ? (parseFloat(String(wc.publishingOwnership)) * 100).toFixed(2)
+                      : "0"
+                  return (
+                    <li key={wc.id} className="flex justify-between gap-2">
+                      <span>
+                        {name} <span className="text-muted-foreground">({wc.roleInWork})</span>
+                      </span>
+                      <span>{pct}%</span>
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>
+          )}
+          {(work.workPublishingEntities?.length ?? 0) > 0 && (
+            <div>
+              <h4 className="text-sm font-medium mb-2">Publisher&apos;s share (50%)</h4>
+              <ul className="text-sm space-y-1 border rounded-md p-3">
+                {work.workPublishingEntities!.map((wpe) => {
+                  const pct =
+                    wpe.ownershipPercentage != null
+                      ? (parseFloat(String(wpe.ownershipPercentage)) * 100).toFixed(2)
+                      : "0"
+                  return (
+                    <li key={wpe.id} className="flex justify-between gap-2">
+                      <span>{wpe.publishingEntity.name}</span>
+                      <span>{pct}%</span>
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>
+          )}
+          {(work.workCollaborators?.length ?? 0) === 0 &&
+            (work.workPublishingEntities?.length ?? 0) === 0 && (
+              <p className="text-sm text-muted-foreground">
+                No work-level splits yet — they will appear after you save publishing splits on a
+                linked recording.
+              </p>
+            )}
         </CardContent>
       </Card>
 

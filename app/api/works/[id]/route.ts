@@ -44,6 +44,26 @@ export async function GET(
           },
           orderBy: { title: "asc" },
         },
+        workCollaborators: {
+          include: {
+            collaborator: {
+              select: {
+                id: true,
+                firstName: true,
+                middleName: true,
+                lastName: true,
+              },
+            },
+          },
+          orderBy: { roleInWork: "asc" },
+        },
+        workPublishingEntities: {
+          include: {
+            publishingEntity: {
+              select: { id: true, name: true, isInternal: true },
+            },
+          },
+        },
       },
     })
 

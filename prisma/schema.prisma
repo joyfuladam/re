@@ -103,6 +103,7 @@ model Collaborator {
   sentMessages        Message[]
   notifications       Notification[]
   createdThreads      MessageThread[]
+  workCollaborators   WorkCollaborator[]
 }
 
 model Account {
@@ -142,14 +143,52 @@ model VerificationToken {
 
 /// Musical work (composition). Songs (recordings) link here via `workId`.
 /// Phase 1: optional link; backfill script creates one Work per existing Song.
+/// Publishing splits (writer / publisher) are stored at Work level when recordings share a composition.
 model Work {
   id                     String   @id @default(cuid())
   title                  String
   iswcCode               String?  @unique
   labelPublishingShare   Decimal  @default(0.5) @db.Decimal(5, 4)
+  publishingLocked       Boolean  @default(false)
+  publishingLockedAt     DateTime?
   createdAt              DateTime @default(now())
   updatedAt              DateTime @updatedAt
   songs                  Song[]
+  workCollaborators      WorkCollaborator[]
+  workPublishingEntities WorkPublishingEntity[]
+}
+
+/// Writer-side publishing splits for a composition (mirrored to SongCollaborator on each linked recording).
+model WorkCollaborator {
+  id                  String           @id @default(cuid())
+  workId              String
+  collaboratorId      String
+  roleInWork          CollaboratorRole
+  publishingOwnership Decimal?         @db.Decimal(5, 4)
+  addedDate           DateTime         @default(now())
+  work                Work             @relation(fields: [workId], references: [id], onDelete: Cascade)
+  collaborator        Collaborator     @relation(fields: [collaboratorId], references: [id], onDelete: Cascade)
+
+  @@unique([workId, collaboratorId, roleInWork])
+  @@index([workId])
+  @@index([collaboratorId])
+}
+
+/// Publisher-side splits for a composition (mirrored to SongPublishingEntity on each recording).
+model WorkPublishingEntity {
+  id                  String           @id @default(cuid())
+  workId              String
+  publishingEntityId  String
+  ownershipPercentage Decimal          @db.Decimal(5, 4)
+  notes               String?
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+  work                Work             @relation(fields: [workId], references: [id], onDelete: Cascade)
+  publishingEntity    PublishingEntity @relation(fields: [publishingEntityId], references: [id], onDelete: Cascade)
+
+  @@unique([workId, publishingEntityId])
+  @@index([workId])
+  @@index([publishingEntityId])
 }
 
 model Song {
@@ -231,6 +270,7 @@ model PublishingEntity {
   updatedAt              DateTime               @updatedAt
   // Relations
   songPublishingEntities SongPublishingEntity[]
+  workPublishingEntities WorkPublishingEntity[]
 
   @@index([name])
   @@index([isInternal])

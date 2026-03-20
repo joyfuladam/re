@@ -24,3 +24,15 @@ Safe to re-run: only processes rows where `workId` is still `null`.
 - **POST `/api/works`**: Admin-only create a standalone composition.
 - Dashboard **New Song** and **Edit Song** include composition linking.
 - **Works hub** (admin): `/dashboard/works` lists compositions; `/dashboard/works/[id]` edits title, ISWC, and label publishing share; `/dashboard/works/new` creates a composition without a recording.
+
+## Work-level publishing (phase 2)
+
+Writer and publisher splits are stored on **Work** (`WorkCollaborator`, `WorkPublishingEntity`) and mirrored to every linked **Song** so existing song UI and contracts keep working.
+
+After deploying migration `20260209120000_work_publishing_tables`:
+
+```bash
+railway run npm run data:backfill-work-publishing
+```
+
+This copies splits from each work’s oldest recording into work tables and mirrors to siblings. Safe to re-run: skips works that already have work-level rows.

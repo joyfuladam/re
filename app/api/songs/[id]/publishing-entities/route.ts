@@ -4,6 +4,10 @@ import { authOptions } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { canManageSplits } from "@/lib/permissions"
 import { numberToDecimal } from "@/lib/validators"
+import {
+  isPublishingLockedForSong,
+  mirrorSongPublishingEntitiesToWork,
+} from "@/lib/work-publishing-sync"
 import { z } from "zod"
 
 const updateSongPublishingEntitiesSchema = z.object({
@@ -83,7 +87,8 @@ export async function POST(
       return NextResponse.json({ error: "Song not found" }, { status: 404 })
     }
 
-    if (song.publishingLocked) {
+    const locked = await isPublishingLockedForSong(params.id)
+    if (locked) {
       return NextResponse.json(
         { error: "Publishing splits are locked and cannot be modified" },
         { status: 400 }
@@ -105,6 +110,8 @@ export async function POST(
         })),
       })
     }
+
+    await mirrorSongPublishingEntitiesToWork(params.id)
 
     // Fetch and return the updated entities
     const updatedEntities = await db.songPublishingEntity.findMany({

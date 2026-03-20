@@ -22,7 +22,8 @@
     "data:import": "tsx scripts/import-to-production.ts",
     "data:transfer": "./scripts/transfer-local-to-production.sh",
     "data:clear-smart-link-clicks": "tsx scripts/clear-smart-link-clicks.ts",
-    "data:backfill-works": "tsx scripts/backfill-works.ts"
+    "data:backfill-works": "tsx scripts/backfill-works.ts",
+    "data:backfill-work-publishing": "tsx scripts/backfill-work-publishing.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.4.0",

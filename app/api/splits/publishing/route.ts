@@ -3,8 +3,12 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { validateCombinedPublishingSplits, numberToDecimal } from "@/lib/validators"
-import { isPublishingEligible } from "@/lib/roles"
 import { canManageSplits } from "@/lib/permissions"
+import {
+  getPublishingValidationData,
+  isPublishingLockedForSong,
+  mirrorSongPublishingSplitsToWork,
+} from "@/lib/work-publishing-sync"
 import { z } from "zod"
 
 const updatePublishingSplitsSchema = z.object({
@@ -49,7 +53,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Song not found" }, { status: 404 })
     }
 
-    if (song.publishingLocked) {
+    const locked = await isPublishingLockedForSong(validated.songId)
+    if (locked) {
       return NextResponse.json(
         { error: "Publishing splits are locked and cannot be modified" },
         { status: 400 }
@@ -65,6 +70,8 @@ export async function POST(request: NextRequest) {
         },
       })
     }
+
+    await mirrorSongPublishingSplitsToWork(validated.songId)
 
     return NextResponse.json({ success: true })
   } catch (error) {
@@ -128,48 +135,54 @@ export async function PATCH(request: NextRequest) {
     }
 
     if (validated.action === "unlock") {
-      // Unlock publishing splits (also unlock master splits if they're locked)
-      await db.song.update({
-        where: { id: validated.songId },
-        data: {
-          publishingLocked: false,
-          publishingLockedAt: null,
-          masterLocked: false, // Also unlock master splits when publishing is unlocked
-          masterLockedAt: null,
-        },
-      })
+      if (song.workId) {
+        await db.work.update({
+          where: { id: song.workId },
+          data: {
+            publishingLocked: false,
+            publishingLockedAt: null,
+          },
+        })
+        await db.song.updateMany({
+          where: { workId: song.workId },
+          data: {
+            publishingLocked: false,
+            publishingLockedAt: null,
+            masterLocked: false,
+            masterLockedAt: null,
+          },
+        })
+      } else {
+        await db.song.update({
+          where: { id: validated.songId },
+          data: {
+            publishingLocked: false,
+            publishingLockedAt: null,
+            masterLocked: false,
+            masterLockedAt: null,
+          },
+        })
+      }
       return NextResponse.json({ success: true })
     }
 
     // Action is "lock"
-    if (song.publishingLocked) {
+    const alreadyLocked = await isPublishingLockedForSong(validated.songId)
+    if (alreadyLocked) {
       return NextResponse.json(
         { error: "Publishing splits are already locked" },
         { status: 400 }
       )
     }
 
-    // Validate combined splits (collaborators + entities) before locking
-    const collaboratorSplits = song.songCollaborators
-      .filter((sc) => isPublishingEligible(sc.roleInSong))
-      .map((sc) => ({
-        collaboratorId: sc.collaboratorId,
-        role: sc.roleInSong,
-        percentage: sc.publishingOwnership
-          ? parseFloat(sc.publishingOwnership.toString()) * 100
-          : 0,
-      }))
-
-    const entitySplits = song.songPublishingEntities.map((spe) => ({
-      publishingEntityId: spe.publishingEntityId,
-      percentage: spe.ownershipPercentage
-        ? parseFloat(spe.ownershipPercentage.toString()) * 100
-        : 0,
-    }))
+    const splitData = await getPublishingValidationData(validated.songId)
+    if (!splitData) {
+      return NextResponse.json({ error: "Song not found" }, { status: 404 })
+    }
 
     const validation = validateCombinedPublishingSplits({
-      collaborators: collaboratorSplits,
-      entities: entitySplits,
+      collaborators: splitData.collaboratorSplits,
+      entities: splitData.entitySplits,
     })
 
     if (!validation.isValid) {
@@ -179,14 +192,31 @@ export async function PATCH(request: NextRequest) {
       )
     }
 
-    // Lock publishing splits
-    await db.song.update({
-      where: { id: validated.songId },
-      data: {
-        publishingLocked: true,
-        publishingLockedAt: new Date(),
-      },
-    })
+    const now = new Date()
+    if (song.workId) {
+      await db.work.update({
+        where: { id: song.workId },
+        data: {
+          publishingLocked: true,
+          publishingLockedAt: now,
+        },
+      })
+      await db.song.updateMany({
+        where: { workId: song.workId },
+        data: {
+          publishingLocked: true,
+          publishingLockedAt: now,
+        },
+      })
+    } else {
+      await db.song.update({
+        where: { id: validated.songId },
+        data: {
+          publishingLocked: true,
+          publishingLockedAt: now,
+        },
+      })
+    }
 
     return NextResponse.json({ success: true })
   } catch (error) {
