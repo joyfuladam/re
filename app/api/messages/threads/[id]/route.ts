@@ -73,6 +73,7 @@ export async function GET(request: NextRequest, { params }: Params) {
   return NextResponse.json({
     id: thread.id,
     subject: thread.subject,
+    threadType: thread.threadType,
     song: thread.song
       ? {
           id: thread.song.id,
@@ -84,6 +85,8 @@ export async function GET(request: NextRequest, { params }: Params) {
       createdAt: m.createdAt,
       bodyHtml: m.bodyHtml,
       bodyText: m.bodyText,
+      parentMessageId: m.parentMessageId,
+      rootMessageId: m.rootMessageId,
       sender: m.sender,
     })),
   })
@@ -92,6 +95,8 @@ export async function GET(request: NextRequest, { params }: Params) {
 const replySchema = z.object({
   bodyHtml: z.string().optional(),
   bodyText: z.string().optional(),
+  /** Reply in thread (Slack-style); omit for main channel message */
+  parentMessageId: z.string().optional().nullable(),
 })
 
 // Post a reply to a thread
@@ -120,9 +125,21 @@ export async function POST(request: NextRequest, { params }: Params) {
     return NextResponse.json({ error: "Validation failed", details: parsed.error.errors }, { status: 400 })
   }
 
-  const { bodyHtml, bodyText } = parsed.data
+  const { bodyHtml, bodyText, parentMessageId } = parsed.data
   if (!bodyHtml && !bodyText) {
     return NextResponse.json({ error: "Message body is required" }, { status: 400 })
+  }
+
+  let rootMessageId: string | null = null
+  if (parentMessageId) {
+    const parent = await db.message.findFirst({
+      where: { id: parentMessageId, threadId },
+      select: { id: true, rootMessageId: true },
+    })
+    if (!parent) {
+      return NextResponse.json({ error: "Parent message not found in this thread" }, { status: 400 })
+    }
+    rootMessageId = parent.rootMessageId || parent.id
   }
 
   const message = await db.message.create({
@@ -131,6 +148,8 @@ export async function POST(request: NextRequest, { params }: Params) {
       senderId: userId,
       bodyHtml: bodyHtml || null,
       bodyText: bodyText || null,
+      parentMessageId: parentMessageId || null,
+      rootMessageId,
     },
   })
 

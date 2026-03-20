@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { db } from "@/lib/db"
+import { MessageThreadType } from "@prisma/client"
 import { isAdmin } from "@/lib/permissions"
 import { z } from "zod"
 import { applyEmailTemplatePlaceholders, renderEmailTemplate, sendTemplatedEmail } from "@/lib/email"
@@ -234,6 +235,7 @@ export async function POST(request: NextRequest) {
               data: {
                 subject: songTitle ? `[${songTitle}] ${rendered.subject}` : rendered.subject,
                 songId: songIdForThread,
+                threadType: songIdForThread ? MessageThreadType.song_scoped : MessageThreadType.group,
                 createdById: adminId,
                 participants: {
                   createMany: {

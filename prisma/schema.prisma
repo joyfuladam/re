@@ -53,6 +53,14 @@ enum NotificationType {
   SYSTEM
 }
 
+enum MessageThreadType {
+  direct // two participants
+  group // multi-party, general
+  song_scoped // tied to a song/recording context
+  org_wide // admin-only: label-wide channel
+  work_collab // future: tied to Work
+}
+
 model Collaborator {
   id                 String             @id @default(cuid())
   firstName          String
@@ -462,6 +470,7 @@ model MessageThread {
   id          String              @id @default(cuid())
   subject     String
   songId      String?
+  threadType  MessageThreadType   @default(group)
   createdById String
   createdAt   DateTime            @default(now())
   updatedAt   DateTime            @updatedAt
@@ -475,6 +484,7 @@ model MessageThread {
   @@index([songId])
   @@index([createdById])
   @@index([updatedAt])
+  @@index([threadType])
 }
 
 model MessageParticipant {
@@ -495,24 +505,30 @@ model MessageParticipant {
 }
 
 model Message {
-  id         String         @id @default(cuid())
-  threadId   String
-  senderId   String
-  bodyHtml   String?        @db.Text
-  bodyText   String?        @db.Text
-  emailLogId String?
-  createdAt  DateTime       @default(now())
+  id              String         @id @default(cuid())
+  threadId        String
+  senderId        String
+  bodyHtml        String?        @db.Text
+  bodyText        String?        @db.Text
+  emailLogId      String?
+  parentMessageId String?
+  rootMessageId   String?
+  createdAt       DateTime       @default(now())
 
   // Relations
-  thread    MessageThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
-  sender    Collaborator  @relation(fields: [senderId], references: [id], onDelete: Cascade)
-  emailLog  EmailLog?     @relation(fields: [emailLogId], references: [id])
-  notifications Notification[]
+  thread         MessageThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  sender         Collaborator  @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  emailLog       EmailLog?     @relation(fields: [emailLogId], references: [id])
+  parentMessage  Message?      @relation("MessageThreading", fields: [parentMessageId], references: [id], onDelete: SetNull)
+  childMessages  Message[]     @relation("MessageThreading")
+  notifications  Notification[]
 
   @@index([threadId])
   @@index([senderId])
   @@index([emailLogId])
   @@index([createdAt])
+  @@index([parentMessageId])
+  @@index([rootMessageId])
 }
 
 model Notification {
