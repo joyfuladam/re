@@ -2,10 +2,30 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { db } from "@/lib/db"
+import { MessageThreadType } from "@prisma/client"
 import { z } from "zod"
 
 interface Params {
   params: { id: string }
+}
+
+function peerDisplayName(u: {
+  firstName: string
+  lastName: string
+  email: string | null
+}) {
+  const n = `${u.firstName} ${u.lastName}`.trim()
+  return n || u.email || "Unknown"
+}
+
+function groupReactions(rows: { emoji: string; userId: string }[]) {
+  const map = new Map<string, string[]>()
+  for (const r of rows) {
+    const arr = map.get(r.emoji) ?? []
+    arr.push(r.userId)
+    map.set(r.emoji, arr)
+  }
+  return Array.from(map.entries()).map(([emoji, userIds]) => ({ emoji, userIds }))
 }
 
 // Fetch a single thread (and optionally mark as read)
@@ -29,11 +49,36 @@ export async function GET(request: NextRequest, { params }: Params) {
           work: {
             select: { id: true, title: true },
           },
+          participants: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                  email: true,
+                  image: true,
+                },
+              },
+            },
+          },
           messages: {
             orderBy: { createdAt: "asc" },
             include: {
               sender: {
-                select: { id: true, firstName: true, lastName: true, email: true },
+                select: { id: true, firstName: true, lastName: true, email: true, image: true },
+              },
+              reactions: {
+                select: { emoji: true, userId: true },
+              },
+              attachments: {
+                select: {
+                  id: true,
+                  fileName: true,
+                  mimeType: true,
+                  fileSize: true,
+                  storagePath: true,
+                },
               },
             },
           },
@@ -73,6 +118,22 @@ export async function GET(request: NextRequest, { params }: Params) {
 
   const thread = participant.thread
 
+  let directPeerName: string | null = null
+  if (thread.threadType === MessageThreadType.direct) {
+    const other = thread.participants.find((p) => p.userId !== userId)
+    if (other?.user) {
+      directPeerName = peerDisplayName(other.user)
+    }
+  }
+
+  const participantsPayload = thread.participants.map((p) => ({
+    userId: p.userId,
+    firstName: p.user.firstName,
+    lastName: p.user.lastName,
+    email: p.user.email,
+    image: p.user.image,
+  }))
+
   return NextResponse.json({
     id: thread.id,
     subject: thread.subject,
@@ -89,14 +150,26 @@ export async function GET(request: NextRequest, { params }: Params) {
           title: thread.work.title,
         }
       : null,
+    directPeerName,
+    participants: participantsPayload,
     messages: thread.messages.map((m) => ({
       id: m.id,
       createdAt: m.createdAt,
+      updatedAt: m.updatedAt,
+      deletedAt: m.deletedAt,
       bodyHtml: m.bodyHtml,
       bodyText: m.bodyText,
       parentMessageId: m.parentMessageId,
       rootMessageId: m.rootMessageId,
       sender: m.sender,
+      reactions: groupReactions(m.reactions),
+      attachments: m.attachments.map((a) => ({
+        id: a.id,
+        fileName: a.fileName,
+        mimeType: a.mimeType,
+        fileSize: a.fileSize,
+        url: `/api/messages/attachments/${a.id}/file`,
+      })),
     })),
   })
 }

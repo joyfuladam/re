@@ -40,3 +40,7 @@ This copies splits from each work’s oldest recording into work tables and mirr
 ## Composition-scoped messaging
 
 Migration `20260209140000_message_thread_work_id` adds optional `MessageThread.workId` so `work_collab` threads can reference a composition. Apply with your usual deploy flow (`npm run db:migrate:deploy` / Railway).
+
+## Messaging (reactions, attachments, edit)
+
+Migration `20260210120000_message_reactions_attachments` adds `Message.updatedAt`, `Message.deletedAt`, `MessageReaction`, and `MessageAttachment`. Run `prisma migrate deploy` after pull. Message files are stored under `uploads/messages/...` (same base as other uploads via `RAILWAY_VOLUME_MOUNT_PATH` when set).

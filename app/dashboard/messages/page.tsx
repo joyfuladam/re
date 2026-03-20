@@ -1,101 +1,25 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-
-type ThreadType = "direct" | "group" | "song_scoped" | "org_wide" | "work_collab"
-
-interface ThreadSummary {
-  id: string
-  subject: string
-  threadType: ThreadType
-  song: { id: string; title: string } | null
-  work?: { id: string; title: string } | null
-  lastMessage: {
-    id: string
-    createdAt: string
-    preview: string
-    sender: {
-      id: string
-      firstName: string | null
-      lastName: string | null
-      email: string | null
-    }
-  } | null
-  updatedAt: string
-  unreadCount: number
-}
-
-interface ThreadMessage {
-  id: string
-  createdAt: string
-  bodyHtml: string | null
-  bodyText: string | null
-  parentMessageId: string | null
-  rootMessageId: string | null
-  sender: {
-    id: string
-    firstName: string | null
-    lastName: string | null
-    email: string | null
-  }
-}
-
-interface ThreadDetail {
-  id: string
-  subject: string
-  threadType: ThreadType
-  song: { id: string; title: string } | null
-  work?: { id: string; title: string } | null
-  messages: ThreadMessage[]
-}
-
-interface Peer {
-  id: string
-  firstName: string
-  lastName: string
-  email: string | null
-}
-
-interface SongOption {
-  id: string
-  title: string
-}
-
-interface WorkOption {
-  id: string
-  title: string
-}
-
-const THREAD_TYPE_LABEL: Record<ThreadType, string> = {
-  direct: "Direct",
-  group: "Group",
-  song_scoped: "Recording",
-  org_wide: "Org-wide",
-  work_collab: "Composition",
-}
-
-function displayName(sender: ThreadMessage["sender"]) {
-  const n = `${sender.firstName ?? ""} ${sender.lastName ?? ""}`.trim()
-  return n || sender.email || "Unknown"
-}
+import { MessagesShell } from "@/components/messages/MessagesShell"
+import { ConversationSidebar } from "@/components/messages/ConversationSidebar"
+import { ConversationHeader } from "@/components/messages/ConversationHeader"
+import { MessageTimeline } from "@/components/messages/MessageTimeline"
+import { MessageComposer } from "@/components/messages/MessageComposer"
+import { ThreadPanelCol } from "@/components/messages/ThreadPanelCol"
+import { ComposeThreadDialog } from "@/components/messages/ComposeThreadDialog"
+import { MessagesSearchModal } from "@/components/messages/MessagesSearchModal"
+import type { Peer, SongOption, WorkOption } from "@/components/messages/compose-types"
+import type { ThreadDetail, ThreadMessage, ThreadSummary, ThreadType } from "@/components/messages/types"
 
 export default function MessagesPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const isAdmin = session?.user?.role === "admin"
+  const currentUserId = session?.user?.id ?? ""
 
   const [threads, setThreads] = useState<ThreadSummary[]>([])
   const [selectedThreadId, setSelectedThreadId] = useState<string | null>(null)
@@ -104,8 +28,8 @@ export default function MessagesPage() {
   const [loadingThread, setLoadingThread] = useState(false)
   const [replyBody, setReplyBody] = useState("")
   const [sendingReply, setSendingReply] = useState(false)
+  const [pendingFiles, setPendingFiles] = useState<File[]>([])
 
-  /** Root message id for Slack-style thread side panel */
   const [threadPanelRootId, setThreadPanelRootId] = useState<string | null>(null)
   const [threadReplyBody, setThreadReplyBody] = useState("")
   const [sendingThreadReply, setSendingThreadReply] = useState(false)
@@ -113,13 +37,23 @@ export default function MessagesPage() {
   const [composeOpen, setComposeOpen] = useState(false)
   const [composeSubject, setComposeSubject] = useState("")
   const [composeType, setComposeType] = useState<ThreadType>("group")
-  const [composeSongId, setComposeSongId] = useState<string>("")
+  const [composeSongId, setComposeSongId] = useState("")
   const [composeParticipantIds, setComposeParticipantIds] = useState<string[]>([])
   const [peers, setPeers] = useState<Peer[]>([])
   const [songs, setSongs] = useState<SongOption[]>([])
   const [worksOptions, setWorksOptions] = useState<WorkOption[]>([])
   const [composeWorkId, setComposeWorkId] = useState("")
   const [creatingThread, setCreatingThread] = useState(false)
+
+  const [sidebarSearch, setSidebarSearch] = useState("")
+  const [searchOpen, setSearchOpen] = useState(false)
+
+  const setComposeTypeSafe = useCallback((v: ThreadType) => {
+    setComposeType(v)
+    setComposeParticipantIds([])
+    setComposeSongId("")
+    setComposeWorkId("")
+  }, [])
 
   useEffect(() => {
     if (status === "loading") return
@@ -129,7 +63,36 @@ export default function MessagesPage() {
     }
     void loadThreads()
     void loadComposeData()
-  }, [status, session])
+  }, [status, session, router])
+
+  /** Poll active thread + list for “realtime-lite” */
+  useEffect(() => {
+    if (!selectedThreadId || status !== "authenticated") return
+    const tick = () => {
+      void loadThreads()
+      void selectThread(selectedThreadId, false)
+    }
+    const id = setInterval(tick, 12000)
+    const onVis = () => {
+      if (document.visibilityState === "visible") tick()
+    }
+    document.addEventListener("visibilitychange", onVis)
+    return () => {
+      clearInterval(id)
+      document.removeEventListener("visibilitychange", onVis)
+    }
+  }, [selectedThreadId, status])
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault()
+        setSearchOpen(true)
+      }
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [])
 
   const loadComposeData = async () => {
     try {
@@ -160,23 +123,22 @@ export default function MessagesPage() {
       const data = await res.json()
       setThreads(data)
       if (!selectedThreadId && data.length > 0) {
-        void selectThread(data[0].id)
+        void selectThread(data[0].id, true)
       }
     } finally {
       setLoadingThreads(false)
     }
   }
 
-  const selectThread = async (threadId: string) => {
+  const selectThread = async (threadId: string, markRead = true) => {
     setSelectedThreadId(threadId)
     setThreadPanelRootId(null)
     try {
       setLoadingThread(true)
-      const res = await fetch(`/api/messages/threads/${threadId}?markRead=true`, { cache: "no-store" })
-      if (!res.ok) {
-        return
-      }
-      const data = await res.json()
+      const q = markRead ? "?markRead=true" : ""
+      const res = await fetch(`/api/messages/threads/${threadId}${q}`, { cache: "no-store" })
+      if (!res.ok) return
+      const data: ThreadDetail = await res.json()
       setSelectedThread(data)
       setThreads((prev) =>
         prev.map((t) => (t.id === threadId ? { ...t, unreadCount: 0, updatedAt: t.updatedAt } : t))
@@ -200,8 +162,19 @@ export default function MessagesPage() {
 
   const lastMessageInThreadPanel = threadPanelMessages[threadPanelMessages.length - 1]
 
-  const sendReply = async (body: string, parentMessageId: string | null) => {
-    if (!selectedThreadId || !body.trim()) return false
+  const uploadFilesToMessage = async (messageId: string, files: File[]) => {
+    for (const file of files) {
+      const fd = new FormData()
+      fd.append("file", file)
+      await fetch(`/api/messages/${messageId}/attachments`, {
+        method: "POST",
+        body: fd,
+      })
+    }
+  }
+
+  const sendReply = async (body: string, parentMessageId: string | null): Promise<string | null> => {
+    if (!selectedThreadId || !body.trim()) return null
     const res = await fetch(`/api/messages/threads/${selectedThreadId}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -210,37 +183,71 @@ export default function MessagesPage() {
         parentMessageId: parentMessageId ?? undefined,
       }),
     })
-    return res.ok
+    if (!res.ok) return null
+    const data = await res.json().catch(() => ({}))
+    return typeof data.id === "string" ? data.id : null
   }
 
-  const handleSendReply = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSendReply = async () => {
     if (!selectedThreadId || !replyBody.trim()) return
     setSendingReply(true)
     try {
-      const ok = await sendReply(replyBody, null)
-      if (!ok) return
+      const id = await sendReply(replyBody, null)
+      if (!id) return
+      if (pendingFiles.length > 0) {
+        await uploadFilesToMessage(id, pendingFiles)
+        setPendingFiles([])
+      }
       setReplyBody("")
-      await selectThread(selectedThreadId)
+      await selectThread(selectedThreadId, true)
       await loadThreads()
     } finally {
       setSendingReply(false)
     }
   }
 
-  const handleSendThreadReply = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSendThreadReply = async () => {
     if (!selectedThreadId || !threadReplyBody.trim() || !threadPanelRootId) return
     setSendingThreadReply(true)
     try {
       const parentId = lastMessageInThreadPanel?.id ?? threadPanelRootId
-      const ok = await sendReply(threadReplyBody, parentId)
-      if (!ok) return
+      const id = await sendReply(threadReplyBody, parentId)
+      if (!id) return
       setThreadReplyBody("")
-      await selectThread(selectedThreadId)
+      await selectThread(selectedThreadId, true)
       await loadThreads()
     } finally {
       setSendingThreadReply(false)
+    }
+  }
+
+  const handleToggleReaction = async (messageId: string, emoji: string) => {
+    const res = await fetch(`/api/messages/${messageId}/reactions`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ emoji }),
+    })
+    if (res.ok && selectedThreadId) {
+      await selectThread(selectedThreadId, false)
+    }
+  }
+
+  const handleEditMessage = async (messageId: string, newText: string) => {
+    const res = await fetch(`/api/messages/${messageId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ bodyText: newText }),
+    })
+    if (res.ok && selectedThreadId) {
+      await selectThread(selectedThreadId, false)
+    }
+  }
+
+  const handleDeleteMessage = async (messageId: string) => {
+    const res = await fetch(`/api/messages/${messageId}`, { method: "DELETE" })
+    if (res.ok && selectedThreadId) {
+      await selectThread(selectedThreadId, false)
+      await loadThreads()
     }
   }
 
@@ -267,7 +274,7 @@ export default function MessagesPage() {
       })
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
-        alert(err.error || "Failed to create thread")
+        alert((err as { error?: string }).error || "Failed to create thread")
         return
       }
       const { id } = await res.json()
@@ -276,9 +283,9 @@ export default function MessagesPage() {
       setComposeParticipantIds([])
       setComposeSongId("")
       setComposeWorkId("")
-      setComposeType("group")
+      setComposeTypeSafe("group")
       await loadThreads()
-      await selectThread(id)
+      await selectThread(id, true)
     } finally {
       setCreatingThread(false)
     }
@@ -295,309 +302,142 @@ export default function MessagesPage() {
   }
 
   if (status === "loading" || loadingThreads) {
-    return <div>Loading messages...</div>
+    return (
+      <div className="flex flex-1 items-center justify-center p-8 text-muted-foreground">
+        Loading messages…
+      </div>
+    )
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold">Messages</h1>
-        <Button type="button" onClick={() => setComposeOpen(true)}>
-          New conversation
-        </Button>
+    <div className="flex min-h-0 flex-1 flex-col gap-3 px-3 pb-3 pt-2 md:px-4">
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-2">
+        <div>
+          <h1 className="text-xl font-bold tracking-tight">Messages</h1>
+          <p className="text-xs text-muted-foreground">
+            <kbd className="rounded border bg-muted px-1 py-0.5 text-[0.65rem]">⌘K</kbd> search · Enter
+            to send
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button type="button" variant="outline" size="sm" onClick={() => setSearchOpen(true)}>
+            Search
+          </Button>
+          <Button type="button" size="sm" onClick={() => setComposeOpen(true)}>
+            New conversation
+          </Button>
+        </div>
       </div>
 
-      {composeOpen && (
-        <Card className="border-primary/50">
-          <CardHeader>
-            <CardTitle className="text-lg">Start a conversation</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form className="space-y-4 max-w-lg" onSubmit={handleCreateThread}>
-              <div className="space-y-2">
-                <Label htmlFor="subj">Subject</Label>
-                <Input
-                  id="subj"
-                  value={composeSubject}
-                  onChange={(e) => setComposeSubject(e.target.value)}
-                  required
-                  placeholder="Topic"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Channel type</Label>
-                <Select
-                  value={composeType}
-                  onValueChange={(v) => {
-                    setComposeType(v as ThreadType)
-                    setComposeParticipantIds([])
-                    setComposeSongId("")
-                    setComposeWorkId("")
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="group">Group</SelectItem>
-                    <SelectItem value="direct">Direct (1 other person)</SelectItem>
-                    <SelectItem value="song_scoped">Recording-scoped</SelectItem>
-                    <SelectItem value="work_collab">Composition (work)</SelectItem>
-                    {isAdmin && <SelectItem value="org_wide">Org-wide (admin)</SelectItem>}
-                  </SelectContent>
-                </Select>
-              </div>
-              {composeType === "song_scoped" && (
-                <div className="space-y-2">
-                  <Label>Recording</Label>
-                  <Select value={composeSongId} onValueChange={setComposeSongId}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select recording" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {songs.map((s) => (
-                        <SelectItem key={s.id} value={s.id}>
-                          {s.title}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-              {composeType === "work_collab" && (
-                <div className="space-y-2">
-                  <Label>Composition (Work)</Label>
-                  <Select value={composeWorkId} onValueChange={setComposeWorkId}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select composition" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {worksOptions.map((w) => (
-                        <SelectItem key={w.id} value={w.id}>
-                          {w.title}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-              <div className="space-y-2">
-                <Label>
-                  {composeType === "direct" ? "Other person" : "Participants"}
-                </Label>
-                <div className="max-h-48 overflow-y-auto border rounded-md p-2 space-y-1">
-                  {peers.length === 0 && (
-                    <p className="text-sm text-muted-foreground">No collaborators available.</p>
-                  )}
-                  {peers.map((p) => {
-                    const checked =
-                      composeType === "direct"
-                        ? composeParticipantIds[0] === p.id
-                        : composeParticipantIds.includes(p.id)
-                    return (
-                      <label
-                        key={p.id}
-                        className="flex items-center gap-2 text-sm cursor-pointer"
-                      >
-                        <input
-                          type={composeType === "direct" ? "radio" : "checkbox"}
-                          name={composeType === "direct" ? "direct-peer" : undefined}
-                          checked={checked}
-                          onChange={() =>
-                            composeType === "direct"
-                              ? setComposeParticipantIds([p.id])
-                              : togglePeer(p.id)
-                          }
-                        />
-                        <span>
-                          {p.firstName} {p.lastName}
-                          {p.email ? ` (${p.email})` : ""}
-                        </span>
-                      </label>
-                    )
-                  })}
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <Button type="submit" disabled={creatingThread}>
-                  {creatingThread ? "Creating…" : "Create"}
-                </Button>
-                <Button type="button" variant="outline" onClick={() => setComposeOpen(false)}>
-                  Cancel
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-      )}
+      <ComposeThreadDialog
+        open={composeOpen}
+        onClose={() => setComposeOpen(false)}
+        isAdmin={!!isAdmin}
+        composeSubject={composeSubject}
+        setComposeSubject={setComposeSubject}
+        composeType={composeType}
+        setComposeType={setComposeTypeSafe}
+        composeSongId={composeSongId}
+        setComposeSongId={setComposeSongId}
+        composeWorkId={composeWorkId}
+        setComposeWorkId={setComposeWorkId}
+        composeParticipantIds={composeParticipantIds}
+        peers={peers}
+        songs={songs}
+        worksOptions={worksOptions}
+        creatingThread={creatingThread}
+        onSubmit={handleCreateThread}
+        togglePeer={togglePeer}
+      />
 
-      <div
-        className={`grid gap-4 ${threadPanelRootId ? "lg:grid-cols-[minmax(0,0.28fr)_minmax(0,0.42fr)_minmax(0,0.3fr)]" : "md:grid-cols-[minmax(0,0.38fr)_minmax(0,0.62fr)]"}`}
-      >
-        <Card className="h-[70vh] flex flex-col">
-          <CardHeader>
-            <CardTitle>Inbox</CardTitle>
-          </CardHeader>
-          <CardContent className="flex-1 overflow-y-auto space-y-1">
-            {threads.length === 0 && (
-              <p className="text-sm text-muted-foreground">No conversations yet.</p>
+      <MessagesSearchModal
+        open={searchOpen}
+        onClose={() => setSearchOpen(false)}
+        onSelectThread={(id) => void selectThread(id, true)}
+      />
+
+      <MessagesShell
+        hasThread={!!threadPanelRootId}
+        sidebar={
+          <div className="flex min-h-0 flex-1 flex-col">
+            <div className="shrink-0 border-b px-3 py-2">
+              <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Inbox
+              </span>
+            </div>
+            <ConversationSidebar
+              threads={threads}
+              selectedThreadId={selectedThreadId}
+              onSelect={(id) => void selectThread(id, true)}
+              search={sidebarSearch}
+              onSearchChange={setSidebarSearch}
+            />
+          </div>
+        }
+        main={
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-background">
+            {loadingThread && (
+              <p className="p-4 text-sm text-muted-foreground">Loading conversation…</p>
             )}
-            {threads.map((thread) => (
-              <button
-                key={thread.id}
-                type="button"
-                onClick={() => void selectThread(thread.id)}
-                className={`w-full text-left rounded-md border px-3 py-2 text-sm transition-colors ${
-                  selectedThreadId === thread.id ? "bg-muted" : "hover:bg-muted/60"
-                }`}
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <div className="font-medium line-clamp-1">{thread.subject}</div>
-                  {thread.unreadCount > 0 && (
-                    <span className="ml-2 inline-flex min-h-[1.1rem] min-w-[1.1rem] items-center justify-center rounded-full bg-red-600 px-1 text-[0.65rem] font-bold text-white">
-                      {thread.unreadCount}
-                    </span>
-                  )}
-                </div>
-                <div className="text-[0.65rem] uppercase tracking-wide text-muted-foreground mt-0.5">
-                  {THREAD_TYPE_LABEL[thread.threadType] ?? thread.threadType}
-                </div>
-                {thread.song && (
-                  <div className="text-xs text-muted-foreground mt-0.5">
-                    Recording: {thread.song.title}
-                  </div>
-                )}
-                {thread.work && (
-                  <div className="text-xs text-muted-foreground mt-0.5">
-                    Composition: {thread.work.title}
-                  </div>
-                )}
-                {thread.lastMessage && (
-                  <div className="mt-1 text-xs text-muted-foreground line-clamp-2">
-                    {thread.lastMessage.preview || "New message"}
-                  </div>
-                )}
-              </button>
-            ))}
-          </CardContent>
-        </Card>
-
-        <Card className="h-[70vh] flex flex-col min-w-0">
-          <CardHeader>
-            <CardTitle>Conversation</CardTitle>
-          </CardHeader>
-          <CardContent className="flex-1 flex flex-col gap-4 overflow-hidden">
-            {loadingThread && <p className="text-sm text-muted-foreground">Loading thread...</p>}
             {!loadingThread && !selectedThread && (
-              <p className="text-sm text-muted-foreground">Select a message thread to view.</p>
+              <p className="p-6 text-sm text-muted-foreground">Select a conversation from the list.</p>
             )}
             {!loadingThread && selectedThread && (
               <>
-                <div className="space-y-1 shrink-0">
-                  <h2 className="text-lg font-semibold">{selectedThread.subject}</h2>
-                  <p className="text-xs text-muted-foreground">
-                    {THREAD_TYPE_LABEL[selectedThread.threadType] ?? selectedThread.threadType}
-                  </p>
-                  {selectedThread.song && (
-                    <p className="text-sm text-muted-foreground">
-                      Related recording: {selectedThread.song.title}
-                    </p>
-                  )}
-                  {selectedThread.work && (
-                    <p className="text-sm text-muted-foreground">
-                      Related composition: {selectedThread.work.title}
-                    </p>
-                  )}
-                </div>
-                <div className="flex-1 overflow-y-auto border rounded-md p-3 space-y-3 bg-background min-h-0">
-                  {mainMessages.map((m) => (
-                    <div key={m.id} className="space-y-1">
-                      <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
-                        <span>{displayName(m.sender)}</span>
-                        <span>{new Date(m.createdAt).toLocaleString()}</span>
-                      </div>
-                      <div className="rounded-md bg-muted px-3 py-2 text-sm">
-                        {m.bodyHtml ? (
-                          <div dangerouslySetInnerHTML={{ __html: m.bodyHtml }} />
-                        ) : (
-                          <p className="whitespace-pre-wrap">{m.bodyText}</p>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="h-7 text-xs"
-                          onClick={() => {
-                            setThreadPanelRootId(m.id)
-                            setThreadReplyBody("")
-                          }}
-                        >
-                          {threadPanelRootId === m.id ? "Thread open" : "Reply in thread"}
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <form className="space-y-2 shrink-0" onSubmit={handleSendReply}>
-                  <textarea
-                    className="w-full min-h-[80px] resize-y rounded-md border px-3 py-2 text-sm"
-                    placeholder="Message…"
-                    value={replyBody}
-                    onChange={(e) => setReplyBody(e.target.value)}
-                  />
-                  <Button type="submit" disabled={sendingReply || !replyBody.trim()}>
-                    {sendingReply ? "Sending…" : "Send"}
-                  </Button>
-                </form>
+                <ConversationHeader thread={selectedThread} />
+                <MessageTimeline
+                  messages={mainMessages}
+                  currentUserId={currentUserId}
+                  threadPanelRootId={threadPanelRootId}
+                  onReplyInThread={(messageId) => {
+                    setThreadPanelRootId(messageId)
+                    setThreadReplyBody("")
+                  }}
+                  onToggleReaction={handleToggleReaction}
+                  onEditMessage={handleEditMessage}
+                  onDeleteMessage={handleDeleteMessage}
+                />
+                <MessageComposer
+                  value={replyBody}
+                  onChange={setReplyBody}
+                  onSubmit={() => void handleSendReply()}
+                  sending={sendingReply}
+                  disabled={false}
+                  onFilesSelected={(files) => {
+                    if (files?.length) setPendingFiles((p) => [...p, ...Array.from(files)])
+                  }}
+                />
+                {pendingFiles.length > 0 && (
+                  <div className="border-t px-3 py-2 text-xs text-muted-foreground">
+                    {pendingFiles.length} file(s) will attach after send ·{" "}
+                    <button
+                      type="button"
+                      className="text-primary underline"
+                      onClick={() => setPendingFiles([])}
+                    >
+                      Clear
+                    </button>
+                  </div>
+                )}
               </>
             )}
-          </CardContent>
-        </Card>
-
-        {threadPanelRootId && selectedThread && (
-          <Card className="h-[70vh] flex flex-col min-w-0 border-l-4 border-l-primary/50">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-base">Thread</CardTitle>
-              <Button type="button" variant="ghost" size="sm" onClick={() => setThreadPanelRootId(null)}>
-                Close
-              </Button>
-            </CardHeader>
-            <CardContent className="flex-1 flex flex-col gap-3 overflow-hidden">
-              <div className="flex-1 overflow-y-auto space-y-1">
-                {threadPanelMessages.map((m) => (
-                  <div key={m.id} className="space-y-1">
-                    <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
-                      <span>{displayName(m.sender)}</span>
-                      <span>{new Date(m.createdAt).toLocaleString()}</span>
-                    </div>
-                    <div className="rounded-md bg-muted/80 px-3 py-2 text-sm">
-                      {m.bodyHtml ? (
-                        <div dangerouslySetInnerHTML={{ __html: m.bodyHtml }} />
-                      ) : (
-                        <p className="whitespace-pre-wrap">{m.bodyText}</p>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <form className="space-y-2" onSubmit={handleSendThreadReply}>
-                <textarea
-                  className="w-full min-h-[64px] resize-y rounded-md border px-3 py-2 text-sm"
-                  placeholder="Reply in thread…"
-                  value={threadReplyBody}
-                  onChange={(e) => setThreadReplyBody(e.target.value)}
-                />
-                <Button type="submit" disabled={sendingThreadReply || !threadReplyBody.trim()}>
-                  {sendingThreadReply ? "Sending…" : "Send"}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-        )}
-      </div>
+          </div>
+        }
+        thread={
+          threadPanelRootId && selectedThread ? (
+            <ThreadPanelCol
+              messages={threadPanelMessages}
+              onClose={() => setThreadPanelRootId(null)}
+              replyBody={threadReplyBody}
+              onReplyBodyChange={setThreadReplyBody}
+              onSendReply={() => void handleSendThreadReply()}
+              sending={sendingThreadReply}
+            />
+          ) : (
+            <div />
+          )
+        }
+      />
     </div>
   )
 }

@@ -3,7 +3,8 @@
 import Link from "next/link"
 import Image from "next/image"
 import { useSession, signOut } from "next-auth/react"
-import { useRouter } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
+import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { RoleBadge } from "@/components/auth/RoleBadge"
 import { NotificationBell } from "@/components/nav/NotificationBell"
@@ -22,6 +23,8 @@ export default function DashboardLayout({
 }) {
   const { data: session, status } = useSession()
   const router = useRouter()
+  const pathname = usePathname()
+  const isMessagesRoute = pathname?.startsWith("/dashboard/messages")
 
   if (status === "loading") {
     return <div>Loading...</div>
@@ -35,7 +38,7 @@ export default function DashboardLayout({
   const isAdmin = session?.user?.role === "admin"
 
   return (
-    <div className="min-h-screen">
+    <div className={cn("min-h-screen", isMessagesRoute && "flex flex-col")}>
       <nav className="border-b">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-6">
@@ -143,7 +146,13 @@ export default function DashboardLayout({
           </div>
         </div>
       </nav>
-      <main className="container mx-auto px-4 py-8">
+      <main
+        className={cn(
+          isMessagesRoute
+            ? "flex min-h-0 flex-1 flex-col px-0 py-0"
+            : "container mx-auto px-4 py-8"
+        )}
+      >
         {children}
       </main>
     </div>

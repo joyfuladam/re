@@ -34,9 +34,29 @@ export function resolveSongMediaPath(
   return { absolutePath, storagePath }
 }
 
+/** Message thread attachments: messages/{threadId}/{messageId}/{filename} */
+export function resolveMessageAttachmentPath(
+  threadId: string,
+  messageId: string,
+  filename: string
+): { absolutePath: string; storagePath: string } {
+  const base = getUploadsBaseDir()
+  const safe = filename.replace(/[^a-zA-Z0-9._-]/g, "_") || "file"
+  const storagePath = `messages/${threadId}/${messageId}/${safe}`
+  const absolutePath = path.join(base, storagePath)
+  const dir = path.dirname(absolutePath)
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true })
+  }
+  return { absolutePath, storagePath }
+}
+
 export {
   MEDIA_CATEGORIES,
   MAX_FILE_SIZE_BYTES,
   getMimeCategory,
   type MediaCategory,
 } from "./media-types"
+
+/** Max size for in-app message attachments (any type). */
+export const MESSAGE_ATTACHMENT_MAX_BYTES = 25 * 1024 * 1024

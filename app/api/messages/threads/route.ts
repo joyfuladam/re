@@ -6,6 +6,15 @@ import { isAdmin } from "@/lib/permissions"
 import { MessageThreadType } from "@prisma/client"
 import { z } from "zod"
 
+function peerDisplayName(u: {
+  firstName: string
+  lastName: string
+  email: string | null
+}) {
+  const n = `${u.firstName} ${u.lastName}`.trim()
+  return n || u.email || "Unknown"
+}
+
 const createThreadSchema = z.object({
   subject: z.string().min(1).max(500),
   participantIds: z.array(z.string().min(1)).min(1),
@@ -34,12 +43,26 @@ export async function GET(_request: NextRequest) {
           work: {
             select: { id: true, title: true },
           },
+          participants: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                  email: true,
+                  image: true,
+                },
+              },
+            },
+          },
           messages: {
             orderBy: { createdAt: "desc" },
             take: 1,
+            where: { deletedAt: null },
             include: {
               sender: {
-                select: { id: true, firstName: true, lastName: true, email: true },
+                select: { id: true, firstName: true, lastName: true, email: true, image: true },
               },
             },
           },
@@ -63,6 +86,7 @@ export async function GET(_request: NextRequest) {
         const unreadCount = await db.message.count({
           where: {
             threadId: thread.id,
+            deletedAt: null,
             ...(p.lastReadAt
               ? {
                   createdAt: {
@@ -72,6 +96,14 @@ export async function GET(_request: NextRequest) {
               : {}),
           },
         })
+
+        let directPeerName: string | null = null
+        if (thread.threadType === MessageThreadType.direct) {
+          const other = thread.participants.find((part) => part.userId !== userId)
+          if (other?.user) {
+            directPeerName = peerDisplayName(other.user)
+          }
+        }
 
         return {
           id: thread.id,
@@ -89,6 +121,7 @@ export async function GET(_request: NextRequest) {
                 title: thread.work.title,
               }
             : null,
+          directPeerName,
           lastMessage: lastMessage
             ? {
                 id: lastMessage.id,

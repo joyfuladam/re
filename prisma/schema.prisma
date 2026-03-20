@@ -101,6 +101,8 @@ model Collaborator {
   sessions           Session[]
   messageParticipants MessageParticipant[]
   sentMessages        Message[]
+  messageReactions    MessageReaction[]
+  messageAttachmentsUploaded MessageAttachment[] @relation("MessageAttachmentUploader")
   notifications       Notification[]
   createdThreads      MessageThread[]
   workCollaborators   WorkCollaborator[]
@@ -574,6 +576,8 @@ model Message {
   parentMessageId String?
   rootMessageId   String?
   createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  deletedAt       DateTime?
 
   // Relations
   thread         MessageThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
@@ -582,6 +586,8 @@ model Message {
   parentMessage  Message?      @relation("MessageThreading", fields: [parentMessageId], references: [id], onDelete: SetNull)
   childMessages  Message[]     @relation("MessageThreading")
   notifications  Notification[]
+  reactions      MessageReaction[]
+  attachments    MessageAttachment[]
 
   @@index([threadId])
   @@index([senderId])
@@ -589,6 +595,39 @@ model Message {
   @@index([createdAt])
   @@index([parentMessageId])
   @@index([rootMessageId])
+  @@index([deletedAt])
+}
+
+model MessageReaction {
+  id        String   @id @default(cuid())
+  messageId String
+  userId    String
+  emoji     String
+  createdAt DateTime @default(now())
+
+  message Message      @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    Collaborator @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId, emoji])
+  @@index([messageId])
+  @@index([userId])
+}
+
+model MessageAttachment {
+  id          String   @id @default(cuid())
+  messageId   String
+  uploaderId  String
+  fileName    String
+  mimeType    String
+  fileSize    Int
+  storagePath String
+  createdAt   DateTime @default(now())
+
+  message  Message      @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  uploader Collaborator @relation("MessageAttachmentUploader", fields: [uploaderId], references: [id], onDelete: Cascade)
+
+  @@index([messageId])
+  @@index([uploaderId])
 }
 
 model Notification {
