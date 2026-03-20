@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -13,7 +13,7 @@ import { ThreadPanelCol } from "@/components/messages/ThreadPanelCol"
 import { ComposeThreadDialog } from "@/components/messages/ComposeThreadDialog"
 import { MessagesSearchModal } from "@/components/messages/MessagesSearchModal"
 import type { Peer, SongOption, WorkOption } from "@/components/messages/compose-types"
-import type { ThreadDetail, ThreadMessage, ThreadSummary, ThreadType } from "@/components/messages/types"
+import type { ThreadDetail, ThreadSummary, ThreadType } from "@/components/messages/types"
 
 export default function MessagesPage() {
   const { data: session, status } = useSession()
@@ -48,12 +48,68 @@ export default function MessagesPage() {
   const [sidebarSearch, setSidebarSearch] = useState("")
   const [searchOpen, setSearchOpen] = useState(false)
 
+  /** Ref so loadThreads can auto-select first thread without stale closure / effect loops */
+  const selectedThreadIdRef = useRef<string | null>(null)
+  selectedThreadIdRef.current = selectedThreadId
+
   const setComposeTypeSafe = useCallback((v: ThreadType) => {
     setComposeType(v)
     setComposeParticipantIds([])
     setComposeSongId("")
     setComposeWorkId("")
   }, [])
+
+  const selectThread = useCallback(
+    async (
+      threadId: string,
+      markRead = true,
+      opts?: { silent?: boolean; keepThreadPanel?: boolean }
+    ) => {
+      const silent = opts?.silent ?? false
+      const keepThreadPanel = opts?.keepThreadPanel ?? false
+
+      setSelectedThreadId(threadId)
+      if (!keepThreadPanel) {
+        setThreadPanelRootId(null)
+      }
+      try {
+        if (!silent) setLoadingThread(true)
+        const q = markRead ? "?markRead=true" : ""
+        const res = await fetch(`/api/messages/threads/${threadId}${q}`, { cache: "no-store" })
+        if (!res.ok) return
+        const data: ThreadDetail = await res.json()
+        setSelectedThread(data)
+        setThreads((prev) =>
+          prev.map((t) => (t.id === threadId ? { ...t, unreadCount: 0, updatedAt: t.updatedAt } : t))
+        )
+      } finally {
+        if (!silent) setLoadingThread(false)
+      }
+    },
+    []
+  )
+
+  const loadThreads = useCallback(
+    async (opts?: { silent?: boolean }) => {
+      const silent = opts?.silent ?? false
+      try {
+        if (!silent) setLoadingThreads(true)
+        const res = await fetch("/api/messages/threads", { cache: "no-store" })
+        if (!res.ok) {
+          setThreads([])
+          return
+        }
+        const data = await res.json()
+        setThreads(data)
+        if (!silent && data.length > 0 && !selectedThreadIdRef.current) {
+          void selectThread(data[0].id, true)
+        }
+      } finally {
+        if (!silent) setLoadingThreads(false)
+      }
+    },
+    [selectThread]
+  )
 
   useEffect(() => {
     if (status === "loading") return
@@ -63,16 +119,16 @@ export default function MessagesPage() {
     }
     void loadThreads()
     void loadComposeData()
-  }, [status, session, router])
+  }, [status, session, router, loadThreads])
 
-  /** Poll active thread + list for “realtime-lite” */
+  /** Poll active thread + list for “realtime-lite” — silent refresh (no loading spinners, keep thread panel open) */
   useEffect(() => {
     if (!selectedThreadId || status !== "authenticated") return
     const tick = () => {
-      void loadThreads()
-      void selectThread(selectedThreadId, false)
+      void loadThreads({ silent: true })
+      void selectThread(selectedThreadId, false, { silent: true, keepThreadPanel: true })
     }
-    const id = setInterval(tick, 12000)
+    const id = setInterval(tick, 20000)
     const onVis = () => {
       if (document.visibilityState === "visible") tick()
     }
@@ -81,7 +137,7 @@ export default function MessagesPage() {
       clearInterval(id)
       document.removeEventListener("visibilitychange", onVis)
     }
-  }, [selectedThreadId, status])
+  }, [selectedThreadId, status, loadThreads, selectThread])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -109,42 +165,6 @@ export default function MessagesPage() {
       }
     } catch {
       /* ignore */
-    }
-  }
-
-  const loadThreads = async () => {
-    try {
-      setLoadingThreads(true)
-      const res = await fetch("/api/messages/threads", { cache: "no-store" })
-      if (!res.ok) {
-        setThreads([])
-        return
-      }
-      const data = await res.json()
-      setThreads(data)
-      if (!selectedThreadId && data.length > 0) {
-        void selectThread(data[0].id, true)
-      }
-    } finally {
-      setLoadingThreads(false)
-    }
-  }
-
-  const selectThread = async (threadId: string, markRead = true) => {
-    setSelectedThreadId(threadId)
-    setThreadPanelRootId(null)
-    try {
-      setLoadingThread(true)
-      const q = markRead ? "?markRead=true" : ""
-      const res = await fetch(`/api/messages/threads/${threadId}${q}`, { cache: "no-store" })
-      if (!res.ok) return
-      const data: ThreadDetail = await res.json()
-      setSelectedThread(data)
-      setThreads((prev) =>
-        prev.map((t) => (t.id === threadId ? { ...t, unreadCount: 0, updatedAt: t.updatedAt } : t))
-      )
-    } finally {
-      setLoadingThread(false)
     }
   }
 
@@ -199,8 +219,8 @@ export default function MessagesPage() {
         setPendingFiles([])
       }
       setReplyBody("")
-      await selectThread(selectedThreadId, true)
-      await loadThreads()
+      await selectThread(selectedThreadId, true, { silent: true, keepThreadPanel: true })
+      await loadThreads({ silent: true })
     } finally {
       setSendingReply(false)
     }
@@ -214,8 +234,8 @@ export default function MessagesPage() {
       const id = await sendReply(threadReplyBody, parentId)
       if (!id) return
       setThreadReplyBody("")
-      await selectThread(selectedThreadId, true)
-      await loadThreads()
+      await selectThread(selectedThreadId, true, { silent: true, keepThreadPanel: true })
+      await loadThreads({ silent: true })
     } finally {
       setSendingThreadReply(false)
     }
@@ -228,7 +248,7 @@ export default function MessagesPage() {
       body: JSON.stringify({ emoji }),
     })
     if (res.ok && selectedThreadId) {
-      await selectThread(selectedThreadId, false)
+      await selectThread(selectedThreadId, false, { silent: true, keepThreadPanel: true })
     }
   }
 
@@ -239,15 +259,15 @@ export default function MessagesPage() {
       body: JSON.stringify({ bodyText: newText }),
     })
     if (res.ok && selectedThreadId) {
-      await selectThread(selectedThreadId, false)
+      await selectThread(selectedThreadId, false, { silent: true, keepThreadPanel: true })
     }
   }
 
   const handleDeleteMessage = async (messageId: string) => {
     const res = await fetch(`/api/messages/${messageId}`, { method: "DELETE" })
     if (res.ok && selectedThreadId) {
-      await selectThread(selectedThreadId, false)
-      await loadThreads()
+      await selectThread(selectedThreadId, false, { silent: true, keepThreadPanel: true })
+      await loadThreads({ silent: true })
     }
   }
 
@@ -284,7 +304,7 @@ export default function MessagesPage() {
       setComposeSongId("")
       setComposeWorkId("")
       setComposeTypeSafe("group")
-      await loadThreads()
+      await loadThreads({ silent: true })
       await selectThread(id, true)
     } finally {
       setCreatingThread(false)
