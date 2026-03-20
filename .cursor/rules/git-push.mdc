@@ -1,0 +1,10 @@
+---
+description: Git workflow after code changes
+globs: "**/*"
+---
+
+# Git push after updates
+
+When completing a meaningful change (feature, fix, migration, or multi-file update), **commit and push to `origin/main`** unless the user explicitly asked not to or there is nothing to commit.
+
+Use a clear conventional-style message (e.g. `fix(scope): …`, `feat(scope): …`).
