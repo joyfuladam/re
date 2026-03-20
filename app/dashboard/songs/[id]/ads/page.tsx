@@ -468,7 +468,7 @@ export default function AdBuilderPage() {
                       </button>
                       <Button
                         type="button"
-                        size="xs"
+                        size="sm"
                         variant={d.status === "ready" ? "outline" : "secondary"}
                         disabled={publishingId === d.id || d.status === "ready"}
                         onClick={() => handlePublishToMeta(d.id)}
