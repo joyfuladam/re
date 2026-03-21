@@ -252,9 +252,6 @@ export async function DELETE(
 
   const songId = params.id
   const userIsAdmin = await isAdmin(session)
-  if (!userIsAdmin) {
-    return NextResponse.json({ error: "Forbidden: admin only" }, { status: 403 })
-  }
 
   const { searchParams } = new URL(request.url)
   const mediaId = searchParams.get("mediaId")
@@ -270,6 +267,14 @@ export async function DELETE(
   })
   if (!media) {
     return NextResponse.json({ error: "Media not found" }, { status: 404 })
+  }
+
+  if (!userIsAdmin) {
+    const canDelete =
+      media.category === "audio" && (await canAccessSong(session, songId))
+    if (!canDelete) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
   }
 
   const base = (await import("@/lib/uploads")).getUploadsBaseDir()

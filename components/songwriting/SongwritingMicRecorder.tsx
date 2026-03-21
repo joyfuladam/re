@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 
@@ -19,61 +19,87 @@ function pickRecorderMimeType(): { mimeType: string; extension: string } {
   return { mimeType: "", extension: "webm" }
 }
 
+function hslFromCssVar(name: string, fallback: string): string {
+  if (typeof document === "undefined") return fallback
+  const raw = getComputedStyle(document.documentElement).getPropertyValue(name).trim()
+  return raw ? `hsl(${raw})` : fallback
+}
+
 function LiveWaveform({ stream }: { stream: MediaStream | null }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const rafRef = useRef<number>(0)
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!stream) return
     const canvas = canvasRef.current
     if (!canvas) return
 
-    const ctx = new AudioContext()
-    const source = ctx.createMediaStreamSource(stream)
-    const analyser = ctx.createAnalyser()
+    let cancelled = false
+    const audioCtx = new AudioContext()
+    const source = audioCtx.createMediaStreamSource(stream)
+    const analyser = audioCtx.createAnalyser()
     analyser.fftSize = 2048
     source.connect(analyser)
     const bufferLength = analyser.frequencyBinCount
     const dataArray = new Uint8Array(bufferLength)
 
-    const draw = () => {
-      const c = canvasRef.current
-      const g = c?.getContext("2d")
-      if (!c || !g) return
-      analyser.getByteTimeDomainData(dataArray)
-      const w = c.width
-      const h = c.height
-      g.fillStyle = "hsl(var(--muted))"
-      g.fillRect(0, 0, w, h)
-      g.lineWidth = 2
-      g.strokeStyle = "hsl(var(--primary))"
-      g.beginPath()
-      const slice = w / bufferLength
-      let x = 0
-      for (let i = 0; i < bufferLength; i++) {
-        const v = dataArray[i] / 128.0
-        const y = (v * h) / 2
-        if (i === 0) g.moveTo(x, y)
-        else g.lineTo(x, y)
-        x += slice
-      }
-      g.stroke()
-      rafRef.current = requestAnimationFrame(draw)
+    const fillStyle = () => hslFromCssVar("--muted", "#f4f4f5")
+    const strokeStyle = () => hslFromCssVar("--primary", "#18181b")
+
+    const start = () => {
+      void (async () => {
+        await audioCtx.resume()
+        if (cancelled) return
+
+        const dpr = typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1
+        const rect = canvas.getBoundingClientRect()
+        const drawW = Math.max(1, rect.width)
+        const drawH = Math.max(1, rect.height)
+        canvas.width = Math.floor(drawW * dpr)
+        canvas.height = Math.floor(drawH * dpr)
+
+        const g = canvas.getContext("2d")
+        if (!g || cancelled) return
+        g.setTransform(1, 0, 0, 1, 0, 0)
+        g.scale(dpr, dpr)
+        g.lineWidth = 2
+
+        const draw = () => {
+          if (cancelled) return
+          if (audioCtx.state === "suspended") void audioCtx.resume()
+          analyser.getByteTimeDomainData(dataArray)
+          g.fillStyle = fillStyle()
+          g.fillRect(0, 0, drawW, drawH)
+          g.strokeStyle = strokeStyle()
+          g.beginPath()
+          const slice = drawW / bufferLength
+          let x = 0
+          for (let i = 0; i < bufferLength; i++) {
+            const v = dataArray[i] / 128.0
+            const y = (v * drawH) / 2
+            if (i === 0) g.moveTo(x, y)
+            else g.lineTo(x, y)
+            x += slice
+          }
+          g.stroke()
+          rafRef.current = requestAnimationFrame(draw)
+        }
+        draw()
+      })()
     }
-    draw()
+    start()
 
     return () => {
+      cancelled = true
       cancelAnimationFrame(rafRef.current)
       source.disconnect()
-      void ctx.close()
+      void audioCtx.close()
     }
   }, [stream])
 
   return (
     <canvas
       ref={canvasRef}
-      width={600}
-      height={80}
       className="h-20 w-full max-w-full rounded-md border bg-muted/40"
       aria-hidden
     />

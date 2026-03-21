@@ -19,6 +19,7 @@ import {
 } from "@/lib/songwriting/chart-mode"
 import { VisualChordChartEditor } from "@/components/songwriting/VisualChordChartEditor"
 import { SongwritingMicRecorder } from "@/components/songwriting/SongwritingMicRecorder"
+import { AudioWaveformPreview } from "@/components/songwriting/AudioWaveformPreview"
 import {
   Select,
   SelectContent,
@@ -49,6 +50,7 @@ export default function SongwritingWorkspacePage() {
   >([])
   const [fileUploading, setFileUploading] = useState(false)
   const [micUploading, setMicUploading] = useState(false)
+  const [deletingDemoId, setDeletingDemoId] = useState<string | null>(null)
   const demoBusy = fileUploading || micUploading
   const [demoLabel, setDemoLabel] = useState("Rough demo")
   const [chartMode, setChartMode] = useState<SongwritingChartMode>("chordpro")
@@ -154,6 +156,25 @@ export default function SongwritingWorkspacePage() {
       await loadDemos()
     } finally {
       setFileUploading(false)
+    }
+  }
+
+  const deleteDemo = async (mediaId: string) => {
+    if (!songId) return
+    if (!confirm("Delete this demo? This cannot be undone.")) return
+    setDeletingDemoId(mediaId)
+    try {
+      const res = await fetch(`/api/songs/${songId}/media?mediaId=${encodeURIComponent(mediaId)}`, {
+        method: "DELETE",
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        alert((err as { error?: string }).error || "Delete failed")
+        return
+      }
+      await loadDemos()
+    } finally {
+      setDeletingDemoId(null)
     }
   }
 
@@ -284,11 +305,24 @@ export default function SongwritingWorkspacePage() {
                 />
               )}
               {demos.length > 0 && (
-                <ul className="space-y-2 text-sm">
+                <ul className="space-y-3 text-sm">
                   {demos.map((d) => (
-                    <li key={d.id} className="flex flex-wrap items-center justify-between gap-2 rounded-md border px-3 py-2">
-                      <span className="font-medium">{d.label || d.filename}</span>
-                      <audio controls className="h-8 max-w-full" src={`/api/media/${d.id}/file`}>
+                    <li key={d.id} className="space-y-2 rounded-md border px-3 py-2">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <span className="font-medium">{d.label || d.filename}</span>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                          disabled={demoBusy || deletingDemoId === d.id}
+                          onClick={() => void deleteDemo(d.id)}
+                        >
+                          {deletingDemoId === d.id ? "Deleting…" : "Delete"}
+                        </Button>
+                      </div>
+                      <AudioWaveformPreview src={`/api/media/${d.id}/file`} />
+                      <audio controls className="h-8 w-full max-w-full" src={`/api/media/${d.id}/file`}>
                         <track kind="captions" />
                       </audio>
                     </li>
