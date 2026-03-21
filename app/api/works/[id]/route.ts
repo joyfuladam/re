@@ -14,6 +14,7 @@ const patchWorkSchema = z.object({
   iswcCode: z.string().optional().nullable(),
   /** Label share of the composition’s publishing (0–100), stored as 0–1 on Work. */
   labelPublishingSharePercent: z.number().min(0).max(100).optional(),
+  compositionStatus: z.enum(["in_progress", "finalized"]).optional(),
 })
 
 export async function GET(
@@ -128,6 +129,9 @@ export async function PATCH(
       data.labelPublishingShare = numberToDecimal(
         validated.labelPublishingSharePercent / 100
       )
+    }
+    if (validated.compositionStatus !== undefined) {
+      data.compositionStatus = validated.compositionStatus
     }
 
     try {

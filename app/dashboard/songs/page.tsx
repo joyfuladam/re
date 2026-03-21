@@ -83,9 +83,14 @@ export default function SongsPage() {
           </p>
         </div>
         {isAdmin && (
-          <Link href="/dashboard/songs/new">
-            <Button>Add Song</Button>
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            <Link href="/dashboard/songs/new?songwriting=1">
+              <Button variant="default">New songwriting project</Button>
+            </Link>
+            <Link href="/dashboard/songs/new">
+              <Button variant="outline">Add recording</Button>
+            </Link>
+          </div>
         )}
       </div>
 

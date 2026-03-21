@@ -32,6 +32,11 @@ export default function SongwritingWorkspacePage() {
   const songId = typeof params?.id === "string" ? params.id : params?.id?.[0]
 
   const [title, setTitle] = useState("")
+  const [workInfo, setWorkInfo] = useState<{
+    id: string
+    title: string
+    compositionStatus: "in_progress" | "finalized"
+  } | null>(null)
   const [lines, setLines] = useState<LyricLine[]>([{ chords: "", text: "" }])
   const [saving, setSaving] = useState(false)
   const [threadId, setThreadId] = useState<string | null>(null)
@@ -51,6 +56,15 @@ export default function SongwritingWorkspacePage() {
     }
     const song = await res.json()
     setTitle(song.title ?? "")
+    if (song.work?.id && song.work?.compositionStatus) {
+      setWorkInfo({
+        id: song.work.id,
+        title: song.work.title ?? "",
+        compositionStatus: song.work.compositionStatus,
+      })
+    } else {
+      setWorkInfo(null)
+    }
     setLines(parseLines(song.songwritingLyricsJson))
     setLoading(false)
   }, [songId])
@@ -141,8 +155,26 @@ export default function SongwritingWorkspacePage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Songwriting</h1>
           <p className="text-muted-foreground">{title || "Recording"}</p>
+          {workInfo && (
+            <p className="mt-1 text-sm text-muted-foreground">
+              Composition (work):{" "}
+              <Link href={`/dashboard/works/${workInfo.id}`} className="font-medium text-foreground underline-offset-4 hover:underline">
+                {workInfo.title || "Untitled"}
+              </Link>
+              {workInfo.compositionStatus === "in_progress" ? (
+                <span className="text-amber-700 dark:text-amber-400"> · in progress</span>
+              ) : (
+                <span> · finalized</span>
+              )}
+            </p>
+          )}
         </div>
         <div className="flex flex-wrap gap-2">
+          <Link href="/dashboard/songs/new?songwriting=1">
+            <Button variant="default" size="sm">
+              New songwriting project
+            </Button>
+          </Link>
           <Link href={`/dashboard/songs/${songId}`}>
             <Button variant="outline" size="sm">
               Back to recording

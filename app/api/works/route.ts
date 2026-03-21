@@ -66,6 +66,7 @@ export async function GET(request: NextRequest) {
         id: true,
         title: true,
         iswcCode: true,
+        compositionStatus: true,
         labelPublishingShare: true,
         createdAt: true,
         _count: { select: { songs: true } },

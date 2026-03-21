@@ -144,18 +144,26 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+/// Lifecycle of the underlying composition (separate from recording status).
+enum WorkCompositionStatus {
+  in_progress
+  finalized
+}
+
 /// Musical work (composition). Songs (recordings) link here via `workId`.
 /// Phase 1: optional link; backfill script creates one Work per existing Song.
 /// Publishing splits (writer / publisher) are stored at Work level when recordings share a composition.
 model Work {
-  id                     String   @id @default(cuid())
+  id                     String                 @id @default(cuid())
   title                  String
-  iswcCode               String?  @unique
-  labelPublishingShare   Decimal  @default(0.5) @db.Decimal(5, 4)
-  publishingLocked       Boolean  @default(false)
+  iswcCode               String?                @unique
+  /// Draft compositions vs catalogued / registered works.
+  compositionStatus      WorkCompositionStatus  @default(in_progress)
+  labelPublishingShare   Decimal                @default(0.5) @db.Decimal(5, 4)
+  publishingLocked       Boolean                @default(false)
   publishingLockedAt     DateTime?
-  createdAt              DateTime @default(now())
-  updatedAt              DateTime @updatedAt
+  createdAt              DateTime               @default(now())
+  updatedAt              DateTime               @updatedAt
   songs                  Song[]
   workCollaborators      WorkCollaborator[]
   workPublishingEntities WorkPublishingEntity[]

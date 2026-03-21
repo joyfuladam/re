@@ -134,7 +134,12 @@ export default function DashboardPage() {
                 </Link>
                 <Link href="/dashboard/songs/new">
                   <Button variant="outline" className="w-full justify-start">
-                    Add Song
+                    Add recording
+                  </Button>
+                </Link>
+                <Link href="/dashboard/songs/new?songwriting=1">
+                  <Button variant="outline" className="w-full justify-start">
+                    New songwriting project
                   </Button>
                 </Link>
               </>

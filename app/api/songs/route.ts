@@ -27,6 +27,11 @@ const songSchema = z.object({
   status: z.enum(["draft", "active", "archived"]).default("draft"),
   /** Link to an existing composition; if omitted, a new Work is created from the recording title. */
   workId: z.string().optional().nullable(),
+  /**
+   * When true (e.g. from songwriting flow), creates a new composition (Work) in progress
+   * and must not link to an existing work.
+   */
+  songwritingIntent: z.boolean().optional(),
 })
 
 export async function GET(request: NextRequest) {
@@ -78,6 +83,7 @@ export async function GET(request: NextRequest) {
             id: true,
             title: true,
             iswcCode: true,
+            compositionStatus: true,
           },
         },
       },
@@ -119,6 +125,13 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const validated = songSchema.parse(body)
 
+    if (validated.songwritingIntent && validated.workId) {
+      return NextResponse.json(
+        { error: "Songwriting flow creates a new composition; omit workId or set songwritingIntent to false." },
+        { status: 400 }
+      )
+    }
+
     // Auto-generate catalog number if not provided
     let catalogNumber = validated.catalogNumber
     if (!catalogNumber) {
@@ -133,7 +146,9 @@ export async function POST(request: NextRequest) {
           throw new Error("WORK_NOT_FOUND")
         }
       } else {
-        const work = await createWorkForSong(tx, validated.title, validated.iswcCode)
+        const work = await createWorkForSong(tx, validated.title, validated.iswcCode, {
+          compositionStatus: "in_progress",
+        })
         workId = work.id
       }
 
@@ -162,6 +177,7 @@ export async function POST(request: NextRequest) {
               id: true,
               title: true,
               iswcCode: true,
+              compositionStatus: true,
             },
           },
         },

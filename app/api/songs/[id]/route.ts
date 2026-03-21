@@ -64,6 +64,7 @@ export async function GET(
             id: true,
             title: true,
             iswcCode: true,
+            compositionStatus: true,
           },
         },
       },

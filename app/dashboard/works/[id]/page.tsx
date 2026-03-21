@@ -41,6 +41,7 @@ type WorkDetail = {
   id: string
   title: string
   iswcCode: string | null
+  compositionStatus?: "in_progress" | "finalized"
   labelPublishingShare: unknown
   publishingLocked?: boolean
   createdAt: string
@@ -63,6 +64,7 @@ export default function WorkDetailPage() {
   const [title, setTitle] = useState("")
   const [iswcCode, setIswcCode] = useState("")
   const [labelPct, setLabelPct] = useState("50")
+  const [finalizing, setFinalizing] = useState(false)
 
   const isAdmin = session?.user?.role === "admin"
 
@@ -126,6 +128,36 @@ export default function WorkDetailPage() {
     }
   }, [session, isAdmin, router])
 
+  const handleFinalizeComposition = async () => {
+    if (!id || !work || work.compositionStatus !== "in_progress") return
+    if (
+      !confirm(
+        "Mark this composition as finalized? Use when the work is registered or ready for catalog."
+      )
+    ) {
+      return
+    }
+    setFinalizing(true)
+    try {
+      const res = await fetch(`/api/works/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ compositionStatus: "finalized" }),
+      })
+      if (res.ok) {
+        const data: WorkDetail = await res.json()
+        setWork(data)
+      } else {
+        const err = await res.json().catch(() => ({}))
+        alert(typeof err.error === "string" ? err.error : "Failed to update")
+      }
+    } catch {
+      alert("Failed to update")
+    } finally {
+      setFinalizing(false)
+    }
+  }
+
   const handleSave = async () => {
     if (!id || !work) return
     const pct = parseFloat(labelPct)
@@ -185,6 +217,17 @@ export default function WorkDetailPage() {
           <h1 className="text-3xl font-bold">{work.title}</h1>
           <p className="text-muted-foreground">
             {work.iswcCode ? `ISWC: ${work.iswcCode}` : "No ISWC on file"}
+            {work.compositionStatus && (
+              <>
+                {" "}
+                ·{" "}
+                <span className="font-medium text-foreground">
+                  {work.compositionStatus === "in_progress"
+                    ? "Composition in progress"
+                    : "Composition finalized"}
+                </span>
+              </>
+            )}
           </p>
         </div>
         <div className="flex gap-2">
@@ -211,7 +254,18 @@ export default function WorkDetailPage() {
               </Button>
             </>
           ) : (
-            <Button onClick={() => setEditing(true)}>Edit</Button>
+            <>
+              <Button onClick={() => setEditing(true)}>Edit</Button>
+              {work.compositionStatus === "in_progress" && (
+                <Button
+                  variant="secondary"
+                  onClick={() => void handleFinalizeComposition()}
+                  disabled={finalizing}
+                >
+                  {finalizing ? "Updating…" : "Mark composition finalized"}
+                </Button>
+              )}
+            </>
           )}
           <Button variant="outline" asChild>
             <Link href="/dashboard/works">All works</Link>

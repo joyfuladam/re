@@ -48,3 +48,10 @@ Migration `20260210120000_message_reactions_attachments` adds `Message.updatedAt
 ## Songwriting workspace
 
 Migration `20260211100000_songwriting_workspace` adds enum value `songwriting` on `MessageThreadType` and `Song.songwritingLyricsJson` (JSON). The app exposes `/dashboard/songs/[id]/songwriting` with lyrics/chords, rough demo uploads (`SongMedia` with collaborator header `x-songwriting-demo: 1`), and a canonical songwriting message thread per recording (participants = song collaborators).
+
+## Composition lifecycle (`Work.compositionStatus`)
+
+Migration `20260211120000_work_composition_status` adds `WorkCompositionStatus` (`in_progress` | `finalized`) on `Work`. Existing rows are set to `finalized`; new compositions created with `POST /api/songs` (new work) default to `in_progress`.
+
+- **Songwriting flow:** `POST /api/songs` with `songwritingIntent: true` (and no `workId`) creates a new work in progress; UI entry: `/dashboard/songs/new?songwriting=1` → redirects to `/dashboard/songs/[id]/songwriting`.
+- **Finalize:** Admins can PATCH `/api/works/[id]` with `{ "compositionStatus": "finalized" }` or use **Mark composition finalized** on `/dashboard/works/[id]`.
