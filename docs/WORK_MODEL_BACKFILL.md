@@ -49,6 +49,8 @@ Migration `20260210120000_message_reactions_attachments` adds `Message.updatedAt
 
 Migration `20260211100000_songwriting_workspace` adds enum value `songwriting` on `MessageThreadType` and `Song.songwritingLyricsJson` (JSON). The app exposes `/dashboard/songs/[id]/songwriting` with lyrics/chords, rough demo uploads (`SongMedia` with collaborator header `x-songwriting-demo: 1`), and a canonical songwriting message thread per recording (participants = song collaborators).
 
+**Lyrics format:** `songwritingLyricsJson` stores **`{ "v": 2, "chordpro": "..." }`** (ChordPro-style source). Legacy saves as an array of `{ chords, text }` rows are converted on load. `PATCH /api/songs/[id]/songwriting` accepts `{ "chordpro": "..." }` (preferred) or legacy `{ lines: [...] }` (converted to v2 on save).
+
 ## Composition lifecycle (`Work.compositionStatus`)
 
 Migration `20260211120000_work_composition_status` adds `WorkCompositionStatus` (`in_progress` | `finalized`) on `Work`. Existing rows are set to `finalized`; new compositions created with `POST /api/songs` (new work) default to `in_progress`.
