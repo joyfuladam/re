@@ -59,6 +59,7 @@ enum MessageThreadType {
   song_scoped // tied to a song/recording context
   org_wide // admin-only: label-wide channel
   work_collab // future: tied to Work
+  songwriting // collaborative writing chat for a recording; appears in Messages with Songwriting label
 }
 
 model Collaborator {
@@ -222,6 +223,8 @@ model Song {
   status                    String                 @default("draft") // draft, active, archived
   notes                     String?
   promoMaterialsFolderId    String? // Google Drive folder ID for promo materials
+  /// Stacked chord + lyric lines for collaborative songwriting workspace (JSON array of { chords?, text })
+  songwritingLyricsJson     Json?
   createdAt                 DateTime               @default(now())
   updatedAt                 DateTime               @updatedAt
   // Relations

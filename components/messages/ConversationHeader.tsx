@@ -21,10 +21,28 @@ export function ConversationHeader({ thread }: { thread: ThreadDetail }) {
       </div>
       {thread.song && (
         <p className="mt-1 text-sm text-muted-foreground">
-          Recording:{" "}
-          <Link href={`/dashboard/songs/${thread.song.id}`} className="font-medium text-primary hover:underline">
-            {thread.song.title}
-          </Link>
+          {thread.threadType === "songwriting" ? (
+            <>
+              Songwriting chat ·{" "}
+              <Link href={`/dashboard/songs/${thread.song.id}`} className="font-medium text-primary hover:underline">
+                {thread.song.title}
+              </Link>
+              {" · "}
+              <Link
+                href={`/dashboard/songs/${thread.song.id}/songwriting`}
+                className="font-medium text-primary hover:underline"
+              >
+                Open workspace
+              </Link>
+            </>
+          ) : (
+            <>
+              Recording:{" "}
+              <Link href={`/dashboard/songs/${thread.song.id}`} className="font-medium text-primary hover:underline">
+                {thread.song.title}
+              </Link>
+            </>
+          )}
         </p>
       )}
       {thread.work && (

@@ -1153,6 +1153,9 @@ export default function SongDetailPage() {
               </Button>
             </>
           )}
+          <Link href={`/dashboard/songs/${song.id}/songwriting`}>
+            <Button variant="secondary">Songwriting</Button>
+          </Link>
           <Link href="/dashboard/songs">
             <Button variant="outline">Back to Songs</Button>
           </Link>

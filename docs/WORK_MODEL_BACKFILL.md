@@ -44,3 +44,7 @@ Migration `20260209140000_message_thread_work_id` adds optional `MessageThread.w
 ## Messaging (reactions, attachments, edit)
 
 Migration `20260210120000_message_reactions_attachments` adds `Message.updatedAt`, `Message.deletedAt`, `MessageReaction`, and `MessageAttachment`. Run `prisma migrate deploy` after pull. Message files are stored under `uploads/messages/...` (same base as other uploads via `RAILWAY_VOLUME_MOUNT_PATH` when set).
+
+## Songwriting workspace
+
+Migration `20260211100000_songwriting_workspace` adds enum value `songwriting` on `MessageThreadType` and `Song.songwritingLyricsJson` (JSON). The app exposes `/dashboard/songs/[id]/songwriting` with lyrics/chords, rough demo uploads (`SongMedia` with collaborator header `x-songwriting-demo: 1`), and a canonical songwriting message thread per recording (participants = song collaborators).

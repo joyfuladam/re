@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { db } from "@/lib/db"
-import { isAdmin } from "@/lib/permissions"
+import { canAccessSong, isAdmin } from "@/lib/permissions"
 import busboy from "busboy"
 import { Readable } from "node:stream"
 import fs from "node:fs"
@@ -32,9 +32,12 @@ export async function GET(
   }
 
   const songId = params.id
+  const songwritingList = request.nextUrl.searchParams.get("context") === "songwriting"
   const userIsAdmin = await isAdmin(session)
-  if (!userIsAdmin) {
-    return NextResponse.json({ error: "Forbidden: admin only" }, { status: 403 })
+  const canList =
+    userIsAdmin || (songwritingList && (await canAccessSong(session, songId)))
+  if (!canList) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
 
   const song = await db.song.findUnique({
@@ -71,9 +74,11 @@ export async function POST(
   }
 
   const songId = params.id
+  const songwritingDemo = request.headers.get("x-songwriting-demo") === "1"
   const userIsAdmin = await isAdmin(session)
-  if (!userIsAdmin) {
-    return NextResponse.json({ error: "Forbidden: admin only" }, { status: 403 })
+  const canCollabDemo = songwritingDemo && (await canAccessSong(session, songId))
+  if (!userIsAdmin && !canCollabDemo) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
 
   const song = await db.song.findUnique({
@@ -180,6 +185,23 @@ export async function POST(
           );
         }
 
+        if (canCollabDemo && !userIsAdmin) {
+          if (resolvedCategory !== "audio") {
+            if (absolutePath && fs.existsSync(absolutePath)) fs.unlinkSync(absolutePath)
+            return resolve(
+              NextResponse.json(
+                { error: "Collaborator songwriting uploads must be audio (rough demos)" },
+                { status: 400 }
+              )
+            )
+          }
+        }
+
+        const demoLabel =
+          canCollabDemo && !userIsAdmin
+            ? (label?.trim() || "Rough demo (songwriting)")
+            : label || undefined
+
         const media = await db.songMedia.create({
           data: {
             songId,
@@ -188,7 +210,7 @@ export async function POST(
             storagePath,
             mimeType,
             fileSize,
-            label: label || undefined,
+            label: demoLabel,
           },
         })
 

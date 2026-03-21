@@ -71,7 +71,9 @@ export function ConversationSidebar({
                       </div>
                       {thread.song && (
                         <div className="mt-0.5 truncate text-[0.7rem] text-muted-foreground">
-                          Recording · {thread.song.title}
+                          {thread.threadType === "songwriting"
+                            ? `Songwriting · ${thread.song.title}`
+                            : `Recording · ${thread.song.title}`}
                         </div>
                       )}
                       {thread.work && (

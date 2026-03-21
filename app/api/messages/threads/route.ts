@@ -166,6 +166,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "songId is required for song_scoped threads" }, { status: 400 })
   }
 
+  if (threadType === MessageThreadType.songwriting && !songId) {
+    return NextResponse.json({ error: "songId is required for songwriting threads" }, { status: 400 })
+  }
+
   if (threadType === MessageThreadType.work_collab && !workId) {
     return NextResponse.json({ error: "workId is required for work_collab threads" }, { status: 400 })
   }

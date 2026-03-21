@@ -1,4 +1,10 @@
-export type ThreadType = "direct" | "group" | "song_scoped" | "org_wide" | "work_collab"
+export type ThreadType =
+  | "direct"
+  | "group"
+  | "song_scoped"
+  | "songwriting"
+  | "org_wide"
+  | "work_collab"
 
 export interface MessageSender {
   id: string
@@ -77,6 +83,7 @@ export const THREAD_TYPE_LABEL: Record<ThreadType, string> = {
   direct: "Direct",
   group: "Group",
   song_scoped: "Recording",
+  songwriting: "Songwriting",
   org_wide: "Org-wide",
   work_collab: "Composition",
 }
@@ -85,6 +92,7 @@ export const THREAD_SECTION_ORDER: ThreadType[] = [
   "direct",
   "group",
   "song_scoped",
+  "songwriting",
   "work_collab",
   "org_wide",
 ]
