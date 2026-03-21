@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useDeferredValue, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
 import { useSession } from "next-auth/react"
@@ -8,22 +8,10 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { LyricsChordEditor, type LyricLine } from "@/components/songwriting/LyricsChordEditor"
+import { ChordProEditor } from "@/components/songwriting/ChordProEditor"
+import { ChordChartPreview } from "@/components/songwriting/ChordChartPreview"
 import { SongwritingChatPanel } from "@/components/songwriting/SongwritingChatPanel"
-
-function parseLines(raw: unknown): LyricLine[] {
-  if (!Array.isArray(raw)) return [{ chords: "", text: "" }]
-  return raw.map((row) => {
-    if (row && typeof row === "object" && "text" in row) {
-      const o = row as { chords?: unknown; text?: unknown }
-      return {
-        chords: typeof o.chords === "string" ? o.chords : "",
-        text: typeof o.text === "string" ? o.text : "",
-      }
-    }
-    return { chords: "", text: "" }
-  })
-}
+import { normalizeSongwritingJson } from "@/lib/songwriting/chordpro-storage"
 
 export default function SongwritingWorkspacePage() {
   const params = useParams()
@@ -37,7 +25,8 @@ export default function SongwritingWorkspacePage() {
     title: string
     compositionStatus: "in_progress" | "finalized"
   } | null>(null)
-  const [lines, setLines] = useState<LyricLine[]>([{ chords: "", text: "" }])
+  const [chordpro, setChordpro] = useState("")
+  const deferredPreview = useDeferredValue(chordpro)
   const [saving, setSaving] = useState(false)
   const [threadId, setThreadId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -65,7 +54,7 @@ export default function SongwritingWorkspacePage() {
     } else {
       setWorkInfo(null)
     }
-    setLines(parseLines(song.songwritingLyricsJson))
+    setChordpro(normalizeSongwritingJson(song.songwritingLyricsJson).chordpro)
     setLoading(false)
   }, [songId])
 
@@ -106,7 +95,7 @@ export default function SongwritingWorkspacePage() {
       const res = await fetch(`/api/songs/${songId}/songwriting`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lines }),
+        body: JSON.stringify({ chordpro }),
       })
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
@@ -188,10 +177,18 @@ export default function SongwritingWorkspacePage() {
           <Card>
             <CardHeader>
               <CardTitle>Lyrics & chords</CardTitle>
-              <CardDescription>Collaborative chord chart — saved to this recording.</CardDescription>
+              <CardDescription>
+                ChordPro-style source with a live chart preview. Saved to this recording.
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <LyricsChordEditor lines={lines} onChange={setLines} disabled={saving} />
+              <div className="grid gap-4 md:grid-cols-2">
+                <ChordProEditor value={chordpro} onChange={setChordpro} disabled={saving} />
+                <div className="space-y-2">
+                  <p className="text-sm font-medium">Preview</p>
+                  <ChordChartPreview chordpro={deferredPreview} />
+                </div>
+              </div>
               <Button type="button" onClick={() => void saveLyrics()} disabled={saving}>
                 {saving ? "Saving…" : "Save lyrics"}
               </Button>

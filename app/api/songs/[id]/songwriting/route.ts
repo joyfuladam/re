@@ -5,6 +5,12 @@ import { db } from "@/lib/db"
 import { canAccessSong } from "@/lib/permissions"
 import { Prisma } from "@prisma/client"
 import { z } from "zod"
+import {
+  MAX_CHORDPRO_LENGTH,
+  linesToChordPro,
+  serializeSongwritingForDb,
+  type LegacyLyricLine,
+} from "@/lib/songwriting/chordpro-storage"
 
 export const dynamic = "force-dynamic"
 
@@ -13,10 +19,16 @@ const lineSchema = z.object({
   text: z.string(),
 })
 
-const patchSchema = z.object({
-  /** Stacked lines: chords above lyrics per row */
-  lines: z.array(lineSchema).min(0),
-})
+const patchSchema = z
+  .object({
+    /** ChordPro source (preferred). */
+    chordpro: z.string().max(MAX_CHORDPRO_LENGTH).optional(),
+    /** Legacy stacked rows — converted to v2 ChordPro on save. */
+    lines: z.array(lineSchema).min(0).optional(),
+  })
+  .refine((d) => d.chordpro !== undefined || d.lines !== undefined, {
+    message: "Provide chordpro or lines",
+  })
 
 interface Params {
   params: { id: string }
@@ -40,10 +52,20 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     return NextResponse.json({ error: "Validation failed", details: parsed.error.flatten() }, { status: 400 })
   }
 
-  const { lines } = parsed.data
+  let json: Prisma.InputJsonValue
+  if (parsed.data.chordpro !== undefined) {
+    json = serializeSongwritingForDb(parsed.data.chordpro) as unknown as Prisma.InputJsonValue
+  } else {
+    const legacy: LegacyLyricLine[] = (parsed.data.lines ?? []).map((row) => ({
+      chords: row.chords ?? "",
+      text: row.text,
+    }))
+    json = serializeSongwritingForDb(linesToChordPro(legacy)) as unknown as Prisma.InputJsonValue
+  }
+
   await db.song.update({
     where: { id: songId },
-    data: { songwritingLyricsJson: lines as Prisma.InputJsonValue },
+    data: { songwritingLyricsJson: json },
   })
 
   return NextResponse.json({ ok: true })
