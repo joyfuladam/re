@@ -101,3 +101,46 @@ export function parseChordProDocument(source: string): ParsedSection[] {
 
   return sections.length > 0 ? sections : [{ title: "Song", lines: [] }]
 }
+
+/** Serialize one lyric line back to ChordPro text. */
+export function lineToChordProLine(line: ParsedLyricLine): string {
+  if (line.segments.length === 0) {
+    return line.raw
+  }
+  return line.segments
+    .map((seg) => {
+      if (seg.chord) {
+        return `[${seg.chord}]${seg.text}`
+      }
+      return seg.text
+    })
+    .join("")
+}
+
+/** Map section title to a `{...}` directive line (inverse of directiveTitle where possible). */
+export function sectionTitleToDirectiveLine(title: string, sectionIndex: number): string | null {
+  const t = title.trim()
+  const lower = t.toLowerCase()
+  if (lower === "song" && sectionIndex === 0) return null
+  if (lower === "verse") return "{verse}"
+  if (lower === "chorus") return "{chorus}"
+  if (lower === "bridge") return "{bridge}"
+  if (lower === "title") return "{title}"
+  return `{${t}}`
+}
+
+/**
+ * Serialize parsed sections to ChordPro source. First section titled "Song" has no leading directive.
+ */
+export function documentToChordPro(sections: ParsedSection[]): string {
+  const out: string[] = []
+  for (let i = 0; i < sections.length; i++) {
+    const sec = sections[i]
+    const dir = sectionTitleToDirectiveLine(sec.title, i)
+    if (dir) out.push(dir)
+    for (const line of sec.lines) {
+      out.push(lineToChordProLine(line))
+    }
+  }
+  return out.join("\n")
+}

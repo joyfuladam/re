@@ -17,7 +17,8 @@ import {
   setStoredChartMode,
   type SongwritingChartMode,
 } from "@/lib/songwriting/chart-mode"
-import { VisualChartPlaceholder } from "@/components/songwriting/VisualChartPlaceholder"
+import { VisualChordChartEditor } from "@/components/songwriting/VisualChordChartEditor"
+import { SongwritingMicRecorder } from "@/components/songwriting/SongwritingMicRecorder"
 import {
   Select,
   SelectContent,
@@ -46,7 +47,9 @@ export default function SongwritingWorkspacePage() {
   const [demos, setDemos] = useState<
     Array<{ id: string; filename: string; label: string | null; mimeType: string; category: string; createdAt: string }>
   >([])
-  const [uploading, setUploading] = useState(false)
+  const [fileUploading, setFileUploading] = useState(false)
+  const [micUploading, setMicUploading] = useState(false)
+  const demoBusy = fileUploading || micUploading
   const [demoLabel, setDemoLabel] = useState("Rough demo")
   const [chartMode, setChartMode] = useState<SongwritingChartMode>("chordpro")
 
@@ -132,7 +135,7 @@ export default function SongwritingWorkspacePage() {
 
   const uploadDemo = async (file: File | null) => {
     if (!file || !songId) return
-    setUploading(true)
+    setFileUploading(true)
     try {
       const fd = new FormData()
       fd.append("category", "audio")
@@ -150,7 +153,7 @@ export default function SongwritingWorkspacePage() {
       }
       await loadDemos()
     } finally {
-      setUploading(false)
+      setFileUploading(false)
     }
   }
 
@@ -233,9 +236,10 @@ export default function SongwritingWorkspacePage() {
                   </div>
                 </div>
               ) : (
-                <VisualChartPlaceholder
-                  chordpro={deferredPreview}
-                  onSwitchToChordPro={() => handleChartModeChange("chordpro")}
+                <VisualChordChartEditor
+                  chordpro={chordpro}
+                  onChange={setChordpro}
+                  disabled={saving}
                 />
               )}
               <Button type="button" onClick={() => void saveLyrics()} disabled={saving}>
@@ -265,11 +269,20 @@ export default function SongwritingWorkspacePage() {
                   id="demo-file"
                   type="file"
                   accept="audio/*"
-                  disabled={uploading}
+                  disabled={demoBusy}
                   onChange={(e) => void uploadDemo(e.target.files?.[0] ?? null)}
                 />
-                {uploading && <p className="text-sm text-muted-foreground">Uploading…</p>}
+                {fileUploading && <p className="text-sm text-muted-foreground">Uploading…</p>}
               </div>
+              {songId && (
+                <SongwritingMicRecorder
+                  songId={songId}
+                  demoLabel={demoLabel}
+                  onUploaded={() => void loadDemos()}
+                  onUploadingChange={setMicUploading}
+                  disabled={demoBusy}
+                />
+              )}
               {demos.length > 0 && (
                 <ul className="space-y-2 text-sm">
                   {demos.map((d) => (
