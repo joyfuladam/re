@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useDeferredValue, useState } from "react"
+import { useCallback, useEffect, useDeferredValue, useRef, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
 import { useSession } from "next-auth/react"
@@ -54,6 +54,7 @@ export default function SongwritingWorkspacePage() {
   const demoBusy = fileUploading || micUploading
   const [demoLabel, setDemoLabel] = useState("Demo")
   const [chartMode, setChartMode] = useState<SongwritingChartMode>("chordpro")
+  const demoFileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     setChartMode(getStoredChartMode())
@@ -156,6 +157,7 @@ export default function SongwritingWorkspacePage() {
       await loadDemos()
     } finally {
       setFileUploading(false)
+      if (demoFileInputRef.current) demoFileInputRef.current.value = ""
     }
   }
 
@@ -282,27 +284,51 @@ export default function SongwritingWorkspacePage() {
                 onChange={(e) => setDemoLabel(e.target.value)}
                 placeholder="Demo"
               />
+              <p className="text-xs text-muted-foreground">
+                Used as the label for both file uploads and new mic recordings.
+              </p>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="demo-file">Upload audio</Label>
-              <Input
-                id="demo-file"
-                type="file"
-                accept="audio/*"
-                disabled={demoBusy}
-                onChange={(e) => void uploadDemo(e.target.files?.[0] ?? null)}
-              />
-              {fileUploading && <p className="text-sm text-muted-foreground">Uploading…</p>}
+
+            <div className="grid gap-4 lg:grid-cols-2 lg:items-stretch">
+              <div className="space-y-3 rounded-md border border-dashed p-3">
+                <div>
+                  <p className="text-sm font-medium">Upload a file</p>
+                  <p className="text-xs text-muted-foreground">
+                    Add an existing audio file from your device (MP3, WAV, WebM, M4A, etc.).
+                  </p>
+                </div>
+                <input
+                  ref={demoFileInputRef}
+                  id="demo-file"
+                  type="file"
+                  accept="audio/*"
+                  className="sr-only"
+                  disabled={demoBusy}
+                  onChange={(e) => void uploadDemo(e.target.files?.[0] ?? null)}
+                />
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    disabled={demoBusy}
+                    aria-label="Choose audio file to upload as a demo"
+                    onClick={() => demoFileInputRef.current?.click()}
+                  >
+                    {fileUploading ? "Uploading…" : "Choose audio file"}
+                  </Button>
+                </div>
+              </div>
+
+              {songId ? (
+                <SongwritingMicRecorder
+                  songId={songId}
+                  demoLabel={demoLabel}
+                  onUploaded={() => void loadDemos()}
+                  onUploadingChange={setMicUploading}
+                  disabled={demoBusy}
+                />
+              ) : null}
             </div>
-            {songId && (
-              <SongwritingMicRecorder
-                songId={songId}
-                demoLabel={demoLabel}
-                onUploaded={() => void loadDemos()}
-                onUploadingChange={setMicUploading}
-                disabled={demoBusy}
-              />
-            )}
             {demos.length > 0 && (
               <ul className="space-y-3 text-sm">
                 {demos.map((d) => (
