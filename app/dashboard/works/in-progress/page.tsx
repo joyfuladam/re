@@ -19,7 +19,7 @@ type WorkRow = {
   primarySongId: string | null
 }
 
-export default function WorksPage() {
+export default function WorksInProgressPage() {
   const { data: session } = useSession()
   const [works, setWorks] = useState<WorkRow[]>([])
   const [loading, setLoading] = useState(true)
@@ -39,6 +39,7 @@ export default function WorksPage() {
     try {
       const params = new URLSearchParams()
       params.set("limit", "500")
+      params.set("compositionStatus", "in_progress")
       if (search.trim()) params.set("q", search.trim())
       const response = await fetch(`/api/works?${params.toString()}`)
       if (response.ok) {
@@ -61,7 +62,7 @@ export default function WorksPage() {
   if (!isAdmin) {
     return (
       <div className="space-y-6">
-        <h1 className="text-3xl font-bold">Works</h1>
+        <h1 className="text-3xl font-bold">Works in progress</h1>
         <p className="text-muted-foreground">Access denied</p>
       </div>
     )
@@ -71,14 +72,14 @@ export default function WorksPage() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Works (Compositions)</h1>
+          <h1 className="text-3xl font-bold">Works in progress</h1>
           <p className="text-muted-foreground">
-            Compositions link to one or more recordings (songs) in the catalog
+            Compositions not yet finalized. Open songwriting on the earliest linked recording.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Link href="/dashboard/works/in-progress">
-            <Button variant="outline">Works in progress</Button>
+          <Link href="/dashboard/works">
+            <Button variant="outline">All works</Button>
           </Link>
           <Link href="/dashboard/works/new">
             <Button>New composition</Button>
@@ -89,7 +90,7 @@ export default function WorksPage() {
       <Card>
         <CardHeader>
           <CardTitle>Search</CardTitle>
-          <CardDescription>Filter by composition title</CardDescription>
+          <CardDescription>Filter in-progress compositions by title</CardDescription>
         </CardHeader>
         <CardContent>
           <Input
@@ -104,7 +105,7 @@ export default function WorksPage() {
         {works.length === 0 ? (
           <Card>
             <CardContent className="py-10 text-center text-muted-foreground">
-              No compositions found. Create one or add a recording from Songs.
+              No compositions in progress. Finalized works stay on the main Works list.
             </CardContent>
           </Card>
         ) : (
@@ -115,27 +116,17 @@ export default function WorksPage() {
                 : "—"
             const canSongwriting = w.primarySongId != null && w._count.songs > 0
             return (
-              <Card
-                key={w.id}
-                className={
-                  w.compositionStatus === "in_progress"
-                    ? "border-amber-500/30"
-                    : undefined
-                }
-              >
+              <Card key={w.id} className="border-amber-500/40">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
                       <CardTitle className="text-lg">
-                        <Link
-                          href={`/dashboard/works/${w.id}`}
-                          className="hover:underline"
-                        >
+                        <Link href={`/dashboard/works/${w.id}`} className="hover:underline">
                           {w.title}
                         </Link>
                       </CardTitle>
-                      <Badge variant="secondary">
-                        {w.compositionStatus === "in_progress" ? "In progress" : "Finalized"}
+                      <Badge variant="secondary" className="bg-amber-500/15 text-amber-900 dark:text-amber-200">
+                        In progress
                       </Badge>
                     </div>
                     <CardDescription>
@@ -150,18 +141,16 @@ export default function WorksPage() {
                   <div className="flex flex-wrap gap-2">
                     {canSongwriting ? (
                       <Link href={`/dashboard/songs/${w.primarySongId}/songwriting`}>
-                        <Button size="sm" variant="secondary">
-                          Songwriting
-                        </Button>
+                        <Button size="sm">Songwriting</Button>
                       </Link>
                     ) : (
-                      <Button size="sm" variant="secondary" disabled title="Add a recording linked to this work first">
+                      <Button size="sm" variant="outline" disabled title="Add a recording linked to this work first">
                         Songwriting
                       </Button>
                     )}
                     <Link href={`/dashboard/works/${w.id}`}>
                       <Button variant="outline" size="sm">
-                        Open
+                        Open work
                       </Button>
                     </Link>
                   </div>

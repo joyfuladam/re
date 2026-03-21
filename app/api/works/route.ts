@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { canManageSongs, getUserPermissions } from "@/lib/permissions"
-import type { Prisma } from "@prisma/client"
+import type { Prisma, WorkCompositionStatus } from "@prisma/client"
 import { createWorkForSong } from "@/lib/work-helpers"
 import { z } from "zod"
 
@@ -30,6 +30,7 @@ export async function GET(request: NextRequest) {
 
     const q = request.nextUrl.searchParams.get("q")?.trim()
     const limitRaw = request.nextUrl.searchParams.get("limit")
+    const compositionStatusParam = request.nextUrl.searchParams.get("compositionStatus")?.trim()
     const limit = Math.min(
       500,
       Math.max(1, limitRaw ? parseInt(limitRaw, 10) || 200 : 200)
@@ -38,6 +39,9 @@ export async function GET(request: NextRequest) {
     const where: Prisma.WorkWhereInput = {}
     if (q) {
       where.title = { contains: q, mode: "insensitive" }
+    }
+    if (compositionStatusParam === "in_progress" || compositionStatusParam === "finalized") {
+      where.compositionStatus = compositionStatusParam as WorkCompositionStatus
     }
 
     if (!canManage) {
@@ -70,12 +74,22 @@ export async function GET(request: NextRequest) {
         labelPublishingShare: true,
         createdAt: true,
         _count: { select: { songs: true } },
+        songs: {
+          orderBy: { createdAt: "asc" },
+          take: 1,
+          select: { id: true },
+        },
       },
       orderBy: { title: "asc" },
       take: limit,
     })
 
-    return NextResponse.json(works)
+    const payload = works.map(({ songs, ...rest }) => ({
+      ...rest,
+      primarySongId: songs[0]?.id ?? null,
+    }))
+
+    return NextResponse.json(payload)
   } catch (error) {
     console.error("Error fetching works:", error)
     return NextResponse.json({ error: "Failed to fetch works" }, { status: 500 })

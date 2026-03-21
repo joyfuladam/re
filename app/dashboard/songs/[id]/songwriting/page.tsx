@@ -12,6 +12,19 @@ import { ChordProEditor } from "@/components/songwriting/ChordProEditor"
 import { ChordChartPreview } from "@/components/songwriting/ChordChartPreview"
 import { SongwritingChatPanel } from "@/components/songwriting/SongwritingChatPanel"
 import { normalizeSongwritingJson } from "@/lib/songwriting/chordpro-storage"
+import {
+  getStoredChartMode,
+  setStoredChartMode,
+  type SongwritingChartMode,
+} from "@/lib/songwriting/chart-mode"
+import { VisualChartPlaceholder } from "@/components/songwriting/VisualChartPlaceholder"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 export default function SongwritingWorkspacePage() {
   const params = useParams()
@@ -35,6 +48,17 @@ export default function SongwritingWorkspacePage() {
   >([])
   const [uploading, setUploading] = useState(false)
   const [demoLabel, setDemoLabel] = useState("Rough demo")
+  const [chartMode, setChartMode] = useState<SongwritingChartMode>("chordpro")
+
+  useEffect(() => {
+    setChartMode(getStoredChartMode())
+  }, [])
+
+  const handleChartModeChange = (value: string) => {
+    const m = value === "visual" ? "visual" : "chordpro"
+    setChartMode(m)
+    setStoredChartMode(m)
+  }
 
   const loadSong = useCallback(async () => {
     if (!songId) return
@@ -175,20 +199,45 @@ export default function SongwritingWorkspacePage() {
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="space-y-6">
           <Card>
-            <CardHeader>
-              <CardTitle>Lyrics & chords</CardTitle>
-              <CardDescription>
-                ChordPro-style source with a live chart preview. Saved to this recording.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
-                <ChordProEditor value={chordpro} onChange={setChordpro} disabled={saving} />
-                <div className="space-y-2">
-                  <p className="text-sm font-medium">Preview</p>
-                  <ChordChartPreview chordpro={deferredPreview} />
+            <CardHeader className="space-y-4">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <CardTitle>Lyrics & chords</CardTitle>
+                  <CardDescription>
+                    Choose how you want to work. Saved to this recording.
+                  </CardDescription>
+                </div>
+                <div className="flex flex-col gap-1 sm:w-[220px]">
+                  <Label htmlFor="chart-mode" className="text-xs text-muted-foreground">
+                    Chart view
+                  </Label>
+                  <Select value={chartMode} onValueChange={handleChartModeChange}>
+                    <SelectTrigger id="chart-mode">
+                      <SelectValue placeholder="Mode" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="chordpro">ChordPro (source)</SelectItem>
+                      <SelectItem value="visual">Visual chart</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {chartMode === "chordpro" ? (
+                <div className="grid gap-4 md:grid-cols-2">
+                  <ChordProEditor value={chordpro} onChange={setChordpro} disabled={saving} />
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">Preview</p>
+                    <ChordChartPreview chordpro={deferredPreview} />
+                  </div>
+                </div>
+              ) : (
+                <VisualChartPlaceholder
+                  chordpro={deferredPreview}
+                  onSwitchToChordPro={() => handleChartModeChange("chordpro")}
+                />
+              )}
               <Button type="button" onClick={() => void saveLyrics()} disabled={saving}>
                 {saving ? "Saving…" : "Save lyrics"}
               </Button>
