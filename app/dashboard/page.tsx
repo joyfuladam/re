@@ -17,6 +17,8 @@ interface DashboardStats {
 export default function DashboardPage() {
   const { data: session } = useSession()
   const isAdmin = session?.user?.role === "admin"
+  const isCollaborator = session?.user?.role === "collaborator"
+  const canStartSongwriting = isAdmin || isCollaborator
   const [stats, setStats] = useState<DashboardStats>({
     totalSongs: 0,
     totalCollaborators: 0,
@@ -54,6 +56,22 @@ export default function DashboardPage() {
         <h1 className="text-3xl font-bold">Dashboard</h1>
         <p className="text-muted-foreground">Overview of your record label operations</p>
       </div>
+
+      {canStartSongwriting && (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardHeader>
+            <CardTitle>Songwriting</CardTitle>
+            <CardDescription>
+              Start a composition (work) in progress and a recording, then open the lyrics and collaboration workspace.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild>
+              <Link href="/dashboard/songs/new?songwriting=1">Start songwriting project</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       <div className={`grid gap-4 ${isAdmin ? 'md:grid-cols-2 lg:grid-cols-4' : 'md:grid-cols-2 lg:grid-cols-3'}`}>
         <Card>
@@ -125,6 +143,13 @@ export default function DashboardPage() {
             <CardDescription>Common tasks</CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
+            {canStartSongwriting && (
+              <Link href="/dashboard/songs/new?songwriting=1">
+                <Button variant="default" className="w-full justify-start">
+                  New songwriting project
+                </Button>
+              </Link>
+            )}
             {isAdmin && (
               <>
                 <Link href="/dashboard/collaborators/new">
@@ -135,11 +160,6 @@ export default function DashboardPage() {
                 <Link href="/dashboard/songs/new">
                   <Button variant="outline" className="w-full justify-start">
                     Add recording
-                  </Button>
-                </Link>
-                <Link href="/dashboard/songs/new?songwriting=1">
-                  <Button variant="outline" className="w-full justify-start">
-                    New songwriting project
                   </Button>
                 </Link>
               </>

@@ -130,6 +130,17 @@ export async function canManageSongs(session: Session | null): Promise<boolean> 
 }
 
 /**
+ * Start a songwriting project: new Work (in progress) + Song.
+ * Admins or collaborators with a collaborator profile may use this; does not grant other admin song powers.
+ */
+export async function canCreateSongwritingProject(session: Session | null): Promise<boolean> {
+  const permissions = await getUserPermissions(session)
+  if (!permissions) return false
+  if (permissions.isAdmin) return true
+  return permissions.isCollaborator && permissions.collaboratorId != null
+}
+
+/**
  * Check if user can manage splits
  * Admins can manage all, collaborators can only view (not edit) splits on their songs
  */

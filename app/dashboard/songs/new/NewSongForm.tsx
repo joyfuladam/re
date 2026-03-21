@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 type WorkOption = { id: string; title: string; iswcCode: string | null }
 
 export default function NewSongForm() {
-  const { data: session } = useSession()
+  const { data: session, status } = useSession()
   const router = useRouter()
   const searchParams = useSearchParams()
   const fromSongwriting =
@@ -57,10 +57,11 @@ export default function NewSongForm() {
   }, [session, fromSongwriting])
 
   useEffect(() => {
-    if (session && session.user?.role !== "admin") {
+    if (status === "loading") return
+    if (session && session.user?.role !== "admin" && !fromSongwriting) {
       router.push("/dashboard")
     }
-  }, [session, router])
+  }, [session, status, router, fromSongwriting])
 
   useEffect(() => {
     const fetchNextCatalogNumber = async () => {
@@ -76,7 +77,13 @@ export default function NewSongForm() {
     fetchNextCatalogNumber()
   }, [])
 
-  if (session && session.user?.role !== "admin") {
+  if (status === "loading") {
+    return (
+      <div className="flex flex-1 items-center justify-center p-8 text-muted-foreground">Loading…</div>
+    )
+  }
+
+  if (session && session.user?.role !== "admin" && !fromSongwriting) {
     return null
   }
 

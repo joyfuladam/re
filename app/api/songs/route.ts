@@ -2,10 +2,15 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { db } from "@/lib/db"
-import { getUserPermissions, canManageSongs, canAccessSong } from "@/lib/permissions"
+import {
+  getUserPermissions,
+  canManageSongs,
+  canCreateSongwritingProject,
+} from "@/lib/permissions"
 import { generateNextCatalogNumber } from "@/lib/catalog-number"
 import { createWorkForSong } from "@/lib/work-helpers"
 import { z } from "zod"
+import { CollaboratorRole } from "@prisma/client"
 
 export const dynamic = 'force-dynamic'
 
@@ -113,17 +118,46 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Only admins can create songs
-    const canManage = await canManageSongs(session)
-    if (!canManage) {
-      return NextResponse.json(
-        { error: "Forbidden: Only admins can create songs" },
-        { status: 403 }
-      )
+    const permissions = await getUserPermissions(session)
+    if (!permissions) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     const body = await request.json()
     const validated = songSchema.parse(body)
+
+    const songwritingIntent = validated.songwritingIntent === true
+
+    // Collaborators may only create via songwriting (new composition in progress); catalog create stays admin-only.
+    if (permissions.isCollaborator && !permissions.isAdmin) {
+      if (!songwritingIntent) {
+        return NextResponse.json(
+          {
+            error:
+              "Forbidden: use the songwriting project flow to create a new recording (composition in progress).",
+          },
+          { status: 403 }
+        )
+      }
+    }
+
+    if (songwritingIntent) {
+      const allowed = await canCreateSongwritingProject(session)
+      if (!allowed) {
+        return NextResponse.json(
+          { error: "Forbidden: cannot start a songwriting project" },
+          { status: 403 }
+        )
+      }
+    } else {
+      const canManage = await canManageSongs(session)
+      if (!canManage) {
+        return NextResponse.json(
+          { error: "Forbidden: Only admins can create catalog recordings" },
+          { status: 403 }
+        )
+      }
+    }
 
     if (validated.songwritingIntent && validated.workId) {
       return NextResponse.json(
@@ -152,7 +186,7 @@ export async function POST(request: NextRequest) {
         workId = work.id
       }
 
-      return tx.song.create({
+      const created = await tx.song.create({
         data: {
           title: validated.title,
           isrcCode: validated.isrcCode,
@@ -182,6 +216,29 @@ export async function POST(request: NextRequest) {
           },
         },
       })
+
+      if (songwritingIntent && permissions.isCollaborator && !permissions.isAdmin) {
+        const collabId = permissions.collaboratorId
+        if (!collabId) {
+          throw new Error("NO_COLLABORATOR")
+        }
+        const collab = await tx.collaborator.findUnique({
+          where: { id: collabId },
+          select: { capableRoles: true },
+        })
+        if (!collab?.capableRoles.includes(CollaboratorRole.writer)) {
+          throw new Error("WRITER_ROLE_REQUIRED")
+        }
+        await tx.songCollaborator.create({
+          data: {
+            songId: created.id,
+            collaboratorId: collabId,
+            roleInSong: CollaboratorRole.writer,
+          },
+        })
+      }
+
+      return created
     })
 
     return NextResponse.json(song, { status: 201 })
@@ -191,6 +248,18 @@ export async function POST(request: NextRequest) {
     }
     if (error instanceof Error && error.message === "WORK_NOT_FOUND") {
       return NextResponse.json({ error: "Work not found" }, { status: 404 })
+    }
+    if (error instanceof Error && error.message === "WRITER_ROLE_REQUIRED") {
+      return NextResponse.json(
+        {
+          error:
+            "Your profile must include the Writer role to start a songwriting project. Ask an admin to update your capable roles.",
+        },
+        { status: 400 }
+      )
+    }
+    if (error instanceof Error && error.message === "NO_COLLABORATOR") {
+      return NextResponse.json({ error: "Invalid session" }, { status: 400 })
     }
     console.error("Error creating song:", error)
     return NextResponse.json(
