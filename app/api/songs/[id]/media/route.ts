@@ -190,7 +190,7 @@ export async function POST(
             if (absolutePath && fs.existsSync(absolutePath)) fs.unlinkSync(absolutePath)
             return resolve(
               NextResponse.json(
-                { error: "Collaborator songwriting uploads must be audio (rough demos)" },
+                { error: "Collaborator songwriting uploads must be audio (demos)" },
                 { status: 400 }
               )
             )
@@ -199,7 +199,7 @@ export async function POST(
 
         const demoLabel =
           canCollabDemo && !userIsAdmin
-            ? (label?.trim() || "Rough demo (songwriting)")
+            ? (label?.trim() || "Demo (songwriting)")
             : label || undefined
 
         const media = await db.songMedia.create({

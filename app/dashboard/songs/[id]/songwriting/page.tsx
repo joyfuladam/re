@@ -52,7 +52,7 @@ export default function SongwritingWorkspacePage() {
   const [micUploading, setMicUploading] = useState(false)
   const [deletingDemoId, setDeletingDemoId] = useState<string | null>(null)
   const demoBusy = fileUploading || micUploading
-  const [demoLabel, setDemoLabel] = useState("Rough demo")
+  const [demoLabel, setDemoLabel] = useState("Demo")
   const [chartMode, setChartMode] = useState<SongwritingChartMode>("chordpro")
 
   useEffect(() => {
@@ -141,7 +141,7 @@ export default function SongwritingWorkspacePage() {
     try {
       const fd = new FormData()
       fd.append("category", "audio")
-      fd.append("label", demoLabel.trim() || "Rough demo (songwriting)")
+      fd.append("label", demoLabel.trim() || "Demo (songwriting)")
       fd.append("file", file)
       const res = await fetch(`/api/songs/${songId}/media`, {
         method: "POST",
@@ -220,120 +220,118 @@ export default function SongwritingWorkspacePage() {
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div className="space-y-6">
-          <Card>
-            <CardHeader className="space-y-4">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                  <CardTitle>Lyrics & chords</CardTitle>
-                  <CardDescription>
-                    Choose how you want to work. Saved to this recording.
-                  </CardDescription>
-                </div>
-                <div className="flex flex-col gap-1 sm:w-[220px]">
-                  <Label htmlFor="chart-mode" className="text-xs text-muted-foreground">
-                    Chart view
-                  </Label>
-                  <Select value={chartMode} onValueChange={handleChartModeChange}>
-                    <SelectTrigger id="chart-mode">
-                      <SelectValue placeholder="Mode" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="chordpro">ChordPro (source)</SelectItem>
-                      <SelectItem value="visual">Visual chart</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {chartMode === "chordpro" ? (
-                <div className="grid gap-4 md:grid-cols-2">
-                  <ChordProEditor value={chordpro} onChange={setChordpro} disabled={saving} />
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium">Preview</p>
-                    <ChordChartPreview chordpro={deferredPreview} />
-                  </div>
-                </div>
-              ) : (
-                <VisualChordChartEditor
-                  chordpro={chordpro}
-                  onChange={setChordpro}
-                  disabled={saving}
-                />
-              )}
-              <Button type="button" onClick={() => void saveLyrics()} disabled={saving}>
-                {saving ? "Saving…" : "Save lyrics"}
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Rough demos</CardTitle>
-              <CardDescription>Audio sketches for this song. Visible on this recording&apos;s media library too.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+      <Card>
+        <CardHeader className="space-y-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <CardTitle>Lyrics & chords</CardTitle>
+              <CardDescription>
+                Choose how you want to work. Saved to this recording.
+              </CardDescription>
+            </div>
+            <div className="flex flex-col gap-1 sm:w-[220px]">
+              <Label htmlFor="chart-mode" className="text-xs text-muted-foreground">
+                Chart view
+              </Label>
+              <Select value={chartMode} onValueChange={handleChartModeChange}>
+                <SelectTrigger id="chart-mode">
+                  <SelectValue placeholder="Mode" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="chordpro">ChordPro (source)</SelectItem>
+                  <SelectItem value="visual">Visual chart</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {chartMode === "chordpro" ? (
+            <div className="grid gap-4 md:grid-cols-2">
+              <ChordProEditor value={chordpro} onChange={setChordpro} disabled={saving} />
               <div className="space-y-2">
-                <Label htmlFor="demo-label">Label</Label>
-                <Input
-                  id="demo-label"
-                  value={demoLabel}
-                  onChange={(e) => setDemoLabel(e.target.value)}
-                  placeholder="Rough demo"
-                />
+                <p className="text-sm font-medium">Preview</p>
+                <ChordChartPreview chordpro={deferredPreview} />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="demo-file">Upload audio</Label>
-                <Input
-                  id="demo-file"
-                  type="file"
-                  accept="audio/*"
-                  disabled={demoBusy}
-                  onChange={(e) => void uploadDemo(e.target.files?.[0] ?? null)}
-                />
-                {fileUploading && <p className="text-sm text-muted-foreground">Uploading…</p>}
-              </div>
-              {songId && (
-                <SongwritingMicRecorder
-                  songId={songId}
-                  demoLabel={demoLabel}
-                  onUploaded={() => void loadDemos()}
-                  onUploadingChange={setMicUploading}
-                  disabled={demoBusy}
-                />
-              )}
-              {demos.length > 0 && (
-                <ul className="space-y-3 text-sm">
-                  {demos.map((d) => (
-                    <li key={d.id} className="space-y-2 rounded-md border px-3 py-2">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <span className="font-medium">{d.label || d.filename}</span>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                          disabled={demoBusy || deletingDemoId === d.id}
-                          onClick={() => void deleteDemo(d.id)}
-                        >
-                          {deletingDemoId === d.id ? "Deleting…" : "Delete"}
-                        </Button>
-                      </div>
-                      <AudioWaveformPreview src={`/api/media/${d.id}/file`} />
-                      <audio controls className="h-8 w-full max-w-full" src={`/api/media/${d.id}/file`}>
-                        <track kind="captions" />
-                      </audio>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+          ) : (
+            <VisualChordChartEditor
+              chordpro={chordpro}
+              onChange={setChordpro}
+              disabled={saving}
+            />
+          )}
+          <Button type="button" onClick={() => void saveLyrics()} disabled={saving}>
+            {saving ? "Saving…" : "Save lyrics"}
+          </Button>
+        </CardContent>
+      </Card>
 
-        <div>
+      <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
+        <Card>
+          <CardHeader>
+            <CardTitle>Demos</CardTitle>
+            <CardDescription>Audio sketches for this song. Visible on this recording&apos;s media library too.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="demo-label">Label</Label>
+              <Input
+                id="demo-label"
+                value={demoLabel}
+                onChange={(e) => setDemoLabel(e.target.value)}
+                placeholder="Demo"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="demo-file">Upload audio</Label>
+              <Input
+                id="demo-file"
+                type="file"
+                accept="audio/*"
+                disabled={demoBusy}
+                onChange={(e) => void uploadDemo(e.target.files?.[0] ?? null)}
+              />
+              {fileUploading && <p className="text-sm text-muted-foreground">Uploading…</p>}
+            </div>
+            {songId && (
+              <SongwritingMicRecorder
+                songId={songId}
+                demoLabel={demoLabel}
+                onUploaded={() => void loadDemos()}
+                onUploadingChange={setMicUploading}
+                disabled={demoBusy}
+              />
+            )}
+            {demos.length > 0 && (
+              <ul className="space-y-3 text-sm">
+                {demos.map((d) => (
+                  <li key={d.id} className="space-y-2 rounded-md border px-3 py-2">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="font-medium">{d.label || d.filename}</span>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                        disabled={demoBusy || deletingDemoId === d.id}
+                        onClick={() => void deleteDemo(d.id)}
+                      >
+                        {deletingDemoId === d.id ? "Deleting…" : "Delete"}
+                      </Button>
+                    </div>
+                    <AudioWaveformPreview src={`/api/media/${d.id}/file`} />
+                    <audio controls className="h-8 w-full max-w-full" src={`/api/media/${d.id}/file`}>
+                      <track kind="captions" />
+                    </audio>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+
+        <div className="min-w-0">
           {threadId ? (
             <SongwritingChatPanel threadId={threadId} />
           ) : (
