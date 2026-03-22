@@ -32,8 +32,6 @@ export default function SongsPage() {
   const [search, setSearch] = useState("")
 
   const isAdmin = session?.user?.role === "admin"
-  const isCollaborator = session?.user?.role === "collaborator"
-  const canStartSongwriting = isAdmin || isCollaborator
 
   useEffect(() => {
     fetchSongs()
@@ -84,17 +82,10 @@ export default function SongsPage() {
               : "Recordings you’re a collaborator on"}
           </p>
         </div>
-        {canStartSongwriting && (
-          <div className="flex flex-wrap gap-2">
-            <Link href="/dashboard/songs/new?songwriting=1">
-              <Button variant="default">New songwriting project</Button>
-            </Link>
-            {isAdmin && (
-              <Link href="/dashboard/songs/new">
-                <Button variant="outline">Add recording</Button>
-              </Link>
-            )}
-          </div>
+        {isAdmin && (
+          <Link href="/dashboard/songs/new">
+            <Button variant="outline">Add recording</Button>
+          </Link>
         )}
       </div>
 
