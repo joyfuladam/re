@@ -9,7 +9,16 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { WorkPublishingSplitEditor } from "@/components/splits/WorkPublishingSplitEditor"
+import { SongRoleSelector } from "@/components/songs/SongRoleSelector"
+import { isPublishingEligible } from "@/lib/roles"
 import { CollaboratorRole } from "@prisma/client"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 type SongBrief = {
   id: string
@@ -35,6 +44,14 @@ type WorkPublishingEntityRow = {
   id: string
   ownershipPercentage: unknown
   publishingEntity: { id: string; name: string; isInternal: boolean }
+}
+
+type CollaboratorOption = {
+  id: string
+  firstName: string
+  middleName: string | null
+  lastName: string
+  capableRoles: CollaboratorRole[]
 }
 
 type WorkDetail = {
@@ -65,6 +82,10 @@ export default function WorkDetailPage() {
   const [iswcCode, setIswcCode] = useState("")
   const [labelPct, setLabelPct] = useState("50")
   const [finalizing, setFinalizing] = useState(false)
+  const [collaboratorOptions, setCollaboratorOptions] = useState<CollaboratorOption[]>([])
+  const [addPubCollabId, setAddPubCollabId] = useState("")
+  const [addPubRoles, setAddPubRoles] = useState<CollaboratorRole[]>([])
+  const [addPubLoading, setAddPubLoading] = useState(false)
 
   const isAdmin = session?.user?.role === "admin"
 
@@ -128,6 +149,21 @@ export default function WorkDetailPage() {
     }
   }, [session, isAdmin, router])
 
+  useEffect(() => {
+    if (!isAdmin) return
+    void (async () => {
+      try {
+        const res = await fetch("/api/collaborators")
+        if (res.ok) {
+          const data = (await res.json()) as CollaboratorOption[]
+          setCollaboratorOptions(Array.isArray(data) ? data : [])
+        }
+      } catch {
+        setCollaboratorOptions([])
+      }
+    })()
+  }, [isAdmin])
+
   const handleFinalizeComposition = async () => {
     if (!id || !work || work.compositionStatus !== "in_progress") return
     if (
@@ -188,6 +224,34 @@ export default function WorkDetailPage() {
       alert("Failed to save")
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleAddPublishingCollaborator = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!id || !addPubCollabId || addPubRoles.length === 0) return
+    setAddPubLoading(true)
+    try {
+      const res = await fetch(`/api/works/${id}/collaborators`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          collaboratorId: addPubCollabId,
+          rolesInWork: addPubRoles,
+        }),
+      })
+      if (res.ok) {
+        setAddPubCollabId("")
+        setAddPubRoles([])
+        await load()
+      } else {
+        const err = await res.json().catch(() => ({}))
+        alert(typeof err.error === "string" ? err.error : "Failed to add collaborator")
+      }
+    } catch {
+      alert("Failed to add collaborator")
+    } finally {
+      setAddPubLoading(false)
     }
   }
 
@@ -332,22 +396,98 @@ export default function WorkDetailPage() {
         <CardHeader>
           <CardTitle>Publishing splits</CardTitle>
           <CardDescription>
-            Writer and publisher shares apply to this composition and stay in sync with every
-            linked recording. You can also edit from a song page.
+            Writer and publisher shares apply to this composition and stay in sync with every linked
+            recording. Add publishing collaborators here or from a linked recording&apos;s page.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4 max-w-2xl">
-          {work.songs.length === 0 ? (
+          {!work.publishingLocked && (
+            <div className="rounded-md border border-dashed bg-muted/30 p-4 space-y-4">
+              <div>
+                <p className="text-sm font-medium">Add publishing collaborator</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Choose a collaborator with at least one publishing-eligible role (writer, artist, or
+                  label). They are added to this composition and to every linked recording.
+                </p>
+              </div>
+              <form onSubmit={(e) => void handleAddPublishingCollaborator(e)} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="work-add-collab">Collaborator</Label>
+                  <Select
+                    value={addPubCollabId}
+                    onValueChange={(v) => {
+                      setAddPubCollabId(v)
+                      setAddPubRoles([])
+                    }}
+                  >
+                    <SelectTrigger id="work-add-collab">
+                      <SelectValue placeholder="Select collaborator" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {collaboratorOptions.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {[c.firstName, c.middleName, c.lastName].filter(Boolean).join(" ")}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {addPubCollabId &&
+                  (() => {
+                    const c = collaboratorOptions.find((x) => x.id === addPubCollabId)
+                    const eligible = (c?.capableRoles ?? []).filter((r) => isPublishingEligible(r))
+                    if (eligible.length === 0) {
+                      return (
+                        <p className="text-sm text-muted-foreground rounded-md border bg-background px-3 py-2">
+                          This collaborator has no publishing-eligible capable roles (writer, artist, or
+                          label). Update their capable roles on the collaborator profile, or pick someone
+                          else.
+                        </p>
+                      )
+                    }
+                    return (
+                      <SongRoleSelector
+                        value={addPubRoles}
+                        onValueChange={setAddPubRoles}
+                        availableRoles={eligible}
+                        rolesLabel="Roles on this composition *"
+                        rolesDescription="Mirrored to every linked recording. At least one role must be publishing-eligible (shown above)."
+                      />
+                    )
+                  })()}
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={
+                    addPubLoading || !addPubCollabId || addPubRoles.length === 0
+                  }
+                >
+                  {addPubLoading ? "Adding…" : "Add to composition"}
+                </Button>
+              </form>
+            </div>
+          )}
+
+          {work.songs.length === 0 &&
+          workCollaboratorsForEditor.length === 0 &&
+          workPublishingEntitiesForEditor.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              Add a recording first, then add collaborators on that song — splits will appear here.
+              No recordings linked yet. You can add publishing collaborators above; when you link
+              recordings to this composition, they will be mirrored automatically. You can also add
+              publishing entities after you have collaborators or from a song page.
             </p>
-          ) : workCollaboratorsForEditor.length === 0 &&
-            workPublishingEntitiesForEditor.length === 0 ? (
+          ) : null}
+
+          {work.songs.length > 0 &&
+          workCollaboratorsForEditor.length === 0 &&
+          workPublishingEntitiesForEditor.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              No splits yet. Add collaborators and publishing entities on a linked recording, or save
-              once splits exist on a song.
+              No splits yet. Use <strong>Add publishing collaborator</strong> above, or open a recording
+              to add collaborators there.
             </p>
-          ) : (
+          ) : null}
+
+          {workCollaboratorsForEditor.length > 0 || workPublishingEntitiesForEditor.length > 0 ? (
             <WorkPublishingSplitEditor
               workId={work.id}
               workCollaborators={workCollaboratorsForEditor}
@@ -355,7 +495,8 @@ export default function WorkDetailPage() {
               isLocked={!!work.publishingLocked}
               onUpdate={() => void load()}
             />
-          )}
+          ) : null}
+
           {work.songs.length > 0 && (
             <p className="text-sm">
               <Button variant="outline" size="sm" asChild>

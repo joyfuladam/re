@@ -9,6 +9,9 @@ interface SongRoleSelectorProps {
   onValueChange: (roles: CollaboratorRole[]) => void
   disabled?: boolean
   availableRoles?: CollaboratorRole[] // Roles the collaborator is capable of
+  /** Override default "song" copy (e.g. composition / work) */
+  rolesLabel?: string
+  rolesDescription?: string
 }
 
 const roleLabels: Record<CollaboratorRole, string> = {
@@ -33,7 +36,9 @@ export function SongRoleSelector({
   value, 
   onValueChange, 
   disabled,
-  availableRoles 
+  availableRoles,
+  rolesLabel = "Roles on This Song *",
+  rolesDescription = "Select all roles this collaborator will have on this song. You can select multiple roles.",
 }: SongRoleSelectorProps) {
   // If availableRoles provided, use those + label. Otherwise, show all.
   const rolesToShow: CollaboratorRole[] = availableRoles 
@@ -54,10 +59,8 @@ export function SongRoleSelector({
 
   return (
     <div className="space-y-2">
-      <Label>Roles on This Song *</Label>
-      <p className="text-sm text-muted-foreground">
-        Select all roles this collaborator will have on this song. You can select multiple roles.
-      </p>
+      <Label>{rolesLabel}</Label>
+      <p className="text-sm text-muted-foreground">{rolesDescription}</p>
       <div className="space-y-3 mt-3">
         {rolesToShow.map((role) => (
           <div key={role} className="flex items-start space-x-3">

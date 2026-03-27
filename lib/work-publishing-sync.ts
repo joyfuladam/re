@@ -255,3 +255,101 @@ export async function syncWorkPublishingEntitiesToAllSongs(workId: string): Prom
     }
   }
 }
+
+/**
+ * Add collaborators at the Work (composition) level and mirror to every linked recording.
+ * Creates SongCollaborator rows only when missing for that song + collaborator + role.
+ */
+export async function addWorkCollaboratorsMirrorToSongs(params: {
+  workId: string
+  collaboratorId: string
+  roles: CollaboratorRole[]
+  publishingOwnershipPercent?: number | null
+}): Promise<void> {
+  const { workId, collaboratorId, roles, publishingOwnershipPercent } = params
+  const pubDecimal =
+    publishingOwnershipPercent != null
+      ? numberToDecimal(publishingOwnershipPercent / 100)
+      : null
+
+  await db.$transaction(async (tx) => {
+    for (const role of roles) {
+      const existing = await tx.workCollaborator.findUnique({
+        where: {
+          workId_collaboratorId_roleInWork: {
+            workId,
+            collaboratorId,
+            roleInWork: role,
+          },
+        },
+      })
+      if (existing) {
+        throw new Error(
+          `This collaborator is already on this composition as ${role}. Remove or choose another role.`
+        )
+      }
+      await tx.workCollaborator.create({
+        data: {
+          workId,
+          collaboratorId,
+          roleInWork: role,
+          publishingOwnership: isPublishingEligible(role) ? pubDecimal : null,
+        },
+      })
+    }
+
+    const songs = await tx.song.findMany({ where: { workId }, select: { id: true } })
+    for (const { id: songId } of songs) {
+      for (const role of roles) {
+        const scExisting = await tx.songCollaborator.findFirst({
+          where: { songId, collaboratorId, roleInSong: role },
+        })
+        if (scExisting) {
+          if (isPublishingEligible(role) && pubDecimal != null) {
+            await tx.songCollaborator.update({
+              where: { id: scExisting.id },
+              data: { publishingOwnership: pubDecimal },
+            })
+          }
+          continue
+        }
+        await tx.songCollaborator.create({
+          data: {
+            songId,
+            collaboratorId,
+            roleInSong: role,
+            publishingOwnership: isPublishingEligible(role) ? pubDecimal : null,
+            masterOwnership: null,
+          },
+        })
+      }
+    }
+  })
+}
+
+/** When a recording is linked to a composition, ensure it gets SongCollaborator rows for every WorkCollaborator. */
+export async function ensureWorkCollaboratorsOnSong(
+  songId: string,
+  workId: string
+): Promise<void> {
+  const wcs = await db.workCollaborator.findMany({ where: { workId } })
+  for (const wc of wcs) {
+    const exists = await db.songCollaborator.findFirst({
+      where: {
+        songId,
+        collaboratorId: wc.collaboratorId,
+        roleInSong: wc.roleInWork,
+      },
+    })
+    if (exists) continue
+    await db.songCollaborator.create({
+      data: {
+        songId,
+        collaboratorId: wc.collaboratorId,
+        roleInSong: wc.roleInWork,
+        publishingOwnership: wc.publishingOwnership,
+        masterOwnership: null,
+      },
+    })
+  }
+}

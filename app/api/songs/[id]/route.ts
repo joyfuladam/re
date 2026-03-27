@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { canAccessSong, canManageSongs } from "@/lib/permissions"
 import { createWorkForSong } from "@/lib/work-helpers"
+import { ensureWorkCollaboratorsOnSong } from "@/lib/work-publishing-sync"
 import { z } from "zod"
 
 const songUpdateSchema = z.object({
@@ -118,6 +119,11 @@ export async function PATCH(
       updateData.recordingDate = new Date(validated.recordingDate)
     }
 
+    const prior = await db.song.findUnique({
+      where: { id: params.id },
+      select: { workId: true },
+    })
+
     if (workId !== undefined) {
       if (workId === null) {
         updateData.workId = null
@@ -145,6 +151,11 @@ export async function PATCH(
       where: { id: params.id },
       data: updateData,
     })
+
+    const newWorkId = song.workId
+    if (newWorkId && newWorkId !== prior?.workId) {
+      await ensureWorkCollaboratorsOnSong(params.id, newWorkId)
+    }
 
     return NextResponse.json(song)
   } catch (error) {
